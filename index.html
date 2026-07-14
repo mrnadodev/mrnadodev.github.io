@@ -17,7 +17,7 @@
      ║                                                                    ║
      ║  Gardez bien les guillemets "  " autour de chaque valeur.          ║
      ╚══════════════════════════════════════════════════════════════════╝ */
-window.NADOBET_CONFIG = {
+  window.NADOBET_CONFIG = {
 
     SUPABASE_URL: "https://pemcdjrciskqhqfimrxo.supabase.co",
     SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlbWNkanJjaXNrcWhxZmltcnhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3MTQwODIsImV4cCI6MjA5OTI5MDA4Mn0.sK1kWiq3EJwW0SdPSTyclqOFB1BjueOZ4ead7kWYfCA",
@@ -960,8 +960,8 @@ window.NADOBET_CONFIG = {
       </div>
       <div class="card-body">
         <div class="row r2" style="margin-bottom:18px">
-          <div><span class="lab">Nombre d'issues</span>
-            <div class="seg" id="segLegs"><button data-legs="2" class="on">2 issues</button><button data-legs="3">3 issues</button></div></div>
+          <div><span class="lab">Nombre de cotes</span>
+            <div class="seg" id="segLegs"><button data-legs="2" class="on">2 cotes</button><button data-legs="3">3 cotes</button></div></div>
           <div><span class="lab">Mode de mise</span>
             <div class="seg" id="segMode"><button data-mode="equal" class="on">Profit égal</button><button data-mode="fixed">Mise fixe</button></div></div>
         </div>
@@ -970,7 +970,7 @@ window.NADOBET_CONFIG = {
           <label class="fld" style="margin:0"><span class="lab" id="amtLab">Montant total à investir</span>
             <input type="number" id="amount" value="100" step="1" min="0"></label>
           <label class="fld" style="margin:0" id="fixedLegWrap"><span class="lab">Jambe à fixer</span>
-            <select id="fixedLeg"><option value="0">Issue 1</option><option value="1">Issue 2</option><option value="2">Issue 3</option></select></label>
+            <select id="fixedLeg"><option value="0">Cote #1</option><option value="1">Cote #2</option><option value="2">Cote #3</option></select></label>
         </div>
 
         <label class="fld" style="margin-bottom:16px"><span class="lab">Arrondir les mises</span>
@@ -986,10 +986,10 @@ window.NADOBET_CONFIG = {
         <label class="fld"><span class="lab">Date du pari</span><input type="date" id="betDate"></label>
 
         <div class="row r2" style="margin-bottom:16px">
-          <label class="fld" style="margin:0"><span class="lab">Match / Événement 1</span>
+          <label class="fld" style="margin:0"><span class="lab">Match</span>
             <input type="text" id="match1" placeholder="ex : PSG vs Marseille"></label>
-          <label class="fld" style="margin:0"><span class="lab">Match / Événement 2</span>
-            <input type="text" id="match2" placeholder="ex : Real vs Barça"></label>
+          <label class="fld" style="margin:0"><span class="lab">Championnat</span>
+            <input type="text" id="match2" placeholder="ex : Ligue 1"></label>
         </div>
 
         <!-- Cote + bookmaker par issue -->
@@ -1108,7 +1108,7 @@ window.NADOBET_CONFIG = {
       <div id="histLoader" class="hist-loader" style="display:none"></div>
       <div class="hist-wrap">
         <table class="hist-table"><thead><tr>
-          <th>Date</th><th>Matchs</th><th>Issues</th><th>Mode</th>
+          <th>Date</th><th>Matchs</th><th>Cotes</th><th>Mode</th>
           <th>Cotes</th><th>Bookmakers</th><th>Mises</th>
           <th>Total</th><th>Retour</th><th>Profit</th><th>ROI</th><th>Statut</th>
         </tr></thead><tbody id="histBody"></tbody></table>
@@ -1319,8 +1319,8 @@ window.NADOBET_CONFIG = {
     <div class="edit-body">
       <p class="edit-note">Vous pouvez corriger les informations descriptives. Les cotes et mises ne sont pas modifiables ici, pour préserver l'exactitude du bilan — supprimez et re-saisissez le pari si une cote est erronée.</p>
       <div class="row r2" style="margin-bottom:12px">
-        <label class="fld" style="margin:0"><span class="lab">Match / Événement 1</span><input type="text" id="editMatch1"></label>
-        <label class="fld" style="margin:0"><span class="lab">Match / Événement 2</span><input type="text" id="editMatch2"></label>
+        <label class="fld" style="margin:0"><span class="lab">Match</span><input type="text" id="editMatch1"></label>
+        <label class="fld" style="margin:0"><span class="lab">Championnat</span><input type="text" id="editMatch2"></label>
       </div>
       <label class="fld"><span class="lab">Date du pari</span><input type="date" id="editDate"></label>
       <div id="editBkFields"></div>
@@ -1588,7 +1588,7 @@ window.NADOBET_CONFIG = {
     const n=legs;let html='';
     for(let i=0;i<n;i++){
       html+=`<div style="margin-bottom:14px">
-        <span class="lab">Issue ${i+1}</span>
+        <span class="lab">Cote #${i+1}</span>
         <div class="bkline">
           <input type="number" class="calcOdd" data-i="${i}" value="2.10" step="0.01" min="1.01" placeholder="Cote">
           <select class="calcBk" data-i="${i}">${bkOptions}</select>
@@ -1834,7 +1834,7 @@ window.NADOBET_CONFIG = {
     $('#editNote').value=h.note||'';
     // champs bookmaker par issue
     const bkHtml=(h.bks||[]).map((b,i)=>`<div class="edit-bk-row">
-      <span class="lg">Issue ${i+1} · cote ${(h.odds[i]!=null?h.odds[i].toFixed(2):'—')}</span>
+      <span class="lg">Cote #${i+1} · ${(h.odds[i]!=null?h.odds[i].toFixed(2):'—')}</span>
       <select class="editBk" data-i="${i}">${bkOptions}</select></div>`).join('');
     $('#editBkFields').innerHTML=`<span class="lab" style="display:block;margin-bottom:7px">Bookmakers</span>${bkHtml}`;
     $$('.editBk').forEach((sel,i)=>{ const v=(h.bks||[])[i]; if(v){ if(![...sel.options].some(o=>o.value===v)){const o=document.createElement('option');o.value=v;o.textContent=v;sel.appendChild(o);} sel.value=v; } });
@@ -2195,7 +2195,7 @@ window.NADOBET_CONFIG = {
     const rows=history.map((h,idx)=>{
       const r={
         '#':idx+1, 'Date':h.date,
-        'Match 1':h.match1||'', 'Match 2':h.match2||'',
+        'Match':h.match1||'', 'Championnat':h.match2||'',
         'Issues':h.legs, 'Mode':h.mode,
       };
       for(let i=0;i<3;i++){
@@ -3417,7 +3417,7 @@ window.NADOBET_CONFIG = {
     let txt='🎯 SUREBET · '+title+'\n';
     if(roi) txt+='ROI garanti : +'+Number(roi).toFixed(2)+'%\n';
     legs.forEach((l,i)=>{
-      if(l.match||l.odd){ txt+='• '+(l.match||'Issue '+(i+1))+' — '+(l.bk||'?')+' @ '+(l.odd||'?')+'\n'; }
+      if(l.match||l.odd){ txt+='• '+(l.match||'Cote '+(i+1))+' — '+(l.bk||'?')+' @ '+(l.odd||'?')+'\n'; }
     });
     if(note) txt+='📝 '+note+'\n';
     txt+='🕒 '+dateStr;
