@@ -17,7 +17,7 @@
      ║                                                                    ║
      ║  Gardez bien les guillemets "  " autour de chaque valeur.          ║
      ╚══════════════════════════════════════════════════════════════════╝ */
-  window.NADOBET_CONFIG = {
+ window.NADOBET_CONFIG = {
 
     SUPABASE_URL: "https://pemcdjrciskqhqfimrxo.supabase.co",
     SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlbWNkanJjaXNrcWhxZmltcnhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3MTQwODIsImV4cCI6MjA5OTI5MDA4Mn0.sK1kWiq3EJwW0SdPSTyclqOFB1BjueOZ4ead7kWYfCA",
@@ -421,6 +421,14 @@
   @keyframes pop{0%{transform:scale(0)}70%{transform:scale(1.2)}100%{transform:scale(1)}}
   /* sur grand écran, la bulle reste discrète (le chat est visible en défilant) */
   @media(min-width:981px){ .chat-fab{width:50px;height:50px;right:22px;bottom:90px} }
+  .typing-bar{display:flex;align-items:center;gap:8px;padding:4px 4px 8px;font-size:11.5px;
+    color:var(--mint);font-style:italic;min-height:20px}
+  .tb-dots{display:inline-flex;gap:3px;align-items:flex-end}
+  .tb-dots i{width:5px;height:5px;border-radius:50%;background:var(--mint);display:block;
+    animation:tbBounce 1.2s infinite ease-in-out}
+  .tb-dots i:nth-child(2){animation-delay:.15s}
+  .tb-dots i:nth-child(3){animation-delay:.3s}
+  @keyframes tbBounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-4px);opacity:1}}
   .chat-compose{display:flex;gap:10px}
   .chat-compose input{flex:1}
   #chatTimerToggle.timer-off{color:var(--gold);border-color:rgba(245,197,66,.4)}
@@ -1157,6 +1165,10 @@
       <div id="chatReplyBar" class="chat-reply-bar" style="display:none">
         <div class="crb-content">↩ Réponse à <b id="chatReplyName">—</b> · <span id="chatReplyText" class="crb-text">—</span></div>
         <button class="crb-x" id="chatReplyCancel" title="Annuler">✕</button>
+      </div>
+      <div id="typingBar" class="typing-bar" style="display:none">
+        <span class="tb-dots"><i></i><i></i><i></i></span>
+        <span id="typingText">—</span>
       </div>
       <div class="chat-compose">
         <input type="text" id="chatInput" placeholder="Écrivez un message…" maxlength="500" autocomplete="off">
@@ -2690,6 +2702,8 @@
     chatChannel=sb.channel('nadobet_chat')
       .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages'},payload=>{
         const m=payload.new;
+        // celui qui vient d'envoyer n'écrit plus
+        if(typingUsers[m.user_id]){ delete typingUsers[m.user_id]; renderTyping(); }
         if(!chatMsgs.some(x=>x.id===m.id)){
           chatMsgs.push(m); renderChat(true);
           const mine=currentUser&&m.user_id===currentUser.id;
@@ -2715,12 +2729,49 @@
         const r=payload.new;
         if(r && r.key==='chat_cooldown'){ cooldownOn = r.value!=='off'; updateTimerBtn(); }
       })
+      // « en train d'écrire… » : signal léger, non stocké en base
+      .on('broadcast',{event:'typing'},({payload})=>{
+        if(!payload || payload.user_id===currentUser.id)return;
+        if(payload.room!==currentRoom)return;
+        typingUsers[payload.user_id]={ name:payload.name, at:Date.now() };
+        renderTyping();
+      })
       .subscribe();
   }
   async function stopChat(){
     if(chatChannel){ try{await sb.removeChannel(chatChannel);}catch(e){} chatChannel=null; }
-    chatMsgs=[]; replyTo=null;
+    chatMsgs=[]; replyTo=null; typingUsers={}; renderTyping();
   }
+
+  /* ----- Indicateur « en train d'écrire… » ----- */
+  let typingUsers={};        // user_id -> {name, at}
+  let lastTypingSent=0;
+  const TYPING_TTL=3000;     // on oublie après 3 s sans signal
+  function sendTyping(){
+    if(!chatChannel||!currentUser)return;
+    const now=Date.now();
+    if(now-lastTypingSent<1200)return;   // n'envoie pas plus d'1 signal / 1,2 s
+    lastTypingSent=now;
+    const name = roleAlias(currentRole) || currentUsername || chatName(currentUser.email);
+    try{
+      chatChannel.send({type:'broadcast', event:'typing',
+        payload:{ user_id:currentUser.id, name, room:currentRoom }});
+    }catch(e){}
+  }
+  function renderTyping(){
+    const bar=$('#typingBar'), txt=$('#typingText');
+    if(!bar)return;
+    const now=Date.now();
+    // nettoie ceux qui ont dépassé le délai
+    Object.keys(typingUsers).forEach(id=>{ if(now-typingUsers[id].at>TYPING_TTL) delete typingUsers[id]; });
+    const names=Object.values(typingUsers).map(u=>u.name);
+    if(!names.length){ bar.style.display='none'; return; }
+    bar.style.display='flex';
+    if(names.length===1) txt.textContent=names[0]+' est en train d\u2019écrire…';
+    else if(names.length===2) txt.textContent=names[0]+' et '+names[1]+' écrivent…';
+    else txt.textContent=names.length+' personnes écrivent…';
+  }
+  setInterval(renderTyping, 1000); // rafraîchit / expire les indicateurs
   // Efface les messages de plus de 7 jours (appelé au démarrage)
   async function cleanupOldMessages(){
     if(!sb)return;
@@ -2943,6 +2994,8 @@
   // Événements chat
   $('#chatSend').addEventListener('click',sendChatMsg);
   $('#chatInput').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); sendChatMsg(); } });
+  // signale « en train d'écrire… » aux autres
+  $('#chatInput').addEventListener('input',()=>{ if($('#chatInput').value.trim()) sendTyping(); });
   // Collage : bloque images/fichiers, force le texte brut sans emoji
   $('#chatInput').addEventListener('paste',e=>{
     const cd=e.clipboardData||window.clipboardData; if(!cd)return;
@@ -3199,6 +3252,7 @@
     $$('#chatRooms .chat-room-tab').forEach(t=>t.classList.toggle('on',t===tab));
     tab.classList.remove('has-new');
     currentRoom=tab.dataset.room;
+    typingUsers={}; renderTyping();
     renderChat(true);
     renderActivePoll();
     updateComposeState();
