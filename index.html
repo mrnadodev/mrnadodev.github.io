@@ -17,7 +17,7 @@
      ║                                                                    ║
      ║  Gardez bien les guillemets "  " autour de chaque valeur.          ║
      ╚══════════════════════════════════════════════════════════════════╝ */
-  window.NADOBET_CONFIG = {
+window.NADOBET_CONFIG = {
 
     SUPABASE_URL: "https://pemcdjrciskqhqfimrxo.supabase.co",
     SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlbWNkanJjaXNrcWhxZmltcnhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3MTQwODIsImV4cCI6MjA5OTI5MDA4Mn0.sK1kWiq3EJwW0SdPSTyclqOFB1BjueOZ4ead7kWYfCA",
@@ -2357,12 +2357,15 @@
   async function fetchAccountStatus(user){
     // L'admin est toujours autorisé, sans dépendre de la table
     if(isAdmin(user)){ currentRole='admin'; }
+    // username éventuellement stocké dans les métadonnées à l'inscription
+    const metaUsername = (user.user_metadata && user.user_metadata.username) || '';
     try{
       const {data,error}=await sb.from('profiles').select('status,role,tour_seen,username').eq('id',user.id).single();
       if(error){
-        // Profil pas encore créé : on tente de le créer en "pending"
+        // Profil pas encore créé : on le crée en "pending" avec le username des métadonnées
         if(error.code==='PGRST116'||/no rows/i.test(error.message||'')){
-          await sb.from('profiles').insert({id:user.id, email:user.email, status:'pending'});
+          await sb.from('profiles').insert({id:user.id, email:user.email, status:'pending', username:metaUsername||null});
+          currentUsername=metaUsername||'';
           return isAdmin(user)?'approved':'pending';
         }
         console.error(error); return isAdmin(user)?'approved':'pending';
@@ -2370,6 +2373,10 @@
       currentRole = isAdmin(user)?'admin':((data&&data.role)||'user');
       tourSeen = !!(data && data.tour_seen);
       currentUsername = (data&&data.username)||'';
+      // Si le profil existe mais sans username, et qu'on en a un dans les métadonnées → on le complète
+      if(!currentUsername && metaUsername){
+        try{ await sb.from('profiles').update({username:metaUsername}).eq('id',user.id); currentUsername=metaUsername; }catch(e){}
+      }
       return isAdmin(user) ? 'approved' : ((data&&data.status)||'pending');
     }catch(e){ console.error(e); return isAdmin(user)?'approved':'pending'; }
   }
@@ -3514,10 +3521,13 @@
       const {data:taken}=await sb.from('profiles').select('id').ilike('username',username).limit(1);
       if(taken && taken.length) return authError('Ce nom d\u2019utilisateur est déjà pris.');
     }catch(e){/* si la colonne n'existe pas encore, on continue */}
-    const {data,error}=await sb.auth.signUp({email,password:pass});
+    const {data,error}=await sb.auth.signUp({
+      email, password:pass,
+      options:{ data:{ username } }   // stocké dans user_metadata, survit à la confirmation
+    });
     if(error)return authError('Inscription échouée : '+error.message);
-    // Enregistre le username dans le profil
-    if(data.user){
+    // Enregistre aussi le username dans le profil (si session déjà active)
+    if(data.session && data.user){
       try{ await sb.from('profiles').upsert({id:data.user.id, email, username, status:'pending'}); }catch(e){ console.error(e); }
     }
     if(data.session){enterApp(data.user);}
