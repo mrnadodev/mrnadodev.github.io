@@ -17,7 +17,7 @@
      ║                                                                    ║
      ║  Gardez bien les guillemets "  " autour de chaque valeur.          ║
      ╚══════════════════════════════════════════════════════════════════╝ */
-   window.NADOBET_CONFIG = {
+  window.NADOBET_CONFIG = {
 
     SUPABASE_URL: "https://pemcdjrciskqhqfimrxo.supabase.co",
     SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlbWNkanJjaXNrcWhxZmltcnhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3MTQwODIsImV4cCI6MjA5OTI5MDA4Mn0.sK1kWiq3EJwW0SdPSTyclqOFB1BjueOZ4ead7kWYfCA",
@@ -31,6 +31,7 @@
     TELEGRAM_BOT_TOKEN: "8995154321:AAE9LxkU9T9t0SuVzermRoGyt2bg3eidNtY",   // ex : "123456:ABC-DEF..."
     TELEGRAM_CHAT_ID:   "@nadobet_surebets"    // ex : "@nadobet_surebets" ou "-1001234567890"
   };
+
 </script>
 <style>
   :root{
@@ -2375,7 +2376,8 @@
   function canPublish(){ return currentRole==='admin' || currentRole==='publisher'; }
   function canModerate(){ return currentRole==='admin' || currentRole==='moderator'; }
 
-  function showAccessScreen(kind, email){
+  let pendingPollTimer=null;
+  function showAccessScreen(kind, email, userForPoll){
     // kind: 'pending' | 'blocked'
     $('#authGate').classList.remove('hidden');
     $('#authTabs').style.display='none';
@@ -2387,20 +2389,60 @@
     clearAuthError();
     if(kind==='pending'){
       sub.textContent='Compte en attente d’approbation';
-      authOk('Votre inscription ('+email+') a bien été reçue. Un administrateur doit l’approuver avant que vous puissiez accéder. Réessayez plus tard.');
+      authOk('Votre inscription ('+email+') a bien été reçue. Un administrateur doit l’approuver avant que vous puissiez accéder. Cette page se mettra à jour automatiquement.');
+    }else if(kind==='approved'){
+      sub.textContent='Compte approuvé 🎉';
+      authOk('Félicitations ! Votre compte ('+email+') a été approuvé. Vous pouvez maintenant vous connecter.');
     }else{
       sub.textContent='Accès bloqué';
       authError('Votre compte ('+email+') n’est pas autorisé à accéder pour le moment. Contactez l’administrateur.');
     }
-    // bouton de déconnexion pour réessayer avec un autre compte
+    // bouton d'action (déconnexion, ou "connexion" une fois approuvé)
     let back=$('#accessLogout');
     if(!back){ back=document.createElement('button'); back.id='accessLogout';
       back.className='btn ghost'; back.style.cssText='width:100%;justify-content:center;margin-top:14px';
-      back.textContent='Se déconnecter'; $('#authError').insertAdjacentElement('afterend',back);
-      back.addEventListener('click',async()=>{ await doLogout(); restoreAuthForm(); });
+      $('#authError').insertAdjacentElement('afterend',back);
     }
     back.style.display='';
+    // Remplace les écouteurs en clonant le bouton
+    const fresh=back.cloneNode(true); back.parentNode.replaceChild(fresh,back);
+    if(kind==='approved'){
+      fresh.textContent='Entrer dans NADOBET →';
+      fresh.className='btn primary';
+      fresh.style.cssText='width:100%;justify-content:center;margin-top:14px';
+      fresh.addEventListener('click',async()=>{
+        stopApprovalPoll();
+        // la session est encore valide : on ré-entre directement
+        try{
+          const {data}=await sb.auth.getSession();
+          if(data && data.session){ restoreAuthForm(); enterApp(data.session.user); return; }
+        }catch(e){}
+        restoreAuthForm(); setAuthMode('login'); if(email)$('#authEmail').value=email;
+      });
+    }else{
+      fresh.textContent='Se déconnecter';
+      fresh.className='btn ghost';
+      fresh.style.cssText='width:100%;justify-content:center;margin-top:14px';
+      fresh.addEventListener('click',async()=>{ stopApprovalPoll(); await doLogout(); restoreAuthForm(); });
+    }
+    // Vérifie périodiquement si le statut est passé à "approved"
+    stopApprovalPoll();
+    if(kind==='pending' && userForPoll){
+      pendingPollTimer=setInterval(async()=>{
+        try{
+          const {data}=await sb.from('profiles').select('status').eq('id',userForPoll.id).single();
+          if(data && data.status==='approved'){
+            stopApprovalPoll();
+            showAccessScreen('approved', email);
+          }else if(data && data.status==='blocked'){
+            stopApprovalPoll();
+            showAccessScreen('blocked', email);
+          }
+        }catch(e){}
+      }, 5000); // toutes les 5 s
+    }
   }
+  function stopApprovalPoll(){ if(pendingPollTimer){ clearInterval(pendingPollTimer); pendingPollTimer=null; } }
   function restoreAuthForm(){
     $('#authTabs').style.display='';
     $('#forgotRow') && ($('#forgotRow').style.display='');
@@ -2415,7 +2457,7 @@
     accountCreatedAt = user.created_at ? new Date(user.created_at).getTime() : null;
     // Contrôle d'accès : approbation / blocage
     const status=await fetchAccountStatus(user);
-    if(status==='pending'){ showAccessScreen('pending',user.email); currentUser=null; return; }
+    if(status==='pending'){ showAccessScreen('pending',user.email,user); currentUser=null; return; }
     if(status==='blocked'){ showAccessScreen('blocked',user.email); currentUser=null; return; }
     // Comptes existants sans nom d'utilisateur : on le demande avant d'entrer (sauf admin)
     if(!currentUsername && !isAdmin(user)){
