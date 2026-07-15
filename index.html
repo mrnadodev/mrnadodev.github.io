@@ -17,7 +17,7 @@
      ║                                                                    ║
      ║  Gardez bien les guillemets "  " autour de chaque valeur.          ║
      ╚══════════════════════════════════════════════════════════════════╝ */
- window.NADOBET_CONFIG = {
+  window.NADOBET_CONFIG = {
 
     SUPABASE_URL: "https://pemcdjrciskqhqfimrxo.supabase.co",
     SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlbWNkanJjaXNrcWhxZmltcnhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3MTQwODIsImV4cCI6MjA5OTI5MDA4Mn0.sK1kWiq3EJwW0SdPSTyclqOFB1BjueOZ4ead7kWYfCA",
@@ -251,6 +251,7 @@
   .tour-slide .ts-art{width:150px;height:150px;margin-bottom:8px}
   .tour-slide .ts-title{font-size:20px;font-weight:700;color:var(--ink)}
   .tour-slide .ts-desc{font-size:14px;color:var(--ink-dim);line-height:1.55;max-width:360px}
+  .tour-slide .ts-cta{margin-top:16px;text-decoration:none;padding:11px 20px;font-size:13.5px}
   .tour-dots{display:flex;justify-content:center;gap:7px;margin:18px 0}
   .tour-dots .td{width:8px;height:8px;border-radius:50%;background:var(--line);transition:.2s}
   .tour-dots .td.on{background:var(--mint);width:22px;border-radius:4px}
@@ -888,6 +889,7 @@
       <div class="chip">Seuil actif <b id="thrChip">4%</b></div>
       <div class="chip">Paris enregistrés <b id="countChip">0</b></div>
       <span class="chip" id="syncChip" style="display:none">☁️ <b id="syncState">Synchronisé</b></span>
+      <a href="https://t.me/nadobet_surebets" target="_blank" rel="noopener" class="btn ghost" id="tgBtn" style="padding:6px 12px;font-size:12px;text-decoration:none" title="Recevoir les alertes surebet sur Telegram">📲 Telegram</a>
       <button class="btn ghost" id="tourBtn" style="padding:6px 12px;font-size:12px" title="Revoir le guide">❔ Guide</button>
       <a href="https://www.sofascore.com/" target="_blank" rel="noopener" class="btn ghost" id="statsBtn" style="padding:6px 14px;font-size:12px;text-decoration:none">📊 Scores & stats ↗</a>
       <button class="btn primary" id="publishBtn" style="display:none;padding:6px 14px;font-size:12px">📢 Publier un surebet</button>
@@ -2520,13 +2522,19 @@
       title:'4 · Historique', desc:'Tous vos paris sont sauvegardés et synchronisés. Filtrez, ajoutez des notes, exportez en Excel, et voyez vos stats par mois et par bookmaker.' },
     { art:`<svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M30 34h60a8 8 0 0 1 8 8v30a8 8 0 0 1-8 8H54l-18 14v-14h-6a8 8 0 0 1-8-8V42a8 8 0 0 1 8-8z" stroke="var(--mint)" stroke-width="5" stroke-linejoin="round"/><circle cx="48" cy="57" r="3.5" fill="var(--gold)"/><circle cx="60" cy="57" r="3.5" fill="var(--gold)"/><circle cx="72" cy="57" r="3.5" fill="var(--gold)"/></svg>`,
       title:'5 · Chat & alertes', desc:'Discutez avec les autres parieurs en direct. Quand un surebet est publié, une alerte apparaît — cliquez pour voir les détails et les charger dans le calculateur.' },
+    { art:`<svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="60" cy="60" r="42" fill="rgba(47,230,168,.08)" stroke="var(--mint)" stroke-width="4"/><path d="M38 60l40-15-13 40-9-13-10 8 1-12z" fill="var(--mint)"/><path d="M56 68l22-23-30 18" stroke="var(--bg)" stroke-width="1.5"/></svg>`,
+      title:'📢 Abonnez-vous à Telegram !', desc:'<b>Important :</b> pour recevoir une notification sur votre téléphone dès qu\'un surebet est détecté (même dashboard fermé), abonnez-vous à notre canal Telegram. Les détails restent visibles uniquement ici, sur votre dashboard.',
+      cta:{ label:'📲 Rejoindre @nadobet_surebets', url:'https://t.me/nadobet_surebets' } },
     { art:`<svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="60" cy="60" r="40" stroke="var(--mint)" stroke-width="5"/><path d="M42 60l12 12 24-26" stroke="var(--gold)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
       title:'C\u2019est parti ! 🎯', desc:'Vous êtes prêt à utiliser NADOBET. Vérifiez toujours les cotes chez le bookmaker avant de miser. Bonne chance !' }
   ];
   let tourIdx=0;
   function renderTourSlide(){
     const s=TOUR_SLIDES[tourIdx];
-    $('#tourSlide').innerHTML=`<div class="ts-art">${s.art}</div><div class="ts-title">${s.title}</div><div class="ts-desc">${s.desc}</div>`;
+    const ctaHtml = s.cta
+      ? `<a href="${s.cta.url}" target="_blank" rel="noopener" class="btn primary ts-cta">${s.cta.label}</a>`
+      : '';
+    $('#tourSlide').innerHTML=`<div class="ts-art">${s.art}</div><div class="ts-title">${s.title}</div><div class="ts-desc">${s.desc}</div>${ctaHtml}`;
     $('#tourDots').innerHTML=TOUR_SLIDES.map((_,i)=>`<span class="td ${i===tourIdx?'on':''}"></span>`).join('');
     $('#tourPrev').style.visibility = tourIdx===0 ? 'hidden':'visible';
     $('#tourNext').textContent = tourIdx===TOUR_SLIDES.length-1 ? 'Terminer' : 'Suivant';
