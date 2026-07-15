@@ -31,6 +31,7 @@
     TELEGRAM_BOT_TOKEN: "8995154321:AAE9LxkU9T9t0SuVzermRoGyt2bg3eidNtY",   // ex : "123456:ABC-DEF..."
     TELEGRAM_CHAT_ID:   "@nadobet_surebets"    // ex : "@nadobet_surebets" ou "-1001234567890"
   };
+
 </script>
 <style>
   :root{
@@ -2749,6 +2750,7 @@
     if(!sb||chatChannel)return;
     await loadCooldownSetting();
     await loadRoomLocks();
+    startSettingsPoll();
     cleanupOldMessages(); // efface les messages de plus de 7 jours
     await loadChatMessages();
     chatChannel=sb.channel('nadobet_chat')
@@ -2801,6 +2803,7 @@
   }
   async function stopChat(){
     if(chatChannel){ try{await sb.removeChannel(chatChannel);}catch(e){} chatChannel=null; }
+    stopSettingsPoll();
     chatMsgs=[]; replyTo=null; typingUsers={}; renderTyping();
   }
 
@@ -3174,11 +3177,39 @@
   async function loadRoomLocks(){
     if(!sb)return;
     try{
-      const {data}=await sb.from('app_settings').select('value').eq('key','locked_rooms').single();
-      if(data && data.value){ try{ lockedRooms=JSON.parse(data.value); }catch(e){ lockedRooms={}; } }
+      const {data}=await sb.from('app_settings').select('value').eq('key','locked_rooms').limit(1);
+      const row = data && data[0];
+      if(row && row.value){ try{ lockedRooms=JSON.parse(row.value); }catch(e){ lockedRooms={}; } }
+      else { lockedRooms={}; }
     }catch(e){}
     updateRoomLockBtn(); updateComposeState();
   }
+  // Filet de sécurité : si le temps réel n'est pas actif sur app_settings,
+  // on revérifie les réglages périodiquement (verrous + minuteur).
+  let settingsPollTimer=null;
+  function startSettingsPoll(){
+    if(settingsPollTimer)return;
+    settingsPollTimer=setInterval(async()=>{
+      if(!sb||!currentUser)return;
+      try{
+        const {data}=await sb.from('app_settings').select('key,value').in('key',['locked_rooms','chat_cooldown']);
+        if(!data)return;
+        data.forEach(r=>{
+          if(r.key==='locked_rooms'){
+            let next={}; try{ next=JSON.parse(r.value||'{}'); }catch(e){}
+            if(JSON.stringify(next)!==JSON.stringify(lockedRooms)){
+              lockedRooms=next; updateRoomLockBtn(); updateComposeState();
+            }
+          }
+          if(r.key==='chat_cooldown'){
+            const on = r.value!=='off';
+            if(on!==cooldownOn){ cooldownOn=on; updateTimerBtn(); }
+          }
+        });
+      }catch(e){}
+    }, 8000); // toutes les 8 s
+  }
+  function stopSettingsPoll(){ if(settingsPollTimer){ clearInterval(settingsPollTimer); settingsPollTimer=null; } }
   async function toggleRoomLock(){
     if(!sb||!isAdmin(currentUser))return;
     if(currentRoom==='surebets')return;
