@@ -17,7 +17,7 @@
      ║                                                                    ║
      ║  Gardez bien les guillemets "  " autour de chaque valeur.          ║
      ╚══════════════════════════════════════════════════════════════════╝ */
-  window.NADOBET_CONFIG = {
+   window.NADOBET_CONFIG = {
 
     SUPABASE_URL: "https://pemcdjrciskqhqfimrxo.supabase.co",
     SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlbWNkanJjaXNrcWhxZmltcnhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3MTQwODIsImV4cCI6MjA5OTI5MDA4Mn0.sK1kWiq3EJwW0SdPSTyclqOFB1BjueOZ4ead7kWYfCA",
@@ -827,7 +827,7 @@
       <span class="auth-ico">
         <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg>
       </span>
-      <input type="email" id="authEmail" placeholder="Adresse email" autocomplete="username">
+      <input type="text" id="authEmail" placeholder="Email ou nom d'utilisateur" autocomplete="username">
     </div>
 
     <div class="auth-field">
@@ -3563,8 +3563,25 @@
   async function doLogin(){
     if(!sb)return authError('Configuration Supabase manquante.');
     clearAuthError();
-    const email=$('#authEmail').value.trim(), pass=$('#authPass').value;
-    if(!email||!pass)return authError('Entrez votre email et mot de passe.');
+    const identifier=$('#authEmail').value.trim(), pass=$('#authPass').value;
+    if(!identifier||!pass)return authError('Entrez votre identifiant et votre mot de passe.');
+
+    let email=identifier;
+    // Si ce n'est pas un email, on considère que c'est un nom d'utilisateur
+    if(!identifier.includes('@')){
+      const vErrLogin=/^[a-zA-Z0-9_.]{3,20}$/.test(identifier);
+      if(!vErrLogin) return authError('Identifiant invalide. Utilisez votre email ou votre nom d\u2019utilisateur.');
+      try{
+        // fonction serveur sécurisée : renvoie l'email correspondant au username
+        const {data,error}=await sb.rpc('email_for_username',{ uname: identifier });
+        if(error) throw error;
+        if(!data) return authError('Nom d\u2019utilisateur introuvable.');
+        email=data;
+      }catch(e){
+        console.error(e);
+        return authError('Connexion par nom d\u2019utilisateur indisponible. Essayez avec votre email.');
+      }
+    }
     const {data,error}=await sb.auth.signInWithPassword({email,password:pass});
     if(error)return authError('Connexion échouée : '+error.message);
     enterApp(data.user);
@@ -3578,6 +3595,7 @@
     const vErr=validateUsername(username);
     if(vErr) return authError(vErr);
     if(!email||!pass)return authError('Entrez un email et un mot de passe (min. 6 caractères).');
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return authError('Adresse email invalide.');
     // Vérifie que le username n'est pas déjà pris
     try{
       const {data:taken}=await sb.from('profiles').select('id').ilike('username',username).limit(1);
@@ -3614,12 +3632,20 @@
   async function doForgot(){
     if(!sb)return authError('Configuration Supabase manquante.');
     clearAuthError();
-    const email=$('#authEmail').value.trim();
-    if(!email)return authError('Entrez d’abord votre adresse email ci-dessus, puis cliquez « Mot de passe oublié ».');
+    const identifier=$('#authEmail').value.trim();
+    if(!identifier)return authError('Entrez d’abord votre email (ou nom d’utilisateur) ci-dessus, puis cliquez « Mot de passe oublié ».');
+    let email=identifier;
+    if(!identifier.includes('@')){
+      try{
+        const {data,error}=await sb.rpc('email_for_username',{ uname: identifier });
+        if(error||!data) return authError('Nom d\u2019utilisateur introuvable. Essayez avec votre email.');
+        email=data;
+      }catch(e){ return authError('Utilisez votre adresse email pour réinitialiser.'); }
+    }
     const redirectTo = window.location.origin + window.location.pathname;
     const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo});
     if(error)return authError('Envoi impossible : '+error.message);
-    authOk('Email envoyé à '+email+'. Ouvrez le lien reçu pour choisir un nouveau mot de passe.');
+    authOk('Email envoyé. Ouvrez le lien reçu pour choisir un nouveau mot de passe.');
   }
 
   // L'utilisateur revient via le lien de réinitialisation : bascule en mode "nouveau mot de passe"
@@ -3660,6 +3686,7 @@
     $('#authPass').setAttribute('autocomplete', m==='login'?'current-password':'new-password');
     $('#forgotRow').style.display = m==='login' ? 'block' : 'none';
     $('#usernameField').style.display = m==='login' ? 'none' : 'flex';
+    $('#authEmail').placeholder = m==='login' ? 'Email ou nom d\u2019utilisateur' : 'Adresse email';
     clearAuthError();
   }
   $$('.auth-tab').forEach(t=>t.addEventListener('click',()=>setAuthMode(t.dataset.tab)));
