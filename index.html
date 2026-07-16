@@ -17,7 +17,7 @@
      ║                                                                    ║
      ║  Gardez bien les guillemets "  " autour de chaque valeur.          ║
      ╚══════════════════════════════════════════════════════════════════╝ */
-   window.NADOBET_CONFIG = {
+    window.NADOBET_CONFIG = {
 
     SUPABASE_URL: "https://pemcdjrciskqhqfimrxo.supabase.co",
     SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlbWNkanJjaXNrcWhxZmltcnhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3MTQwODIsImV4cCI6MjA5OTI5MDA4Mn0.sK1kWiq3EJwW0SdPSTyclqOFB1BjueOZ4ead7kWYfCA",
@@ -31,7 +31,6 @@
     TELEGRAM_BOT_TOKEN: "8995154321:AAE9LxkU9T9t0SuVzermRoGyt2bg3eidNtY",   // ex : "123456:ABC-DEF..."
     TELEGRAM_CHAT_ID:   "@nadobet_surebets"    // ex : "@nadobet_surebets" ou "-1001234567890"
   };
-
 </script>
 <style>
   :root{
@@ -2847,9 +2846,25 @@
   async function loadChatMessages(){
     if(!sb)return;
     try{
-      const {data,error}=await sb.from('messages').select('*').order('created_at',{ascending:false}).limit(CHAT_LIMIT);
-      if(error)throw error;
-      chatMsgs=(data||[]).reverse();
+      // On charge les derniers messages de CHAQUE salon séparément :
+      // sinon un salon très actif (Général) peut faire disparaître les surebets.
+      const rooms=['general','surebets','debutants'];
+      const results=await Promise.all(rooms.map(r=>
+        sb.from('messages').select('*').eq('room',r)
+          .order('created_at',{ascending:false}).limit(CHAT_LIMIT)
+      ));
+      let all=[];
+      results.forEach(res=>{ if(res && res.data) all=all.concat(res.data); });
+      // messages sans salon (anciens) → considérés comme "general"
+      try{
+        const {data:legacy}=await sb.from('messages').select('*').is('room',null)
+          .order('created_at',{ascending:false}).limit(50);
+        (legacy||[]).forEach(m=>{ m.room='general'; all.push(m); });
+      }catch(e){}
+      // tri chronologique + dédoublonnage
+      const seen={};
+      chatMsgs=all.filter(m=>{ if(seen[m.id])return false; seen[m.id]=true; return true; })
+        .sort((a,b)=>(a.created_at||'').localeCompare(b.created_at||''));
       renderChat(true);
     }catch(err){ console.error('chat:',err);
       $('#chatMessages').innerHTML='<div class="chat-empty">Chat indisponible.<br>Vérifiez que la table « messages » existe (voir le guide).</div>'; }
@@ -3663,10 +3678,27 @@
     if(note) txt+='📝 '+note+'\n';
     txt+='🕒 '+dateStr;
     try{
-      await sb.from('messages').insert({
-        user_id:currentUser.id, email:currentUser.email, text:txt, room:'surebets', is_surebet:true
+      const {error}=await sb.from('messages').insert({
+        user_id:currentUser.id,
+        email:currentUser.email,
+        username:currentUsername||chatName(currentUser.email),
+        sender_role:currentRole,
+        text:txt,
+        room:'surebets',
+        is_surebet:true
       });
-    }catch(err){ console.error('post surebet chat:',err); }
+      if(error)throw error;
+    }catch(err){
+      console.error('post surebet chat:',err);
+      // On informe l'admin : sinon l'échec passe inaperçu
+      const msg=(err&&err.message)||'';
+      if(/column .*(is_surebet|sb_status|room|username|sender_role)/i.test(msg))
+        showToast('Surebet publié, mais archive chat impossible : colonnes SQL manquantes (voir guide)',true);
+      else if(/row-level security|policy/i.test(msg))
+        showToast('Surebet publié, mais archive chat refusée par les règles RLS (voir guide)',true);
+      else
+        showToast('Surebet publié, mais archive chat échouée',true);
+    }
   }
 
   // Envoie une alerte générique dans le canal Telegram (pas de détails du surebet)
