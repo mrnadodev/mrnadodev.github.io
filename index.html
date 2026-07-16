@@ -17,7 +17,7 @@
      ║                                                                    ║
      ║  Gardez bien les guillemets "  " autour de chaque valeur.          ║
      ╚══════════════════════════════════════════════════════════════════╝ */
-    window.NADOBET_CONFIG = {
+  window.NADOBET_CONFIG = {
 
     SUPABASE_URL: "https://pemcdjrciskqhqfimrxo.supabase.co",
     SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlbWNkanJjaXNrcWhxZmltcnhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3MTQwODIsImV4cCI6MjA5OTI5MDA4Mn0.sK1kWiq3EJwW0SdPSTyclqOFB1BjueOZ4ead7kWYfCA",
@@ -3688,16 +3688,20 @@
         is_surebet:true
       });
       if(error)throw error;
+      // rafraîchit tout de suite : l'archive apparaît sans attendre le temps réel
+      await loadChatMessages();
+      const tab=document.querySelector('.chat-room-tab[data-room="surebets"]');
+      if(tab && currentRoom!=='surebets') tab.classList.add('has-new');
     }catch(err){
       console.error('post surebet chat:',err);
-      // On informe l'admin : sinon l'échec passe inaperçu
-      const msg=(err&&err.message)||'';
-      if(/column .*(is_surebet|sb_status|room|username|sender_role)/i.test(msg))
-        showToast('Surebet publié, mais archive chat impossible : colonnes SQL manquantes (voir guide)',true);
-      else if(/row-level security|policy/i.test(msg))
-        showToast('Surebet publié, mais archive chat refusée par les règles RLS (voir guide)',true);
-      else
-        showToast('Surebet publié, mais archive chat échouée',true);
+      const msg=(err&&err.message)||JSON.stringify(err)||'erreur inconnue';
+      // Message très explicite : l'admin doit savoir exactement quoi corriger
+      alert('⚠️ Le surebet est publié, mais l\u2019archive dans le chat a échoué.\n\n'
+        +'Erreur exacte :\n'+msg+'\n\n'
+        +'Causes probables :\n'
+        +'• Colonnes SQL manquantes (room, is_surebet, username, sender_role, sb_status)\n'
+        +'• Règle RLS qui bloque l\u2019écriture dans le salon « surebets »\n\n'
+        +'Voir la section « Chat » du guide.');
     }
   }
 
