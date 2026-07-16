@@ -29,8 +29,8 @@
        automatiquement dans votre canal Telegram (sans les détails du surebet).
        Laissez vide "" pour désactiver. Voir le guide pour créer le bot. */
     TELEGRAM_BOT_TOKEN: "8995154321:AAE9LxkU9T9t0SuVzermRoGyt2bg3eidNtY",   // ex : "123456:ABC-DEF..."
-    TELEGRAM_CHAT_ID:   "@nadobet_surebets"    // ex : "@nadobet_surebets" ou "-1001234567890"
-  };
+    TE
+
 </script>
 <style>
   :root{
@@ -415,6 +415,11 @@
     box-shadow:0 10px 30px -6px rgba(47,230,168,.5);transition:transform .18s,box-shadow .18s}
   .chat-fab:hover{transform:translateY(-2px) scale(1.04);box-shadow:0 14px 36px -6px rgba(47,230,168,.6)}
   .chat-fab:active{transform:scale(.96)}
+  .chat-fab.has-unread{animation:fabPulse 1.8s ease-in-out infinite}
+  @keyframes fabPulse{
+    0%,100%{box-shadow:0 10px 30px -6px rgba(47,230,168,.5)}
+    50%{box-shadow:0 10px 30px -6px rgba(47,230,168,.5), 0 0 0 10px rgba(47,230,168,.14)}
+  }
   .chat-fab-badge{position:absolute;top:-4px;right:-4px;min-width:22px;height:22px;padding:0 6px;border-radius:11px;
     background:var(--red);color:#fff;font-family:var(--mono);font-size:12px;font-weight:700;
     display:grid;place-items:center;border:2px solid var(--bg);animation:pop .3s ease}
@@ -2716,22 +2721,32 @@
     return [...set];
   }
 
-  // Le chat est-il visible à l'écran en ce moment ?
+  // Le chat est-il réellement visible (zone des messages) ?
   function chatInView(){
     const card=$('#chatCard'); if(!card)return false;
     if(card.classList.contains('hist-collapsed'))return false; // œil fermé
-    const r=card.getBoundingClientRect();
-    // au moins une partie de la zone messages est visible
-    return r.top < window.innerHeight-60 && r.bottom > 80;
+    // On teste la ZONE DES MESSAGES, pas la carte entière :
+    // la carte est très haute, son bord haut peut être à l'écran alors
+    // que les messages sont encore loin plus bas.
+    const box=$('#chatMessages'); if(!box)return false;
+    const r=box.getBoundingClientRect();
+    const vh=window.innerHeight||document.documentElement.clientHeight;
+    // il faut qu'une bonne partie (au moins 120 px) des messages soit visible
+    const visible = Math.min(r.bottom, vh) - Math.max(r.top, 0);
+    return visible > 120;
   }
   function updateChatFab(){
     const fab=$('#chatFab'), badge=$('#chatFabBadge');
     if(!fab)return;
     // la bulle s'affiche seulement si l'utilisateur est connecté et le chat pas visible
-    if(!currentUser || chatInView()){ fab.style.display='none'; return; }
+    if(!currentUser || chatInView()){ fab.style.display='none'; fab.classList.remove('has-unread'); return; }
     fab.style.display='grid';
-    if(chatUnread>0){ badge.style.display='grid'; badge.textContent=chatUnread>99?'99+':chatUnread; }
-    else { badge.style.display='none'; }
+    if(chatUnread>0){
+      badge.style.display='grid';
+      badge.textContent=chatUnread>99?'99+':chatUnread;
+      fab.classList.add('has-unread');   // attire l'œil
+    }
+    else { badge.style.display='none'; fab.classList.remove('has-unread'); }
   }
   function goToChat(){
     const card=$('#chatCard'); if(!card)return;
@@ -3470,6 +3485,9 @@
     if(chatInView() && chatUnread>0){ chatUnread=0; }
     updateChatFab();
   },{passive:true});
+  window.addEventListener('resize',()=>updateChatFab(),{passive:true});
+  // filet : la bulle reste juste même si un défilement est manqué
+  setInterval(()=>{ if(currentUser){ if(chatInView() && chatUnread>0) chatUnread=0; updateChatFab(); } }, 2000);
   $('#chatEye').addEventListener('click',()=>{
     const eye=$('#chatEye'), card=$('#chatCard');
     const on=!eye.classList.contains('on');
