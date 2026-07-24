@@ -23,8 +23,12 @@ python -c "import httpx, websockets, curl_cffi, rapidfuzz, sqlalchemy, fastapi, 
 if errorlevel 1 (
     echo   Premiere utilisation : installation des dependances...
     python -m pip install --quiet -r "surebet\requirements.txt"
-    python -m playwright install chromium
 )
+
+REM Toujours s'assurer que le navigateur Playwright est present (idempotent,
+REM quasi instantane s'il est deja installe). Evite le message
+REM "Please run playwright install" au demarrage.
+python -m playwright install chromium >nul 2>&1
 
 :loop
 echo.

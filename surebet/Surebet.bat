@@ -35,8 +35,10 @@ if errorlevel 1 (
         pause
         exit /b 1
     )
-    python -m playwright install chromium
 )
+
+REM Toujours s'assurer que le navigateur Playwright est present (idempotent).
+python -m playwright install chromium >nul 2>&1
 
 REM --- Lancer le scan + le tableau de bord -------------------------------
 python -m surebet.main --scan --dashboard --sport football
