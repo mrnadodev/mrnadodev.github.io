@@ -185,6 +185,92 @@ async def run_collector_loop(sport: str = "football") -> None:
         await engine.dispose()
 
 
+async def run_scan(sport: str = "football", open_dashboard: bool = False) -> int:
+    """Scan unique : collecte les 4 books, detecte, enregistre, rapporte.
+
+    Mode concu pour un usage quotidien (lanceur bureau) : une passe, un
+    rapport lisible en console, un export Excel, puis sortie. Retourne le
+    nombre d'opportunites detectees (code de sortie du processus).
+    """
+    from .export.excel import export_opportunities
+
+    engine = make_engine(settings.database_url)
+    await init_db(engine)
+    repo = OpportunityRepository(make_session_factory(engine))
+    scout = Scout(min_roi=1.0, bankroll=settings.default_bankroll, llm_client=build_llm_client())
+    notifier = TelegramNotifier(settings.telegram_bot_token, settings.telegram_chat_id)
+
+    print("=" * 66)
+    print(f"  SCAN SUREBET — {datetime.now().strftime('%d/%m/%Y %H:%M')} — {sport}")
+    print("=" * 66)
+
+    try:
+        pool: list[Odd] = []
+        for scraper in build_scrapers():
+            name = scraper.bookmaker_name
+            try:
+                odds = await scraper.scrape(sport)
+                pool.extend(odds)
+                print(f"  [OK]     {name:<14} {len(odds):>6} cotes")
+            except ScraperUnavailableError as exc:
+                print(f"  [ECHEC]  {name:<14} indisponible — {str(exc)[:40]}")
+            except Exception as exc:
+                print(f"  [ERREUR] {name:<14} {type(exc).__name__}: {str(exc)[:40]}")
+
+        print(f"\n  Total collecte : {len(pool)} cotes")
+        opportunities = await process_cycle(pool, scout, notifier, repo)
+
+        print("-" * 66)
+        if not opportunities:
+            print("  Aucune opportunite d'arbitrage pour le moment.")
+            print("  (Normal : les fenetres durent quelques minutes ; relancer plus tard")
+            print("   ou utiliser --collector pour une surveillance continue.)")
+        else:
+            print(f"  {len(opportunities)} OPPORTUNITE(S) DETECTEE(S)\n")
+            for opp in opportunities:
+                print(f"  >> {opp.match_label}  [{opp.market_type}"
+                      + (f" {opp.line}" if opp.line is not None else "") + "]")
+                print(f"     ROI {opp.roi_pct:.2f}%  profit {opp.profit:,.0f} HTG"
+                      f"  score IA {opp.score_ia}")
+                for leg in opp.legs:
+                    print(f"       - {leg.selection:<6} @ {leg.odds:<6} chez {leg.bookmaker:<12}"
+                          f" miser {leg.stake:,.0f} HTG")
+                print()
+            try:
+                path = export_opportunities(opportunities, "surebet_opportunites.xlsx")
+                print(f"  Export Excel : {path}")
+            except Exception as exc:
+                logger.warning("Export Excel impossible : %s", exc)
+        print("=" * 66)
+
+        if open_dashboard:
+            _launch_dashboard()
+        return len(opportunities)
+    finally:
+        await engine.dispose()
+
+
+def _launch_dashboard() -> None:
+    """Ouvre le dashboard dans le navigateur par defaut."""
+    import subprocess
+    import sys
+    import threading
+    import webbrowser
+
+    url = f"http://127.0.0.1:{settings.dashboard_port}"
+    subprocess.Popen(
+        [sys.executable, "-m", "uvicorn", "surebet.dashboard.app:app",
+         "--host", "127.0.0.1", "--port", str(settings.dashboard_port), "--log-level", "warning"],
+        cwd=str(Path(__file__).resolve().parent.parent),
+    )
+    threading.Timer(2.5, lambda: webbrowser.open(url)).start()
+    print(f"  Dashboard : {url}   (Ctrl+C pour quitter)")
+    try:
+        threading.Event().wait()
+    except KeyboardInterrupt:
+        pass
+
+
 async def run_dry_run() -> None:
     """Rejoue les fixtures locales : cycle complet sans reseau (spec plan §Verification)."""
     logger.info("=== DRY RUN (fixtures locales, aucun reseau) ===")
@@ -264,6 +350,10 @@ def _reference_example_odds(now: datetime) -> list[Odd]:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Systeme de detection de surebets - marche haitien")
     parser.add_argument("--dry-run", action="store_true", help="Rejoue les fixtures locales sans reseau")
+    parser.add_argument("--scan", action="store_true",
+                        help="Scan unique des 4 bookmakers + rapport (usage quotidien)")
+    parser.add_argument("--dashboard", action="store_true",
+                        help="Avec --scan : ouvre le dashboard dans le navigateur")
     parser.add_argument("--collector", action="store_true",
                         help="Mode collector : sessions navigateur persistantes, collecte decouplee (recommande en prod)")
     parser.add_argument("--sport", default="football", choices=["football", "basketball"])
@@ -271,6 +361,8 @@ def main() -> None:
 
     if args.dry_run:
         asyncio.run(run_dry_run())
+    elif args.scan:
+        asyncio.run(run_scan(args.sport, open_dashboard=args.dashboard))
     elif args.collector:
         asyncio.run(run_collector_loop(args.sport))
     else:
