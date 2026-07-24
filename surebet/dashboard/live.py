@@ -9,12 +9,26 @@ Separe la logique (testable hors-ligne) du rendu web. Fournit :
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
+from datetime import datetime, timezone
 
 from ..arbitrage.combinatorics import best_three_way, best_two_way, group_by_match_market
 from ..arbitrage.detector import implied_margin, roi_percent
 from ..arbitrage.reconcile import reconcile_pool
 from ..arbitrage.stakes import split_stakes
 from ..normalizer.schema import Odd
+
+
+def prematch_only(pool: list[Odd], grace_minutes: float = 0.0) -> list[Odd]:
+    """Ne garde que les matchs PAS ENCORE commences (arbitrage pre-match).
+
+    Ecarte tout match dont le coup d'envoi est passe : un match en cours cote
+    en "live" chez un book et en "pre-match" chez un autre produirait une
+    comparaison faussee. `grace_minutes` : marge avant le coup d'envoi.
+    """
+    from datetime import timedelta
+
+    cutoff = datetime.now(timezone.utc) + timedelta(minutes=grace_minutes)
+    return [o for o in pool if o.start_time.astimezone(timezone.utc) > cutoff]
 
 # selection -> (libelle FR, symbole)
 OUTCOME_LABELS = {
@@ -101,6 +115,7 @@ def rank_cross_book(
     montre toujours les cotes par issue. Seules les combinaisons reunissant au
     moins deux bookmakers distincts sont retenues.
     """
+    pool = prematch_only(pool)   # arbitrage pre-match : ecarter les matchs commences
     pool = reconcile_pool(pool)  # relier les memes matchs entre books (fuzzy)
     results: list[LiveOpportunity] = []
     for (_, market_type, line, team_scope), group in group_by_match_market(pool).items():

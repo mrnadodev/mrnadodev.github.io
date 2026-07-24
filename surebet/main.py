@@ -80,9 +80,17 @@ def _check_unavailability(scraper) -> None:
         )
 
 
-async def process_cycle(pool: list[Odd], scout: Scout, notifier: TelegramNotifier, repo: OpportunityRepository | None):
-    """normalize (deja fait au scraping) -> detect -> score -> store -> notify."""
+async def process_cycle(pool: list[Odd], scout: Scout, notifier: TelegramNotifier,
+                        repo: OpportunityRepository | None, prematch: bool = True):
+    """normalize (deja fait au scraping) -> detect -> score -> store -> notify.
+
+    `prematch=True` (defaut en temps reel) : n'arbitre que les matchs pas encore
+    commences. Le --dry-run le desactive (fixtures aux dates de reference figees).
+    """
     fresh_pool = [o for o in pool if not o.is_stale]  # filtre > 60s (spec MISSION §9)
+    if prematch:
+        now = datetime.now(timezone.utc)
+        fresh_pool = [o for o in fresh_pool if o.start_time.astimezone(timezone.utc) > now]
     opportunities = scout.evaluate(fresh_pool)
     logger.info("%d opportunite(s) detectee(s)", len(opportunities))
 
@@ -277,7 +285,8 @@ async def run_dry_run() -> None:
     pool = _load_fixture_pool()
     scout = Scout(min_roi=1.0, bankroll=settings.default_bankroll)
     notifier = TelegramNotifier(None, None)
-    opportunities = await process_cycle(pool, scout, notifier, repo=None)
+    # prematch=False : les fixtures ont des dates de reference figees (passees)
+    opportunities = await process_cycle(pool, scout, notifier, repo=None, prematch=False)
 
     for opp in opportunities:
         print(f"\n[{opp.n_outcomes} issues] {opp.match_label} — {opp.market_type}")

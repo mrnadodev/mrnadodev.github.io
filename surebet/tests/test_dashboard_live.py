@@ -1,11 +1,12 @@
 """Tests de la vue live du dashboard (libelles + classement cross-book)."""
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import pytest
 
 from surebet.dashboard.live import (
     market_label,
     outcome_label,
+    prematch_only,
     rank_cross_book,
     scan_stats,
 )
@@ -112,6 +113,47 @@ class TestRankCrossBook:
         outcomes = {l.selection: l.outcome for l in opp.legs}
         assert outcomes["home"] == "Victoire Domicile (1)"
         assert outcomes["away"] == "Victoire Extérieur (2)"
+
+
+class TestPrematchOnly:
+    """Arbitrage PRE-MATCH : on ecarte les matchs deja commences."""
+
+    def _odd(self, start, home="A", away="B"):
+        return Odd(
+            bookmaker="X", sport="football", competition="C",
+            match_id=make_match_id(home, away, start), home_team=home, away_team=away,
+            start_time=start, market_type="1x2", n_outcomes=3, selection="home",
+            line=None, team_scope=None, odds=2.0, url="https://x/e",
+            scraped_at=datetime.now(timezone.utc),
+        )
+
+    def test_keeps_future_matches(self):
+        future = datetime.now(timezone.utc) + timedelta(hours=3)
+        assert len(prematch_only([self._odd(future)])) == 1
+
+    def test_drops_started_matches(self):
+        past = datetime.now(timezone.utc) - timedelta(minutes=5)
+        assert prematch_only([self._odd(past)]) == []
+
+    def test_mixed_pool(self):
+        future = datetime.now(timezone.utc) + timedelta(hours=2)
+        past = datetime.now(timezone.utc) - timedelta(hours=1)
+        pool = [self._odd(future, "A", "B"), self._odd(past, "C", "D")]
+        kept = prematch_only(pool)
+        assert len(kept) == 1 and kept[0].home_team == "A"
+
+    def test_rank_cross_book_excludes_started_match(self):
+        """Un match commence ne doit pas produire d'opportunite dans le scan live."""
+        past = datetime.now(timezone.utc) - timedelta(minutes=10)
+        pool = [
+            self._odd(past, "A", "B"),  # home @2.0
+            Odd(bookmaker="Y", sport="football", competition="C",
+                match_id=make_match_id("A", "B", past), home_team="A", away_team="B",
+                start_time=past, market_type="1x2", n_outcomes=3, selection="draw",
+                line=None, team_scope=None, odds=4.0, url="https://y/e",
+                scraped_at=datetime.now(timezone.utc)),
+        ]
+        assert rank_cross_book(pool) == []
 
 
 class TestScanStats:

@@ -6,6 +6,19 @@ priorise les opportunités. Le cœur de calcul (`M`, ROI, mises) est **purement
 déterministe** ; l'IA n'intervient que pour la normalisation sémantique des
 libellés et l'explication des alertes (jamais dans le calcul d'arbitrage).
 
+## Orientation pré-match
+
+Le système cible **l'arbitrage pré-match** (matchs à venir), pas le jeu en
+direct (in-play) :
+- 1xBet interroge le feed `LineFeed` (pré-match) ; Golcash utilise
+  `game_type=0` ; Paryaj Pam les événements à venir ; Paryaj Lakay la page
+  `/sports`. Vérifié live : les 3 books à API rapide ne renvoient que des coups
+  d'envoi **futurs** (0 match déjà commencé).
+- Filtre de garantie : le scan et l'orchestrateur écartent tout match dont le
+  coup d'envoi est passé (`prematch_only`), pour qu'un match en cours coté en
+  « live » chez un book ne fausse pas la comparaison avec un autre resté en
+  pré-match. Le `--dry-run` désactive ce filtre (fixtures aux dates figées).
+
 ## Bookmakers couverts
 
 | Bookmaker | Méthode de collecte | Statut (test live juillet 2026) |
