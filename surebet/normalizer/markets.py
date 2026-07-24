@@ -32,11 +32,18 @@ RESULT_1X2_RE = re.compile(
     re.I,
 )
 
-# Variantes promotionnelles a NE PAS confondre avec le 1X2 standard.
-# "2UP" (gain paye d'avance si l'equipe mene de 2 buts) porte le titre
-# "Resultat du match 2UP" et les selections "1: 2UP" / "X: 2UP" / "2: 2UP" :
-# sans cette exclusion, il fusionne avec le vrai 1X2 et fabrique de faux
-# arbitrages (releve en test live sur Paryaj Lakay ; meme regle que §6.1).
+# Variantes promotionnelles : EXCLUES de l'arbitrage.
+#
+# Releve en test live sur Paryaj Lakay, un meme match expose simultanement :
+#   "Resultat du match", "Resultat du match 2UP",
+#   "Resultat du match (rembourse si match nul)",
+#   "Resultat du match (rembourse si CSKA Moscou gagne)"
+# Tous ces titres matchent RESULT_1X2_RE et leurs selections matchent 1/X/2.
+#
+# On les rejette au lieu de leur donner un market_type commun : leurs regles de
+# paiement different (remboursement conditionnel, gain anticipe...), donc elles
+# ne sont equivalentes ni au 1X2 standard, ni entre elles — y compris d'un
+# bookmaker a l'autre. Les regrouper reintroduirait le faux appariement.
 PROMO_VARIANT_RE = re.compile(
     r"\b2\s*up\b|bore\s*draw|insurance|assurance|cashback|rembours", re.I
 )
@@ -134,6 +141,10 @@ def normalize_market_label(
     """
     label = f"{market_label} {selection_label}".strip()
 
+    # --- Variantes promotionnelles : exclues de l'arbitrage (voir PROMO_VARIANT_RE) ---
+    if PROMO_VARIANT_RE.search(label):
+        return None
+
     # --- BTTS : verifier avant "goals" (le mot "marquent" ne contient pas "but") ---
     if BTTS_RE.search(market_label):
         selection = _over_under_selection(selection_label) or _over_under_selection(market_label)
@@ -152,10 +163,7 @@ def normalize_market_label(
             selection = "away"
         if selection is None:
             return None
-        # Variante promo (2UP...) : marche distinct, jamais fusionne avec le 1X2
-        promo = PROMO_VARIANT_RE.search(market_label) or PROMO_VARIANT_RE.search(selection_label)
-        base = "1x2_promo" if promo else "1x2"
-        return MarketMatch(base + _period_suffix(market_label), selection, 3, None, None, 0.98)
+        return MarketMatch("1x2" + _period_suffix(market_label), selection, 3, None, None, 0.98)
 
     # --- European/Asian handicap : structure ambigue -> confiance basse, IA tranche ---
     if HANDICAP_RE.search(market_label):

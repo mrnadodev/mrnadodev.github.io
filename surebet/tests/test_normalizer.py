@@ -110,43 +110,43 @@ def test_corners_first_half_vs_full_match_are_distinct_markets():
     assert full_match.market_type != first_half.market_type
 
 
-class TestPromoVariantsNeverMergeWith1x2:
-    """Regression : "Resultat du match 2UP" est une variante promotionnelle.
+class TestPromoVariantsAreExcluded:
+    """Regression : les variantes promotionnelles sont EXCLUES de l'arbitrage.
 
-    Releve en test live sur Paryaj Lakay : son titre matche "Resultat du match"
-    et ses selections "1: 2UP"/"X: 2UP"/"2: 2UP" matchent 1/X/2. Sans separation,
-    il fusionnait avec le vrai 1X2 -> deux jeux de cotes sous le meme
-    market_type, donc de faux arbitrages.
+    Releve en test live sur Paryaj Lakay, un meme match expose simultanement
+    "Resultat du match", "... 2UP", "... (rembourse si match nul)" et
+    "... (rembourse si CSKA Moscou gagne)". Tous ces titres matchent
+    "Resultat du match" et leurs selections matchent 1/X/2.
+
+    Elles sont rejetees plutot que regroupees : leurs regles de paiement
+    different entre elles, donc un market_type commun recreerait le faux
+    appariement qu'on veut eviter.
     """
 
-    def test_2up_is_a_distinct_market_type(self):
-        standard = normalize_market_label("Resultat du match", "1", HOME, AWAY)
-        promo = normalize_market_label("Resultat du match 2UP", "1: 2UP", HOME, AWAY)
-        assert standard.market_type == "1x2"
-        assert promo.market_type == "1x2_promo"
-        assert standard.market_type != promo.market_type
-
     @pytest.mark.parametrize("selection", ["1: 2UP", "X: 2UP", "2: 2UP"])
-    def test_all_2up_selections_are_flagged(self, selection):
-        result = normalize_market_label("Resultat du match 2UP", selection, HOME, AWAY)
-        assert result.market_type == "1x2_promo"
-
-    def test_2up_keeps_correct_selection(self):
-        assert normalize_market_label("Resultat du match 2UP", "1: 2UP", HOME, AWAY).selection == "home"
-        assert normalize_market_label("Resultat du match 2UP", "X: 2UP", HOME, AWAY).selection == "draw"
-        assert normalize_market_label("Resultat du match 2UP", "2: 2UP", HOME, AWAY).selection == "away"
+    def test_2up_is_rejected(self, selection):
+        assert normalize_market_label("Resultat du match 2UP", selection, HOME, AWAY) is None
 
     @pytest.mark.parametrize("label", [
+        "Resultat du match (rembourse si match nul)",
+        "Resultat du match (rembourse si Ghana gagne)",
         "Resultat du match avec assurance",
         "Match result cashback",
-        "Resultat du match rembourse si nul",
+        "Match result insurance",
     ])
-    def test_other_promo_wordings_are_separated(self, label):
-        assert normalize_market_label(label, "1", HOME, AWAY).market_type == "1x2_promo"
+    def test_refund_and_insurance_variants_are_rejected(self, label):
+        assert normalize_market_label(label, "1", HOME, AWAY) is None
 
-    def test_plain_1x2_is_not_flagged_as_promo(self):
+    def test_distinct_promos_cannot_collide(self):
+        """Deux promos differentes ne doivent pas se retrouver sous un meme type."""
+        a = normalize_market_label("Resultat du match (rembourse si match nul)", "1", HOME, AWAY)
+        b = normalize_market_label("Resultat du match 2UP", "1: 2UP", HOME, AWAY)
+        assert a is None and b is None
+
+    def test_plain_1x2_is_still_accepted(self):
         assert normalize_market_label("Resultat du match", "1", HOME, AWAY).market_type == "1x2"
         assert normalize_market_label("Match Result", "Home", HOME, AWAY).market_type == "1x2"
+        assert normalize_market_label("Resultat du match", "X", HOME, AWAY).selection == "draw"
 
 
 def test_1x2_first_half_vs_full_match_are_distinct():
