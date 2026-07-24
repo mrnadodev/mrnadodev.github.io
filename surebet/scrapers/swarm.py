@@ -39,14 +39,40 @@ EVENT_TYPE_TO_SELECTION = {
     "No": "under",
 }
 
-# Types de marches Swarm -> market_type canonique
+# Types de marches Swarm -> market_type canonique.
+# Les marches de NICHE sont prioritaires : mesure live, ils sont nettement
+# moins marges que le 1X2, donc c'est la que l'arbitrage est realiste.
 MARKET_TYPE_MAP = {
+    # --- Marches principaux ---
     "P1XP2": ("1x2", 3),
     "OverUnder": ("goals_total", 2),
     "BothTeamsToScore": ("btts", 2),
-    "HandicapResult": ("handicap", 3),
-    "P1XP2Half1": ("1x2_1h", 3),
-    "OverUnderCorners": ("corners_total", 2),
+    "Team1OverUnder": ("goals_team", 2),
+    "Team2OverUnder": ("goals_team", 2),
+    # --- Mi-temps (jamais fusionner avec le match entier, spec §6.1) ---
+    "HalfTimeResult": ("1x2_1h", 3),
+    "HalfTimeOverUnder": ("goals_total_1h", 2),
+    "2ndHalfTotalOver/Under": ("goals_total_2h", 2),
+    "HalfTimeTeam1OverUnder": ("goals_team_1h", 2),
+    "HalfTimeTeam2OverUnder": ("goals_team_1h", 2),
+    # --- Corners (noms reels releves sur le flux Golcash) ---
+    "CornersOverUnder": ("corners_total", 2),
+    "HomeTeamCornersOverUnder": ("corners_team", 2),
+    "AwayTeamCornersOverUnder": ("corners_team", 2),
+    "TeamWithMostCornersWithDraw": ("corners_1x2", 3),
+    "HalfTimeCornersOverUnder": ("corners_total_1h", 2),
+    "2ndHalfCornersOver/Under": ("corners_total_2h", 2),
+    "HalfTimeTeam1CornersOverUnder": ("corners_team_1h", 2),
+    "HalfTimeTeam2CornersOverUnder": ("corners_team_1h", 2),
+    "HalfTimeCornersResult": ("corners_1x2_1h", 3),
+}
+
+# team_scope par type de marche (evite d'apparier equipe A avec equipe B)
+SWARM_TEAM_SCOPE = {
+    "Team1OverUnder": "home", "Team2OverUnder": "away",
+    "HomeTeamCornersOverUnder": "home", "AwayTeamCornersOverUnder": "away",
+    "HalfTimeTeam1OverUnder": "home", "HalfTimeTeam2OverUnder": "away",
+    "HalfTimeTeam1CornersOverUnder": "home", "HalfTimeTeam2CornersOverUnder": "away",
 }
 
 

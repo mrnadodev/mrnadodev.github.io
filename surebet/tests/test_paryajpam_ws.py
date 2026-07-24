@@ -9,6 +9,7 @@ from surebet.scrapers.pamws import (
     MARKET_TYPE_BY_TP,
     OUTCOME_TO_SELECTION,
     PERIOD_SUFFIX,
+    TEAM_SCOPE_BY_TP,
     parse_outcomes,
     period_suffix,
 )
@@ -76,6 +77,37 @@ class TestProtocolMappings:
     def test_market_types_carry_outcome_count(self):
         assert MARKET_TYPE_BY_TP[2] == ("1x2", 3)
         assert MARKET_TYPE_BY_TP[4] == ("goals_total", 2)
+
+    def test_niche_markets_required_by_mission_are_covered(self):
+        """Marches de niche exiges par la mission §2 (et moins marges)."""
+        assert MARKET_TYPE_BY_TP[67] == ("corners_total", 2)      # CornersTotal
+        assert MARKET_TYPE_BY_TP[97] == ("shots_on_target_total", 2)
+        assert MARKET_TYPE_BY_TP[131] == ("shots_total", 2)       # ShotsAllTotal
+        assert MARKET_TYPE_BY_TP[77] == ("cards_total", 2)        # YellowCardsTotal
+        assert MARKET_TYPE_BY_TP[87] == ("fouls_total", 2)
+        assert MARKET_TYPE_BY_TP[380] == ("saves_total", 2)
+        assert MARKET_TYPE_BY_TP[419] == ("tackles_total", 2)
+        assert MARKET_TYPE_BY_TP[124] == ("offside_total", 2)
+
+    def test_mission_example_shots_by_team_is_mapped(self):
+        """L'exemple §5.4 ("Tirs total Ghana 7.5") = ShotsAllTeam1/2Total."""
+        assert MARKET_TYPE_BY_TP[132] == ("shots_team", 2)
+        assert MARKET_TYPE_BY_TP[133] == ("shots_team", 2)
+        assert TEAM_SCOPE_BY_TP[132] == "home"
+        assert TEAM_SCOPE_BY_TP[133] == "away"
+
+    def test_team1_and_team2_variants_never_share_a_scope(self):
+        """Sans scope distinct, "tirs equipe A" serait apparie a "tirs equipe B"."""
+        pairs = [(5, 6), (68, 69), (78, 79), (88, 89), (98, 99),
+                 (125, 126), (132, 133), (381, 382), (420, 421)]
+        for team1, team2 in pairs:
+            assert MARKET_TYPE_BY_TP[team1] == MARKET_TYPE_BY_TP[team2]
+            assert TEAM_SCOPE_BY_TP[team1] == "home"
+            assert TEAM_SCOPE_BY_TP[team2] == "away"
+
+    def test_every_scoped_type_is_mapped(self):
+        for tp in TEAM_SCOPE_BY_TP:
+            assert tp in MARKET_TYPE_BY_TP, f"tp={tp} a un scope mais aucun mapping"
 
     def test_period_suffixes(self):
         assert PERIOD_SUFFIX["MainTime"] == ""

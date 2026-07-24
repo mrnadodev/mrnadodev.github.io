@@ -34,10 +34,15 @@ class ParyajPamScraper(BookmakerScraper):
     bookmaker_name = "Paryaj Pam"
 
     # count=500 : l'arbitrage exige le catalogue LARGE, pas la selection "hot".
-    # Test live : count=50 -> 50 matchs et AUCUN recouvrement avec Golcash ;
-    # count=500 -> 494 matchs et 5 matchs communs exploitables.
+    #   Test live : count=50 -> 50 matchs, AUCUN recouvrement avec Golcash ;
+    #   count=500 -> 494 matchs et 5 matchs communs exploitables.
+    # mcount=200 : les marches de NICHE (corners, tirs, cartons...) sont classes
+    #   apres les marches principaux. Test live : mcount=60 -> 10 types, aucun
+    #   marche de niche ; mcount=200 -> 43 types dont les corners (64-70) sur
+    #   les matchs majeurs (MLS, Liga Profesional...). C'est la que se trouve
+    #   l'arbitrage, ces marches etant nettement moins marges que le 1X2.
     def __init__(self, base_url: str = "https://www.paryajpam.com",
-                 count: int = 500, mcount: int = 10, **kwargs) -> None:
+                 count: int = 500, mcount: int = 200, **kwargs) -> None:
         super().__init__(**kwargs)
         self.base_url = base_url.rstrip("/")
         self.count = count

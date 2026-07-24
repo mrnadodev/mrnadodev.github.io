@@ -95,6 +95,42 @@ structurellement attendu entre ces deux books seuls.**
 > stratégiquement important, et pourquoi les exemples de la mission combinent
 > justement 1xBet et Paryaj Lakay avec ces deux books.
 
+### Couverture des marchés de niche
+
+Les marchés de niche sont **systématiquement moins margés** que le 1X2, donc
+c'est là que l'arbitrage est réaliste :
+
+| Marché | Golcash | Paryaj Pam |
+|---|---|---|
+| `1x2` | 12,60 % | 9,98 % |
+| `goals_total` | 10,26 % | **7,73 %** (min **3,41 %**) |
+| `btts` | 10,27 % | 8,79 % |
+
+Le mapping couvre donc les deux familles exigées par la mission (§2) :
+
+- **Paryaj Pam** — 40+ types mappés : corners, cartons, fautes, tirs, tirs
+  cadrés, hors-jeu, tacles, arrêts, touches, dégagements (totaux, par équipe et
+  1X2). L'exemple §5.4 (« Tirs total Ghana 7.5 ») correspond aux types 132/133
+  (`ShotsAllTeam1Total` / `ShotsAllTeam2Total`).
+- **Golcash** — types réels relevés sur le flux : `CornersOverUnder`,
+  `HomeTeamCornersOverUnder`, `TeamWithMostCornersWithDraw`, variantes mi-temps…
+
+**Deux paramètres décisifs, calibrés en live :**
+
+- `mcount=200` — les marchés de niche sont classés *après* les marchés
+  principaux. Avec `mcount=60` : 10 types, aucun marché de niche. Avec
+  `mcount=200` : 43 types, corners inclus, sur les matchs majeurs (MLS,
+  Liga Profesional…). Les petites ligues n'offrent pas ces marchés.
+- `count=500` — voir plus haut (couverture du catalogue).
+
+Résultat de l'extension : Golcash passe de 986 à **2816 cotes** (3 → 15 types),
+Paryaj Pam à **11 097 cotes** (16 types), et le nombre de marchés partagés entre
+les deux books sur les matchs communs passe de 3 à **13**.
+
+> Malgré cette couverture, aucun surebet n'apparaît entre ces deux books : la
+> meilleure combinaison cross-book atteint `M = 1,0832` (−7,68 %). La corrélation
+> des cotes, et non la couverture des marchés, est le facteur limitant.
+
 ### Findings du test live 1xBet (juillet 2026)
 
 Un test live réel a révélé que **1xBet Haïti n'est plus une API JSON simple**

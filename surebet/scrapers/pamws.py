@@ -33,12 +33,70 @@ ORIGIN = "https://paryajpam.com"
 MAX_MESSAGE_BYTES = 64 * 1024 * 1024
 
 # `tp` du marche -> (market_type canonique, n_outcomes)
+#
+# Couverture des deux familles exigees par la mission (§2). Les marches de
+# NICHE (corners, tirs, cartons, fautes, tacles, arrets, hors-jeu...) sont
+# prioritaires : la mesure live a montre qu'ils sont nettement moins marges
+# que le 1X2 (7,7 % contre 10,0 % en moyenne, jusqu'a 3,4 %), donc c'est la
+# que l'arbitrage est realiste. L'exemple §5.4 de la mission ("Tirs total
+# Ghana 7.5") correspond a ShotsAllTeam1Total / ShotsAllTeam2Total.
 MARKET_TYPE_BY_TP = {
+    # --- Marches principaux ---
     1: ("winner_2way", 2),
     2: ("1x2", 3),
     4: ("goals_total", 2),
     5: ("goals_team", 2),
     6: ("goals_team", 2),
+    15: ("btts", 2),
+    # --- Corners ---
+    64: ("corners_1x2", 3),
+    67: ("corners_total", 2),
+    68: ("corners_team", 2),
+    69: ("corners_team", 2),
+    # --- Cartons jaunes ---
+    74: ("cards_1x2", 3),
+    77: ("cards_total", 2),
+    78: ("cards_team", 2),
+    79: ("cards_team", 2),
+    # --- Fautes ---
+    84: ("fouls_1x2", 3),
+    87: ("fouls_total", 2),
+    88: ("fouls_team", 2),
+    89: ("fouls_team", 2),
+    # --- Tirs cadres ---
+    94: ("shots_on_target_1x2", 3),
+    97: ("shots_on_target_total", 2),
+    98: ("shots_on_target_team", 2),
+    99: ("shots_on_target_team", 2),
+    # --- Hors-jeu ---
+    120: ("offside_1x2", 3),
+    124: ("offside_total", 2),
+    125: ("offside_team", 2),
+    126: ("offside_team", 2),
+    # --- Tirs (tous) ---
+    127: ("shots_1x2", 3),
+    131: ("shots_total", 2),
+    132: ("shots_team", 2),
+    133: ("shots_team", 2),
+    # --- Touches ---
+    357: ("throwins_1x2", 3),
+    360: ("throwins_total", 2),
+    361: ("throwins_team", 2),
+    362: ("throwins_team", 2),
+    # --- Degagements ---
+    367: ("goalkicks_1x2", 3),
+    370: ("goalkicks_total", 2),
+    371: ("goalkicks_team", 2),
+    372: ("goalkicks_team", 2),
+    # --- Arrets du gardien ---
+    377: ("saves_1x2", 3),
+    380: ("saves_total", 2),
+    381: ("saves_team", 2),
+    382: ("saves_team", 2),
+    # --- Tacles ---
+    419: ("tackles_total", 2),
+    420: ("tackles_team", 2),
+    421: ("tackles_team", 2),
 }
 
 # Nom d'issue -> selection canonique (spec MISSION §4)
@@ -52,8 +110,22 @@ OUTCOME_TO_SELECTION = {
     "No": "under",
 }
 
-# `tp` du marche -> team_scope (marches par equipe)
-TEAM_SCOPE_BY_TP = {5: "home", 6: "away"}
+# `tp` du marche -> team_scope. CRITIQUE : les variantes Team1/Team2 partagent
+# le meme market_type canonique ; sans ce scope, "tirs de l'equipe A" serait
+# apparie avec "tirs de l'equipe B" -> faux arbitrage (spec MISSION §4).
+TEAM_SCOPE_BY_TP = {
+    5: "home", 6: "away",           # buts par equipe
+    68: "home", 69: "away",         # corners
+    78: "home", 79: "away",         # cartons
+    88: "home", 89: "away",         # fautes
+    98: "home", 99: "away",         # tirs cadres
+    125: "home", 126: "away",       # hors-jeu
+    132: "home", 133: "away",       # tirs
+    361: "home", 362: "away",       # touches
+    371: "home", 372: "away",       # degagements
+    381: "home", 382: "away",       # arrets
+    420: "home", 421: "away",       # tacles
+}
 
 # `pn` (nom de periode) -> suffixe de market_type.
 # CRITIQUE : le flux renvoie le meme `tp` pour le temps reglementaire et pour

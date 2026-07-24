@@ -74,6 +74,35 @@ class TestSwarmMappings:
         assert MARKET_TYPE_MAP["OverUnder"] == ("goals_total", 2)
         assert MARKET_TYPE_MAP["BothTeamsToScore"] == ("btts", 2)
 
+    def test_niche_markets_are_mapped(self):
+        """Les marches de niche portent l'arbitrage : ils doivent etre couverts."""
+        assert MARKET_TYPE_MAP["CornersOverUnder"] == ("corners_total", 2)
+        assert MARKET_TYPE_MAP["HomeTeamCornersOverUnder"] == ("corners_team", 2)
+        assert MARKET_TYPE_MAP["TeamWithMostCornersWithDraw"] == ("corners_1x2", 3)
+
+    def test_half_time_markets_never_collide_with_full_match(self):
+        """Un marche de mi-temps ne doit jamais partager le market_type du match."""
+        from surebet.scrapers.swarm import MARKET_TYPE_MAP as M
+
+        assert M["HalfTimeOverUnder"][0] != M["OverUnder"][0]
+        assert M["HalfTimeCornersOverUnder"][0] != M["CornersOverUnder"][0]
+        assert M["HalfTimeResult"][0] != M["P1XP2"][0]
+
+    def test_team_scoped_markets_declare_their_side(self):
+        from surebet.scrapers.swarm import SWARM_TEAM_SCOPE
+
+        assert SWARM_TEAM_SCOPE["HomeTeamCornersOverUnder"] == "home"
+        assert SWARM_TEAM_SCOPE["AwayTeamCornersOverUnder"] == "away"
+        assert SWARM_TEAM_SCOPE["Team1OverUnder"] == "home"
+        assert SWARM_TEAM_SCOPE["Team2OverUnder"] == "away"
+
+    def test_every_team_scoped_type_is_also_mapped(self):
+        """Coherence : tout marche portant un scope doit avoir un market_type."""
+        from surebet.scrapers.swarm import SWARM_TEAM_SCOPE
+
+        for swarm_type in SWARM_TEAM_SCOPE:
+            assert swarm_type in MARKET_TYPE_MAP, f"{swarm_type} a un scope mais aucun mapping"
+
 
 class TestExtractLine:
     @pytest.mark.parametrize("name,expected", [

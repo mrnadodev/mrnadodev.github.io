@@ -17,7 +17,7 @@ from datetime import datetime, timezone
 
 from ..normalizer.schema import Odd, make_match_id
 from .base import BookmakerScraper, ScraperUnavailableError
-from .swarm import EVENT_TYPE_TO_SELECTION, MARKET_TYPE_MAP, SwarmClient
+from .swarm import EVENT_TYPE_TO_SELECTION, MARKET_TYPE_MAP, SWARM_TEAM_SCOPE, SwarmClient
 
 logger = logging.getLogger("surebet.scrapers.golcash")
 
@@ -78,10 +78,12 @@ class GolcashScraper(BookmakerScraper):
 
         out: list[Odd] = []
         for market in (game.get("market") or {}).values():
-            mapped = MARKET_TYPE_MAP.get(market.get("type"))
+            swarm_type = market.get("type")
+            mapped = MARKET_TYPE_MAP.get(swarm_type)
             if mapped is None:
                 continue
             market_type, n_outcomes = mapped
+            team_scope = SWARM_TEAM_SCOPE.get(swarm_type)
 
             for event in (market.get("event") or {}).values():
                 selection = EVENT_TYPE_TO_SELECTION.get(event.get("type"))
@@ -95,7 +97,7 @@ class GolcashScraper(BookmakerScraper):
                             match_id=match_id, home_team=home, away_team=away,
                             start_time=start_time, market_type=market_type, n_outcomes=n_outcomes,
                             selection=selection, line=_extract_line(event.get("name")),
-                            team_scope=None, odds=float(price), url=url, scraped_at=scraped_at,
+                            team_scope=team_scope, odds=float(price), url=url, scraped_at=scraped_at,
                         )
                     )
                 except ValueError:  # cote/selection invalide : ligne ignoree
