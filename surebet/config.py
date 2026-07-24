@@ -1,11 +1,23 @@
 """Configuration provider-agnostique via .env (spec MISSION §6.4)."""
 from __future__ import annotations
 
+from pathlib import Path
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Chemin ABSOLU du .env, dans le paquet surebet/ (git-ignore), pour qu'il soit
+# lu quel que soit le dossier de lancement (le lanceur demarre depuis la racine
+# du depot). On accepte aussi un .env a la racine du projet en second recours.
+_PACKAGE_ENV = Path(__file__).resolve().parent / ".env"
+_ROOT_ENV = Path(__file__).resolve().parent.parent / ".env"
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=(_ROOT_ENV, _PACKAGE_ENV),  # le dernier a la priorite
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
 
     # Storage
     database_url: str = "sqlite+aiosqlite:///./surebet.db"

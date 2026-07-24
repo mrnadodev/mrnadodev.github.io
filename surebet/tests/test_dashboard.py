@@ -172,8 +172,11 @@ def test_bankroll_svg_helper():
     assert "<svg" in svg and "polyline" in svg
 
 
-def test_ai_success_rate_helper():
+def test_ai_success_rate_helper(monkeypatch):
     import surebet.dashboard.app as app_mod
+
+    # Seuil explicite : le test ne doit pas dependre du .env ambiant.
+    monkeypatch.setattr(app_mod.settings, "min_score_alert", 70)
 
     class Row:
         def __init__(self, score):
