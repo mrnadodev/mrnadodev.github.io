@@ -13,7 +13,7 @@ libellés et l'explication des alertes (jamais dans le calcul d'arbitrage).
 | **Golcash Haïti** | **API BetConstruct « Swarm » (WebSocket)** | ✅ **Opérationnel — 986 cotes / 44 matchs, sans Cloudflare ni compte** |
 | **Paryaj Pam** | **WebSocket de cotes, token public `demo`** | ✅ **Opérationnel — 919 cotes / 49 matchs, sans compte ni navigateur** |
 | **Paryaj Lakay** | SPA Angular → Playwright (DOM `hg-event-bet-type-item`) | ✅ **Validé live bout-en-bout** (6 marchés → 23 cotes canoniques) |
-| 1xBet Haïti | API `service-api/LineFeed` | ❌ **Bloqué** — Cloudflare *managed challenge* sur `/service-api/` en headless |
+| **1xBet Haïti** | **API `service-api/LineFeed` via empreinte TLS Chrome** | ✅ **Opérationnel — 518 cotes / 50 matchs, sans navigateur ni frais** |
 
 > Les scrapers Playwright reposent sur la structure DOM observée en
 > reconnaissance (juillet 2026). Les sites réels évoluent et sont protégés par
@@ -97,13 +97,14 @@ structurellement attendu entre ces deux books seuls.**
 
 ### Pièges d'appariement relevés en live
 
-Trois faux appariements détectés sur des données réelles, chacun capable de
+Cinq faux appariements détectés sur des données réelles, chacun capable de
 fabriquer un surebet fantôme. Tous sont désormais bloqués et couverts par des
 tests de non-régression :
 
 | Piège | Symptôme | Traitement |
 |---|---|---|
-| **Variante promo « 2UP »** (Paryaj Lakay) | « Résultat du match **2UP** » a un titre qui matche `Résultat du match` et des sélections `1: 2UP`/`X: 2UP`/`2: 2UP` qui matchent `1`/`X`/`2` → deux jeux de cotes sous le même `1x2` | `market_type` distinct `1x2_promo` |
+| **Variantes promo** (Paryaj Lakay) | Un même match expose « Résultat du match », « … **2UP** », « … (remboursé si nul) », « … (remboursé si X gagne) » — tous matchent `Résultat du match` et `1`/`X`/`2` | **exclues** : leurs règles de paiement diffèrent entre elles, donc elles ne sont équivalentes à rien |
+| **Double Chance** (1xBet `G=8`) | Marge mesurée à **119 %** : les issues 1X / 12 / X2 se recouvrent | groupe exclu du mapping |
 | **Périodes** (Paryaj Pam, Golcash) | Le même type de marché sert le temps réglementaire et les mi-temps | suffixes `_1h` / `_2h` ; période inconnue = marché écarté |
 | **Variantes Team1/Team2** | « tirs équipe A » et « tirs équipe B » partagent le `market_type` | `team_scope` obligatoire (`home`/`away`) |
 | **Équipes U-23 / réserve / féminine** | « Eltham Redbacks U-23 » et « Eltham Redbacks » matchent à **88** (> seuil 85) — deux matchs différents | niveau d'équipe vérifié **avant** la similarité |
@@ -173,46 +174,42 @@ les deux books sur les matchs communs passe de 3 à **13**.
 > meilleure combinaison cross-book atteint `M = 1,0832` (−7,68 %). La corrélation
 > des cotes, et non la couverture des marchés, est le facteur limitant.
 
-### Findings du test live 1xBet (juillet 2026)
+### 1xBet débloqué — l'empreinte TLS, pas le navigateur
 
-Un test live réel a révélé que **1xBet Haïti n'est plus une API JSON simple**
-comme le supposait la mission :
+Cloudflare protège `/service-api/` et renvoyait un `403 "Just a moment..."` à
+`httpx` — **et aussi à un Chromium headless piloté par Playwright**, dont même
+les requêtes natives du site échouaient (9 requêtes `/service-api/*` sur 9).
 
-1. **Route corrigée** : la bonne URL est `/service-api/LineFeed/Get1x2_VZip`
-   avec le paramètre `sports=` (et non `/LineFeed/...?sportId=`, qui renvoie
-   `404 Fail route`). Corrigé dans `scrapers/xbet.py`.
-2. **Cloudflare** fronte désormais l'API : un GET httpx direct reçoit un
-   `403 "Just a moment..."`. Le scraper retombe sur un **fallback navigateur**
-   (Playwright) qui charge l'origine, attend la résolution du challenge JS, puis
-   fait un `fetch()` XHR in-page — ce mécanisme **franchit Cloudflare avec succès**.
-3. **En-tête réel identifié** : les requêtes du site vers `/service-api/*`
-   portent un en-tête custom `x-svc-source: __V3_HOST_APP__` (absent → `406
-   feed/NotAcceptableException`). Ajouté au scraper.
-4. **Profil persistant : la page passe, l'API non.** Avec une session à profil
-   persistant (`collector/session.py`), la **page HTML franchit Cloudflare dès la
-   2ᵉ visite** (profil réchauffé : titre réel, plus de challenge). Mais **toutes
-   les requêtes `/service-api/*` restent en 403** (9/9 mesurées : `Get1x2_VZip`,
-   `GetSportsShortZip`, `WebGetTopChampsZip`, `getbanner`…). Cloudflare applique
-   donc une règle **distincte et plus stricte sur la route API**, que la clearance
-   de page ne satisfait pas.
-5. **Conclusion définitive (test live poussé)** : en mode **headless**,
-   Cloudflare bloque la route `/service-api/LineFeed/` par un *managed challenge*
-   — **même les propres requêtes du site échouent en 403**, et le cookie
-   `cf_clearance` de la page HTML ne débloque pas l'API. Le seul levier restant
-   non testé est le mode **headful** (Cloudflare empreinte le Chromium headless) ;
-   il n'a pas pu être lancé dans l'environnement sandboxé (« spawn UNKNOWN »).
-   Le scraper intercepte donc la réponse native du site (`Get1x2_VZip`) plutôt
-   que de refaire un `fetch()`, et expose `headless=False` : **un navigateur
-   non-headless (avec affichage, ou `xvfb` sous Linux) est requis en production**
-   pour franchir le challenge. Le lancement headful n'a pas pu être testé dans
-   l'environnement sandboxé (pas de display). Pour un déploiement serveur fiable,
-   prévoir soit un navigateur furtif (playwright-stealth / undetected-chromedriver)
-   soit un accès data partenaire.
+Le facteur discriminant n'était pas le navigateur mais l'**empreinte TLS** :
+Cloudflare identifie le client par son handshake (JA3), et la pile TLS de Python
+est immédiatement reconnaissable comme non-navigateur.
 
-Le moteur d'arbitrage, la normalisation, le scoring et le reste du pipeline sont
-entièrement fonctionnels et testés hors-ligne sur données réelles ; seul l'accès
-réseau live à 1xBet bute sur ce mur anti-bot Cloudflare (contrainte externe, pas
-un défaut du système).
+`curl_cffi` avec `impersonate="chrome"` reproduit le handshake exact de Chrome.
+Cloudflare laisse alors passer — **sans navigateur, sans proxy, sans service
+payant**. Restaient trois paramètres à caler sur le flux réel :
+
+| Élément | Valeur correcte | Symptôme si faux |
+|---|---|---|
+| Route | `/service-api/LineFeed/Get1x2_VZip` | `404 Fail route` |
+| Paramètre sport | `sports=` | `406 NotAcceptable` |
+| **Partenaire** | **`partner=151`** | `406 NotAcceptable` |
+| En-tête | `x-svc-source: __V3_HOST_APP__` | `406 NotAcceptable` |
+
+Les couples `(G, T)` du flux ont été validés par **cohérence de marge** sur
+50 matchs réels : `G=1` 1X2 (9,4 %), `G=17` totaux (8,1 %), `G=15`/`G=62` totaux
+par équipe (8,3 % / 8,5 %), `G=19` BTTS (8,8 %).
+
+> **`G=8` est volontairement exclu.** Sa « marge » mesurée atteint **119 %** —
+> c'est la Double Chance, dont les trois issues (1X / 12 / X2) se recouvrent. La
+> traiter comme un marché à 3 issues fabriquerait des arbitrages fantômes.
+
+L'orientation des totaux par équipe a été fixée par un cas extrême
+(Timor oriental–Viêt-Nam, 1X2 à 40.00/1.02) : l'équipe domicile faible cote 3.90
+sur « plus de 0.5 but », la dominante 1.60 sur « plus de 3.5 » — ce qui identifie
+`G=15` comme domicile et `G=62` comme extérieur sans ambiguïté.
+
+**1xBet est le book à cotation la plus serrée** : marge 1X2 minimale mesurée à
+**5,25 %**, contre 12,6 % chez Golcash. C'est le partenaire d'arbitrage décisif.
 
 ## Architecture
 

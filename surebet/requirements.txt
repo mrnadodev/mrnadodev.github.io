@@ -4,6 +4,8 @@ playwright>=1.44
 beautifulsoup4>=4.12
 # API BetConstruct "Swarm" (Golcash) : WebSocket
 websockets>=12.0
+# 1xBet : empreinte TLS Chrome pour franchir Cloudflare sans navigateur
+curl_cffi>=0.7
 
 # Normalisation
 rapidfuzz>=3.9

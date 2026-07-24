@@ -87,15 +87,19 @@ class TestParyajLakayFixture:
 
 
 @pytest.mark.asyncio
-@respx.mock
-async def test_xbet_scraper_parses_line_feed():
+async def test_xbet_scraper_parses_line_feed(monkeypatch):
+    """1xBet passe par curl_cffi (empreinte TLS Chrome), pas par httpx :
+    le fetch est donc monkeypatche plutot que mocke via respx.
+    Voir tests/test_xbet_tls.py pour la couverture detaillee du flux.
+    """
     payload = json.loads((FIXTURES / "xbet_get1x2.json").read_text(encoding="utf-8"))
-    respx.get(url__regex=r".*LineFeed/Get1x2_VZip.*").mock(
-        return_value=httpx.Response(200, json=payload)
-    )
+    scraper = XBetScraper(base_url="https://ht.1xbet.com")
 
-    async with XBetScraper(base_url="https://ht.1xbet.com") as scraper:
-        odds = await scraper.scrape("football")
+    async def fake_fetch(url):
+        return payload
+
+    monkeypatch.setattr(scraper, "_fetch", fake_fetch)
+    odds = await scraper.scrape("football")
 
     x2 = [o for o in odds if o.market_type == "1x2"]
     assert len(x2) == 6  # 2 matchs x 3 issues
@@ -111,13 +115,14 @@ async def test_xbet_scraper_parses_line_feed():
 
 
 @pytest.mark.asyncio
-@respx.mock
-async def test_xbet_scraper_retries_then_raises_on_persistent_failure():
+async def test_xbet_scraper_raises_on_http_error(monkeypatch):
     from surebet.scrapers.base import ScraperUnavailableError
 
-    respx.get(url__regex=r".*LineFeed.*").mock(return_value=httpx.Response(503))
-    async with XBetScraper(
-        base_url="https://ht.1xbet.com", max_retries=2, base_delay=0.01, use_browser_fallback=False
-    ) as scraper:
-        with pytest.raises(ScraperUnavailableError):
-            await scraper.scrape("football")
+    scraper = XBetScraper(base_url="https://ht.1xbet.com")
+
+    async def failing_fetch(url):
+        raise ScraperUnavailableError("1xBet: HTTP 403 — Just a moment...")
+
+    monkeypatch.setattr(scraper, "_fetch", failing_fetch)
+    with pytest.raises(ScraperUnavailableError):
+        await scraper.scrape("football")
