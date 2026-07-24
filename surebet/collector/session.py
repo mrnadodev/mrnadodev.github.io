@@ -63,6 +63,11 @@ class BrowserSession:
     def is_started(self) -> bool:
         return self._context is not None
 
+    @property
+    def page(self):
+        """Page Playwright courante (pour les scrapers qui doivent interagir)."""
+        return self._page
+
     async def start(self) -> None:
         if self.is_started:
             return

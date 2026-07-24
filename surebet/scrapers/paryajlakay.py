@@ -30,13 +30,86 @@ class ParyajLakayScraper(PlaywrightScraper):
         super().__init__(**kwargs)
         self.base_url = base_url.rstrip("/")
 
-    async def _list_event_urls(self, sport: str, limit: int = 20) -> list[str]:
-        """Collecte les URLs d'evenements depuis la page listing du sport."""
+    # Libelle du sport dans le menu lateral : le deployer double le nombre
+    # d'evenements listes (10 -> 20 en test live).
+    SPORT_MENU_LABEL = {"football": "Football", "basketball": "Basketball"}
+
+    async def _list_event_urls(self, sport: str, limit: int = 60) -> list[str]:
+        """Collecte les URLs d'evenements depuis la page listing du sport.
+
+        La page n'affiche qu'une poignee de matchs vedettes ; les competitions
+        du menu lateral ne sont pas des liens <a> mais des elements cliquables.
+        On deploie donc le sport puis on parcourt les competitions en cliquant,
+        en accumulant les URLs a chaque etape (voir _harvest_via_clicks).
+        """
         listing = f"{self.base_url}{self.SPORT_PATHS.get(sport, '/sports')}"
         html = await self._render_html(listing, wait_selector="a[href*='/sports/event/']")
-        hrefs = set(EVENT_LINK_RE.findall(html))
-        urls = [self.base_url + h if h.startswith("/") else h for h in hrefs]
-        return urls[:limit]
+        urls = self._urls_from_html(html)
+
+        if self.session is not None and self.session.page is not None:
+            urls |= await self._harvest_via_clicks(sport)
+
+        return sorted(urls)[:limit]
+
+    def _urls_from_html(self, html: str) -> set[str]:
+        return {
+            self.base_url + h if h.startswith("/") else h
+            for h in EVENT_LINK_RE.findall(html)
+        }
+
+    async def _harvest_via_clicks(self, sport: str) -> set[str]:
+        """Deploie le sport puis chaque competition, en recoltant les evenements.
+
+        Sans navigateur pilotable (pas de session injectee), cette etape est
+        simplement sautee et on se contente des matchs vedettes.
+        """
+        page = self.session.page
+        collected: set[str] = set()
+        label = self.SPORT_MENU_LABEL.get(sport, "Football")
+
+        async def harvest() -> None:
+            collected.update(self._urls_from_html(await page.content()))
+
+        try:
+            await page.evaluate(
+                """(label) => {
+                    const el = [...document.querySelectorAll('*')].find(
+                        e => e.children.length === 0 &&
+                             new RegExp('^' + label + '$', 'i').test((e.textContent||'').trim()));
+                    if (el) el.click();
+                }""",
+                label,
+            )
+            await page.wait_for_timeout(2500)
+            await harvest()
+
+            competitions = await page.evaluate(
+                """() => [...document.querySelectorAll('*')]
+                    .filter(e => e.children.length === 0 &&
+                                 /^(D\\d|Ligue|Liga|Serie|Premier|Copa|Coupe|Championship|MLS|Eliteserien|Allsvenskan)/i
+                                   .test((e.textContent||'').trim()))
+                    .map(e => (e.textContent||'').trim())
+                    .filter((v, i, a) => a.indexOf(v) === i)
+                    .slice(0, 12)"""
+            )
+            for name in competitions:
+                try:
+                    await page.evaluate(
+                        """(name) => {
+                            const el = [...document.querySelectorAll('*')].find(
+                                e => e.children.length === 0 && (e.textContent||'').trim() === name);
+                            if (el) el.click();
+                        }""",
+                        name,
+                    )
+                    await page.wait_for_timeout(1800)
+                    await harvest()
+                except Exception:
+                    logger.debug("Paryaj Lakay: competition %r non deployable", name)
+        except Exception:
+            logger.warning("Paryaj Lakay: recolte par clics interrompue", exc_info=True)
+
+        return collected
 
     async def _scrape_event(self, url: str, sport: str) -> list[Odd]:
         html = await self._render_html(url, wait_selector=self.ITEM_SELECTOR)
