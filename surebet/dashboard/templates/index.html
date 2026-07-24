@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Surebet Haïti — Dashboard</title>
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+  <style>
+    :root { color-scheme: light dark; --accent:#1F4E78; --good:#137333; }
+    body { font-family: system-ui, sans-serif; margin:0; background:#0f1720; color:#e8edf2; }
+    header { background:var(--accent); padding:1rem 1.5rem; }
+    header h1 { margin:0; font-size:1.25rem; }
+    .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:1rem; padding:1.5rem; }
+    .card { background:#1a2531; border-radius:10px; padding:1rem 1.25rem; }
+    .card .value { font-size:1.6rem; font-weight:700; }
+    .card .label { opacity:.7; font-size:.85rem; text-transform:uppercase; letter-spacing:.03em; }
+    main { padding:0 1.5rem 2rem; }
+    table { width:100%; border-collapse:collapse; font-size:.9rem; }
+    th, td { text-align:left; padding:.55rem .6rem; border-bottom:1px solid #24303d; }
+    th { position:sticky; top:0; background:#16202b; }
+    .roi { color:var(--good); font-weight:700; }
+    .badge { padding:.1rem .5rem; border-radius:6px; background:#24303d; font-size:.8rem; }
+    .curve { padding:1.5rem; }
+    svg { width:100%; height:160px; background:#16202b; border-radius:10px; }
+    a { color:#6db3f2; }
+  </style>
+</head>
+<body>
+  <header><h1>⚽ Surebet Haïti — Dashboard</h1></header>
+
+  <section class="cards">
+    <div class="card"><div class="value">{{ total }}</div><div class="label">Opportunités détectées</div></div>
+    <div class="card"><div class="value">{{ "%.0f"|format(total_profit) }} HTG</div><div class="label">Profit cumulé théorique</div></div>
+    <div class="card"><div class="value">{{ ai_success_rate }} %</div><div class="label">Taux d'appariement IA ≥ seuil</div></div>
+  </section>
+
+  <section class="curve">
+    <h2 style="font-size:1rem;">Courbe de bankroll (profit cumulé)</h2>
+    {{ bankroll_svg|safe }}
+  </section>
+
+  <main>
+    <h2 style="font-size:1rem;">Opportunités récentes
+      <button hx-get="/fragments/opportunities" hx-target="#opps" hx-swap="innerHTML"
+              style="margin-left:1rem;">↻ Rafraîchir</button>
+    </h2>
+    <div id="opps" hx-get="/fragments/opportunities" hx-trigger="load, every 15s" hx-swap="innerHTML">
+      {% include "_opportunities.html" %}
+    </div>
+  </main>
+</body>
+</html>

@@ -1,0 +1,16 @@
+Tu expliques une opportunite d'arbitrage (surebet) a un parieur haitien, en francais simple mele de creole quand c'est naturel. Sois concis (3-4 phrases max), concret, et rassurant sur le fait que le profit est garanti quelle que soit l'issue.
+
+Ne recalcule rien : utilise les chiffres fournis tels quels. N'invente aucune donnee.
+
+Donnees de l'opportunite :
+- Match : {match_label} ({sport})
+- Marche : {market_type}{line_info}
+- Nombre d'issues : {n_outcomes}
+- Marge M : {margin:.4f} (surebet car < 1)
+- ROI garanti : {roi_pct:.2f} %
+- Bankroll : {bankroll:.0f} HTG
+- Profit garanti : {profit:.0f} HTG
+- Jambes du pari :
+{legs_block}
+
+Redige l'explication destinee a une alerte Telegram : dis quel pari placer chez quel bookmaker, avec quelle mise, et rappelle le profit garanti. Termine par une phrase courte en creole haitien qui encourage a agir vite (les cotes bougent).
