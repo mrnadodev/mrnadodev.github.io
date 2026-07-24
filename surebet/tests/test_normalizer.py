@@ -149,6 +149,45 @@ class TestPromoVariantsAreExcluded:
         assert normalize_market_label("Resultat du match", "X", HOME, AWAY).selection == "draw"
 
 
+class TestNOrMoreFormat:
+    """Format "N ou +" de Paryaj Lakay : "5 ou +" = au moins 5 = Over 4.5.
+
+    Releve en live : "Nombre de Corners - {equipe}" avec selections
+    "2 ou +", "3 ou +", "4 ou +", "5 ou +".
+    """
+
+    HOME = "UTA Arad"
+    AWAY = "ASC Otelul Galati"
+
+    @pytest.mark.parametrize("sel,expected_line", [
+        ("2 ou +", 1.5), ("3 ou +", 2.5), ("5 ou +", 4.5), ("8 ou +", 7.5),
+    ])
+    def test_corners_team_n_or_more(self, sel, expected_line):
+        r = normalize_market_label("Nombre de Corners - ASC Otelul Galati", sel, self.HOME, self.AWAY)
+        assert r.market_type == "corners_team"
+        assert r.selection == "over"
+        assert r.line == expected_line
+        assert r.team_scope == "away"
+        assert r.confidence >= 0.9
+
+    def test_shots_on_target_n_or_more(self):
+        r = normalize_market_label("Nombre de tirs cadrés - UTA Arad", "8 ou +", self.HOME, self.AWAY)
+        assert r.market_type == "shots_on_target_team"
+        assert r.line == 7.5
+        assert r.team_scope == "home"
+
+    @pytest.mark.parametrize("sel", ["6 ou plus", "6+", "6 or more"])
+    def test_alternate_wordings(self, sel):
+        r = normalize_market_label("Total corners", sel, "Manchester United", "Liverpool")
+        assert r.selection == "over" and r.line == 5.5
+
+    def test_total_corners_over_under_still_works(self):
+        r = normalize_market_label("Total corners", "> 9.5", "Manchester United", "Liverpool")
+        assert r.market_type == "corners_total"
+        assert r.team_scope is None
+        assert r.line == 9.5
+
+
 def test_1x2_first_half_vs_full_match_are_distinct():
     full_match = normalize_market_label("Resultat du match", "1", HOME, AWAY)
     first_half = normalize_market_label("Resultat du match 1ere mi-temps", "1", HOME, AWAY)

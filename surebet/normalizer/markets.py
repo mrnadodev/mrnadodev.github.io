@@ -48,6 +48,10 @@ PROMO_VARIANT_RE = re.compile(
     r"\b2\s*up\b|bore\s*draw|insurance|assurance|cashback|rembours", re.I
 )
 
+# Format "N ou +" / "N or more" (Paryaj Lakay) : seuil unilateral cote a la
+# hausse. "5 ou +" = au moins 5 = Over 4.5. Capte aussi "N ou plus", "N+".
+N_OR_MORE_RE = re.compile(r"(\d+)\s*(?:ou\s*\+|ou\s*plus|or\s*more|\+)\s*$", re.I)
+
 CORNERS_RE = re.compile(r"corners?", re.I)
 TACKLES_RE = re.compile(r"tacles?|tackles?", re.I)
 FOULS_RE = re.compile(r"fautes?|fouls?", re.I)
@@ -177,6 +181,11 @@ def normalize_market_label(
             continue
         selection = _over_under_selection(selection_label)
         line = _parse_line(selection_label)
+        # Format "N ou +" (Paryaj Lakay) : "5 ou +" -> Over 4.5
+        n_or_more = N_OR_MORE_RE.search(selection_label)
+        if n_or_more:
+            selection = "over"
+            line = int(n_or_more.group(1)) - 0.5
         if selection is None or line is None:
             return MarketMatch(market_type, "over", 2, line, None, 0.5)
         scope = _team_scope(market_label, home_team, away_team)

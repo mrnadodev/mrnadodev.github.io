@@ -188,7 +188,36 @@ complet** est calculé et affiché ; sinon la valuation reste partielle (jambes
 connues affichées, reste signalé). Le pricing profond est activable via
 `/api/funbets?deep=true` (défaut).
 
-### Couverture des marchés de niche
+### Couverture des marchés de niche par bookmaker
+
+Corners, tirs, tirs cadrés, fautes, tacles, cartons, dégagements, arrêts, VAR,
+hors-jeu, touches — état réel constaté en live (juillet 2026) :
+
+| Marché | Paryaj Pam | 1xBet | Paryaj Lakay | Golcash |
+|---|---|---|---|---|
+| Corners | ✅ | ✅ (par événement) | ✅ (« N ou + ») | ✅ |
+| Tirs cadrés | ✅ | ✅ | ✅ | ❌ |
+| Tirs | ✅ | ✅ | selon match | ❌ |
+| Fautes | ✅ | ✅ | selon match | ❌ |
+| Tacles | ✅ | ✅ | selon match | ❌ |
+| Cartons | ✅ | ✅ | selon match | ❌ |
+| Dégagements | ✅ | ✅ | selon match | ❌ |
+| Arrêts gardien | ✅ | ✅ | selon match | ❌ |
+| Hors-jeu | ✅ | ✅ | selon match | ❌ |
+| Touches | ✅ | ✅ | selon match | ❌ |
+| VAR | ❌ | ✅ | ❌ | ❌ |
+
+- **Paryaj Pam** : 40+ types déjà mappés (`pamws.py`) — tout sauf VAR, que le
+  book n'offre pas.
+- **1xBet** : tous via le feed par-événement (`xbet_stats.py`), VAR compris.
+- **Paryaj Lakay** : format spécifique **« N ou + »** (« 5 ou + » = Over 4.5),
+  désormais reconnu par `markets.py`. Vérifié live : 13 cotes `corners_team`
+  captées sur un match. La profondeur des marchés de niche varie selon le match.
+- **Golcash** : son feed BetConstruct (240 types) ne propose **que les corners**
+  au-delà des buts — aucun cartons/fautes/tirs n'existe côté opérateur. On ne
+  peut pas ajouter ce que le book ne cote pas.
+
+### Couverture des marchés de niche (Paryaj Pam / 1xBet, détail)
 
 Les marchés de niche sont **systématiquement moins margés** que le 1X2, donc
 c'est là que l'arbitrage est réaliste :
