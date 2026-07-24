@@ -56,13 +56,20 @@ class FunBetValuation:
         return sum(1 for p in self.priced if p.fair_odds is None)
 
 
-def _find_odd(pool: list[Odd], match_id: str, market_type: str,
-              selection: str, line: float | None, team_scope: str | None) -> Odd | None:
+def _find_odd(pool: list[Odd], market_type: str, selection: str,
+              line: float | None, team_scope: str | None) -> Odd | None:
+    """Cherche la meilleure cote dans un pool DEJA restreint au bon match.
+
+    On ne filtre pas par match_id : les cotes de base 1xBet et les cotes de
+    niche (feed par-evenement) peuvent porter des variantes de nom d'equipe,
+    donc des match_id differents pour un meme match. Le pool recu est deja
+    scope au match via l'appariement flou des equipes (_match_pool).
+    """
     best = None
     for o in pool:
-        if o.match_id != match_id or o.market_type != market_type:
+        if o.market_type != market_type or o.selection != selection:
             continue
-        if o.selection != selection or o.team_scope != team_scope:
+        if o.team_scope != team_scope:
             continue
         if line is not None and o.line != line:
             continue
@@ -86,7 +93,6 @@ def _match_pool(pool: list[Odd], funbet: FunBet) -> list[Odd]:
 def _price_condition(cond: Condition, match_odds: list[Odd]) -> PricedLeg:
     if not match_odds:
         return PricedLeg(cond, None, detail="match absent de 1xBet")
-    mid = match_odds[0].match_id
     book = match_odds[0].bookmaker
 
     if cond.kind == "win":
@@ -94,26 +100,26 @@ def _price_condition(cond: Condition, match_odds: list[Odd]) -> PricedLeg:
         if scope is None:
             return PricedLeg(cond, None, detail="equipe non identifiee")
         sel = "home" if scope == "home" else "away"
-        o = _find_odd(match_odds, mid, "1x2", sel, None, None)
+        o = _find_odd(match_odds, "1x2", sel, None, None)
         return PricedLeg(cond, o.odds if o else None, book, "victoire (1X2)")
 
     if cond.kind == "btts":
-        o = _find_odd(match_odds, mid, "btts", "over", None, None)
+        o = _find_odd(match_odds, "btts", "over", None, None)
         return PricedLeg(cond, o.odds if o else None, book, "BTTS oui")
 
     if cond.kind == "threshold":
-        return _price_threshold(cond, match_odds, mid, book)
+        return _price_threshold(cond, match_odds, book)
 
     return PricedLeg(cond, None, detail="condition non reconnue")
 
 
-def _price_threshold(cond: Condition, match_odds: list[Odd], mid: str, book: str) -> PricedLeg:
+def _price_threshold(cond: Condition, match_odds: list[Odd], book: str) -> PricedLeg:
     if cond.each_team:
         mt = STAT_TO_MARKET.get((cond.stat, True))
         if mt is None:
             return PricedLeg(cond, None, detail=f"stat {cond.stat} inconnue")
-        home_o = _find_odd(match_odds, mid, mt, "over", cond.line, "home")
-        away_o = _find_odd(match_odds, mid, mt, "over", cond.line, "away")
+        home_o = _find_odd(match_odds, mt, "over", cond.line, "home")
+        away_o = _find_odd(match_odds, mt, "over", cond.line, "away")
         if home_o and away_o:
             return PricedLeg(cond, home_o.odds * away_o.odds, book,
                              f"{cond.stat} >= {cond.line + 0.5:g} chaque equipe")
@@ -123,7 +129,7 @@ def _price_threshold(cond: Condition, match_odds: list[Odd], mid: str, book: str
     if mt is None:
         return PricedLeg(cond, None, detail=f"stat {cond.stat} inconnue")
     scope = _which_side(cond, match_odds) if cond.team else None
-    o = _find_odd(match_odds, mid, mt, "over", cond.line, scope)
+    o = _find_odd(match_odds, mt, "over", cond.line, scope)
     if o:
         return PricedLeg(cond, o.odds, book, f"{cond.stat} >= {cond.line + 0.5:g}")
     return PricedLeg(cond, None, detail=f"{cond.stat} (ligne {cond.line}) absent de 1xBet")

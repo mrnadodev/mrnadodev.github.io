@@ -173,11 +173,20 @@ Pipeline (`surebet/funbet/`) :
   marquée incomplète et **aucun edge n'est annoncé** — les jambes chiffrables
   restent affichées pour le hedge manuel.
 
-> Limite actuelle : 1xBet est intégré pour 1x2 / totaux / BTTS, mais **pas encore
-> pour les corners/tirs** (feed par-événement `GetGameZip` requis). Les FunBets
-> étant dominés par ces marchés, la plupart s'affichent en « chiffrage partiel »
-> avec les conditions corners/tirs signalées à vérifier manuellement. Ajouter le
-> feed corners/tirs de 1xBet est l'étape qui débloquera le calcul d'edge complet.
+**Marchés de niche 1xBet** (`scrapers/xbet_stats.py`) — pour chiffrer les
+conditions corners/tirs des FunBets, le scraper 1xBet interroge son feed
+par-événement (`GetGameZip`). Les statistiques y sont des **sous-jeux** nommés
+(« Corners », « Tirs Cadrés », « Fautes », « Cartons jaunes », « Tacles »,
+« Dégagements de but », « Sauvetages », « Contrôles VAR », « Hors-jeu »,
+« Touches »), chacun réutilisant la convention standard `G=17` (total) /
+`G=15`/`G=62` (par équipe), `T=9/10/11/12/13/14` (Over/Under). Récupéré
+uniquement pour les matchs des FunBets (regroupés par match) afin de respecter
+les rate-limits. « 8 corners ou + » → Over 7.5, chiffré à sa cote 1xBet réelle.
+
+Quand toutes les conditions d'une FunBet sont ainsi chiffrables, l'**edge
+complet** est calculé et affiché ; sinon la valuation reste partielle (jambes
+connues affichées, reste signalé). Le pricing profond est activable via
+`/api/funbets?deep=true` (défaut).
 
 ### Couverture des marchés de niche
 

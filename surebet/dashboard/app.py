@@ -197,8 +197,13 @@ async def api_scan(sport: str = "football", min_profit: float = 0.0,
 
 
 @app.get("/api/funbets")
-async def api_funbets():
-    """FunBets Paryaj Lakay (paris boostes) chiffres contre les cotes 1xBet."""
+async def api_funbets(deep: bool = True):
+    """FunBets Paryaj Lakay (paris boostes) chiffres contre les cotes 1xBet.
+
+    `deep=true` : recupere aussi les marches de niche 1xBet (corners, tirs,
+    fautes...) par evenement pour chiffrer les conditions statistiques des
+    FunBets. Plus lent (requetes par match) mais debloque l'edge complet.
+    """
     from ..funbet.pricing import value_funbet
     from ..scrapers.xbet import XBetScraper
 
@@ -208,12 +213,14 @@ async def api_funbets():
         logger.warning("FunBets: extraction impossible (%s)", exc)
         return {"funbets": [], "error": "Paryaj Lakay FunBet indisponible"}
 
+    pool: list[Odd] = []
     try:
         async with XBetScraper(base_url=settings.xbet_base_url) as xbet:
             pool = await xbet.scrape("football")
+            if deep:
+                pool += await _enrich_1xbet_niche(xbet, funbets)
     except Exception as exc:  # noqa: BLE001
         logger.warning("FunBets: 1xBet indisponible pour le pricing (%s)", exc)
-        pool = []
 
     out = []
     for fb in funbets:
@@ -251,6 +258,40 @@ async def _scrape_lakay_funbets():
             _lakay_scraper.attach_session(_lakay_session)
             await _lakay_session.start()
         return await _lakay_scraper.scrape_funbets()
+
+
+async def _enrich_1xbet_niche(xbet, funbets) -> list[Odd]:
+    """Recupere les marches de niche 1xBet (corners, tirs...) pour les matchs
+    des FunBets, afin de chiffrer leurs conditions statistiques.
+
+    Regroupe par match (les FunBets d'un meme match partagent les stats) pour
+    limiter le nombre de requetes.
+    """
+    wanted_by_match: dict[tuple[str, str], set[str]] = {}
+    for fb in funbets:
+        if not fb.home_team or not fb.away_team:
+            continue
+        stats = {c.stat for c in fb.conditions if c.kind == "threshold" and c.stat}
+        if not stats:
+            continue
+        key = (fb.home_team, fb.away_team)
+        wanted_by_match.setdefault(key, set()).update(stats)
+
+    enriched: list[Odd] = []
+    for (home, away), stats in wanted_by_match.items():
+        try:
+            found = await xbet.find_event_id(home, away, "football")
+            if found is None:
+                continue
+            event_id, start_time, competition = found
+            if start_time is None:
+                continue
+            enriched.extend(
+                await xbet.scrape_event_stats(event_id, home, away, start_time, competition, stats)
+            )
+        except Exception:  # noqa: BLE001
+            logger.debug("FunBets: enrichissement 1xBet impossible pour %s - %s", home, away)
+    return enriched
 
 
 @app.get("/fragments/opportunities", response_class=HTMLResponse)

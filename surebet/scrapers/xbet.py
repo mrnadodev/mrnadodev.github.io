@@ -139,6 +139,69 @@ class XBetScraper(BookmakerScraper):
         except Exception as exc:
             raise ScraperUnavailableError("1xBet: reponse non-JSON") from exc
 
+    def _gamezip_url(self, event_id: int) -> str:
+        return (
+            f"{self.base_url}/service-api/LineFeed/GetGameZip"
+            f"?id={event_id}&lng={self.language}&country=71&partner={self.partner}"
+            f"&grMode=4&isSubGames=true"
+        )
+
+    async def find_event_id(self, home: str, away: str, sport: str = "football",
+                            count: int = 100) -> tuple[int, datetime, str] | None:
+        """Cherche l'evenement 1xBet correspondant a (home, away) par appariement flou.
+
+        Retourne (event_id, start_time, competition) ou None. Reutilise le feed
+        compact (rapide) pour eviter un balayage complet.
+        """
+        from ..normalizer.teams import teams_similar
+
+        sport_id = SPORT_IDS.get(sport)
+        if sport_id is None:
+            return None
+        payload = await self._fetch(
+            self._feed_url(sport_id).replace(f"count={self.count}", f"count={count}")
+        )
+        for event in payload.get("Value") or []:
+            o1, o2 = event.get("O1"), event.get("O2")
+            if not o1 or not o2:
+                continue
+            if teams_similar(o1, home) and teams_similar(o2, away):
+                start = datetime.fromtimestamp(event["S"], tz=timezone.utc) if event.get("S") else None
+                return event.get("I"), start, event.get("L", "")
+        return None
+
+    async def scrape_event_stats(self, event_id: int, home: str, away: str,
+                                 start_time: datetime, competition: str,
+                                 wanted_stats: set[str]) -> list[Odd]:
+        """Recupere les marches de niche (corners, tirs, fautes...) d'un evenement.
+
+        Un appel au feed principal pour reperer les sous-jeux, puis un appel par
+        stat demandee. Delais herites de _fetch (respect des rate-limits).
+        """
+        from ..normalizer.schema import make_match_id
+        from .xbet_stats import find_stat_subgames, parse_stat_subgame
+
+        scraped_at = datetime.now(timezone.utc)
+        match_id = make_match_id(home, away, start_time)
+        url = f"{self.base_url}/{self.language}/line/football/{event_id}"
+
+        try:
+            main = (await self._fetch(self._gamezip_url(event_id))).get("Value", {})
+        except ScraperUnavailableError:
+            logger.warning("1xBet: feed evenement %s indisponible", event_id)
+            return []
+
+        subgames = find_stat_subgames(main, wanted_stats)
+        out: list[Odd] = []
+        for stat, sub_id in subgames.items():
+            try:
+                sub = (await self._fetch(self._gamezip_url(sub_id))).get("Value", {})
+            except ScraperUnavailableError:
+                continue
+            out.extend(parse_stat_subgame(sub, stat, home, away, match_id,
+                                          competition, url, start_time, scraped_at))
+        return out
+
     def _parse_event(self, event: dict, sport: str, scraped_at: datetime) -> list[Odd]:
         home = event.get("O1")
         away = event.get("O2")
