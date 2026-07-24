@@ -106,6 +106,31 @@ tests de non-régression :
 | **Variante promo « 2UP »** (Paryaj Lakay) | « Résultat du match **2UP** » a un titre qui matche `Résultat du match` et des sélections `1: 2UP`/`X: 2UP`/`2: 2UP` qui matchent `1`/`X`/`2` → deux jeux de cotes sous le même `1x2` | `market_type` distinct `1x2_promo` |
 | **Périodes** (Paryaj Pam, Golcash) | Le même type de marché sert le temps réglementaire et les mi-temps | suffixes `_1h` / `_2h` ; période inconnue = marché écarté |
 | **Variantes Team1/Team2** | « tirs équipe A » et « tirs équipe B » partagent le `market_type` | `team_scope` obligatoire (`home`/`away`) |
+| **Équipes U-23 / réserve / féminine** | « Eltham Redbacks U-23 » et « Eltham Redbacks » matchent à **88** (> seuil 85) — deux matchs différents | niveau d'équipe vérifié **avant** la similarité |
+
+#### Le faux surebet qui a coûté une leçon
+
+La mesure de corrélation a détecté un surebet à **`M = 0,9458`, ROI +5,73 %**.
+Vérification faite, il était **entièrement fictif** :
+
+| Source | home | draw | away |
+|---|---|---|---|
+| Paryaj Lakay | 1.34 | 4.5 | 5.0 |
+| Paryaj Pam **U-23** | 1.37 | 4.79 | 5.72 | ← le vrai correspondant |
+| Paryaj Pam senior | 1.91 | 3.69 | 3.15 | ← apparié à tort |
+
+Paryaj Lakay affichait le match **U-23** (coup d'envoi 08:15) ; le matcher flou
+l'a apparié au match **senior** (10:30). Miser sur cette « opportunité » aurait
+signifié miser sur **deux matchs différents**.
+
+`teams.py` vérifie désormais le niveau d'équipe (`squad_marker` : jeunes /
+réserve / féminine) **avant** toute comparaison de similarité — dans
+`teams_match` comme dans `best_team_match`.
+
+> Le pipeline de production utilise `match_id` (hachage exact), qui distinguait
+> déjà ces deux matchs ; le faux positif venait du script de mesure. Mais la
+> mission impose le matching flou (seuil 85) pour réconcilier les équipes entre
+> bookmakers — sans ce garde-fou, la faille se serait déclenchée en production.
 
 > Signe d'alerte utile : une marge implicite aberrante. Un « 1X2 » à `M ≈ 1,80`
 > n'est pas un 1X2 — c'est un marché mal apparié (double chance ou variante

@@ -1,6 +1,7 @@
 """Fuzzy matching des noms d'equipes entre bookmakers (spec MISSION §3, seuil 85)."""
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 
 from rapidfuzz import fuzz, process
@@ -21,6 +22,35 @@ KNOWN_ALIASES: dict[str, str] = {
 }
 
 
+# Marqueurs d'equipes DISTINCTES portant le meme nom de club.
+#
+# Piege releve en test live : "Eltham Redbacks U-23" et "Eltham Redbacks"
+# obtiennent un score de similarite de 88, au-dessus du seuil de 85 — mais ce
+# sont deux matchs differents, joues a des heures differentes et cotes
+# differemment. Les apparier fabriquait un faux surebet a +5,73 % de ROI.
+#
+# Deux libelles ne peuvent designer la meme equipe que s'ils portent le MEME
+# marqueur (les deux U-23, ou aucun des deux).
+SQUAD_MARKERS: dict[str, re.Pattern] = {
+    "youth": re.compile(r"\bu-?\s?(?:15|16|17|18|19|20|21|22|23)\b|\byouth\b|\bjunior|\bjeunes?\b", re.I),
+    "reserve": re.compile(r"\breserves?\b|\bres\.\b|\bII\b|\bB\b(?!\w)|\bacademy\b|\bacad[eé]mie\b", re.I),
+    "women": re.compile(r"\b(?:women|feminin|f[eé]minines?|dames|ladies|\(w\)|\bw\b)\b", re.I),
+}
+
+
+def squad_marker(name: str) -> str | None:
+    """Marqueur d'equipe (jeunes, reserve, feminine) ou None pour l'equipe premiere."""
+    for marker, pattern in SQUAD_MARKERS.items():
+        if pattern.search(name):
+            return marker
+    return None
+
+
+def same_squad_level(name_a: str, name_b: str) -> bool:
+    """True si les deux libelles designent le meme niveau d'equipe."""
+    return squad_marker(name_a) == squad_marker(name_b)
+
+
 def _canonical_key(name: str) -> str:
     return " ".join(name.strip().lower().split())
 
@@ -37,7 +67,14 @@ class TeamMatch:
 
 
 def teams_match(name_a: str, name_b: str, threshold: int = DEFAULT_THRESHOLD) -> bool:
-    """True si deux libelles d'equipe (bookmakers differents) designent la meme equipe."""
+    """True si deux libelles d'equipe (bookmakers differents) designent la meme equipe.
+
+    Le niveau d'equipe (premiere / U-23 / reserve / feminine) est verifie AVANT
+    la similarite : sans ce garde-fou, "Eltham Redbacks U-23" et
+    "Eltham Redbacks" matchent a 88 et produisent un faux arbitrage.
+    """
+    if not same_squad_level(name_a, name_b):
+        return False
     a = resolve_alias(name_a)
     b = resolve_alias(name_b)
     score = fuzz.token_sort_ratio(_canonical_key(a), _canonical_key(b))
@@ -50,10 +87,12 @@ def best_team_match(
     """Meilleure correspondance de `raw_name` parmi `candidates` (registre d'equipes connues)."""
     if not candidates:
         return None
+    # Ne comparer qu'a des equipes de meme niveau (premiere / U-23 / reserve...)
+    eligible = [c for c in candidates if same_squad_level(raw_name, c)]
+    if not eligible:
+        return None
     resolved = resolve_alias(raw_name)
-    result = process.extractOne(
-        resolved, candidates, scorer=fuzz.token_sort_ratio
-    )
+    result = process.extractOne(resolved, eligible, scorer=fuzz.token_sort_ratio)
     if result is None:
         return None
     candidate, score, _ = result

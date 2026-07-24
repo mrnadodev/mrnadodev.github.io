@@ -239,3 +239,56 @@ class TestTeamsFuzzyMatching:
         result = best_team_match("Man Utd", candidates, threshold=85)
         assert result is not None
         assert result.candidate == "Manchester United"
+
+
+class TestSquadLevelNeverConfused:
+    """Regression : une equipe U-23 / reserve / feminine n'est PAS l'equipe premiere.
+
+    Piege releve en test live : "Eltham Redbacks U-23" et "Eltham Redbacks"
+    obtiennent un score de 88 (> seuil 85). Les apparier a produit un faux
+    surebet a +5,73 % de ROI — en realite deux matchs distincts, joues a
+    08:15 et 10:30, cotes 1.37/4.79/5.72 et 1.91/3.69/3.15.
+    """
+
+    @pytest.mark.parametrize("senior,other", [
+        ("Eltham Redbacks", "Eltham Redbacks U-23"),
+        ("Melbourne Serbia", "Melbourne Serbia U-23"),
+        ("Real Madrid", "Real Madrid U19"),
+        ("FC Barcelona", "FC Barcelona Youth"),
+        ("Arsenal", "Arsenal Reserves"),
+        ("Chelsea", "Chelsea Women"),
+        ("Liverpool", "Liverpool Academy"),
+    ])
+    def test_senior_never_matches_other_squad(self, senior, other):
+        assert teams_match(senior, other, threshold=85) is False
+
+    @pytest.mark.parametrize("a,b", [
+        ("Eltham Redbacks U-23", "Eltham Redbacks U23"),
+        ("Real Madrid U19", "Real Madrid U-19"),
+        ("Arsenal Reserves", "Arsenal Reserve"),
+    ])
+    def test_same_squad_level_still_matches(self, a, b):
+        assert teams_match(a, b, threshold=85) is True
+
+    def test_best_team_match_excludes_other_squad_levels(self):
+        candidates = ["Eltham Redbacks", "Eltham Redbacks U-23"]
+        senior = best_team_match("Eltham Redbacks FC", candidates, threshold=85)
+        youth = best_team_match("Eltham Redbacks U-23", candidates, threshold=85)
+        assert senior is not None and senior.candidate == "Eltham Redbacks"
+        assert youth is not None and youth.candidate == "Eltham Redbacks U-23"
+
+    def test_no_eligible_candidate_returns_none(self):
+        assert best_team_match("Eltham Redbacks U-23", ["Eltham Redbacks"], threshold=85) is None
+
+    def test_squad_marker_detection(self):
+        from surebet.normalizer.teams import squad_marker
+
+        assert squad_marker("Eltham Redbacks") is None
+        assert squad_marker("Eltham Redbacks U-23") == "youth"
+        assert squad_marker("Arsenal Reserves") == "reserve"
+        assert squad_marker("Chelsea Women") == "women"
+
+    def test_plain_teams_are_unaffected(self):
+        """Le garde-fou ne doit pas casser les appariements legitimes."""
+        assert teams_match("Manchester United", "Man Utd", threshold=85) is True
+        assert teams_match("Paris Saint-Germain", "PSG", threshold=85) is True
