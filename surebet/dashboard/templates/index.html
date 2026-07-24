@@ -3,50 +3,226 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Surebet Haïti — Dashboard</title>
-  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+  <title>SUREBET — Arbitrage Scanner Pro</title>
   <style>
-    :root { color-scheme: light dark; --accent:#1F4E78; --good:#137333; }
-    body { font-family: system-ui, sans-serif; margin:0; background:#0f1720; color:#e8edf2; }
-    header { background:var(--accent); padding:1rem 1.5rem; }
-    header h1 { margin:0; font-size:1.25rem; }
-    .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:1rem; padding:1.5rem; }
-    .card { background:#1a2531; border-radius:10px; padding:1rem 1.25rem; }
-    .card .value { font-size:1.6rem; font-weight:700; }
-    .card .label { opacity:.7; font-size:.85rem; text-transform:uppercase; letter-spacing:.03em; }
-    main { padding:0 1.5rem 2rem; }
-    table { width:100%; border-collapse:collapse; font-size:.9rem; }
-    th, td { text-align:left; padding:.55rem .6rem; border-bottom:1px solid #24303d; }
-    th { position:sticky; top:0; background:#16202b; }
-    .roi { color:var(--good); font-weight:700; }
-    .badge { padding:.1rem .5rem; border-radius:6px; background:#24303d; font-size:.8rem; }
-    .curve { padding:1.5rem; }
-    svg { width:100%; height:160px; background:#16202b; border-radius:10px; }
-    a { color:#6db3f2; }
+    :root {
+      --bg:#0a0e14; --panel:#111823; --panel-2:#0e141d; --border:#1c2735;
+      --text:#e6edf3; --muted:#8b98a5; --neon:#22e06b; --neon-dim:#12813f;
+      --amber:#e0a020; --chip:#16202c;
+    }
+    * { box-sizing:border-box; }
+    body {
+      margin:0; background:var(--bg); color:var(--text);
+      font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+      background-image:radial-gradient(1200px 400px at 80% -100px, rgba(34,224,107,.06), transparent);
+    }
+    .wrap { max-width:1100px; margin:0 auto; padding:1.25rem 1.25rem 3rem; }
+
+    header.top { display:flex; align-items:center; gap:.9rem; padding:.5rem 0 1.25rem; }
+    .logo { font-size:1.7rem; font-weight:900; letter-spacing:.04em; color:var(--neon);
+            text-shadow:0 0 18px rgba(34,224,107,.45); }
+    .logo-badge { border:1px solid var(--border); color:var(--muted); font-size:.72rem;
+            padding:.28rem .6rem; border-radius:8px; background:var(--panel-2); }
+
+    .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:1rem; }
+    .card { background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:1.1rem 1.25rem; }
+    .card .k { font-size:.72rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+    .card .v { font-size:2rem; font-weight:800; margin:.35rem 0 .15rem; }
+    .card .v.neon { color:var(--neon); }
+    .card .sub { font-size:.78rem; color:var(--muted); }
+    .dot { display:inline-block; width:.55rem; height:.55rem; border-radius:50%; background:var(--neon);
+           box-shadow:0 0 10px var(--neon); margin-right:.4rem; vertical-align:middle; }
+
+    .section-title { display:flex; align-items:center; gap:.6rem; margin:1.8rem 0 .9rem; font-size:1.05rem; font-weight:700; }
+    .section-title::before { content:""; width:.32rem; height:1.15rem; background:var(--neon); border-radius:3px; }
+
+    .filters { background:var(--panel); border:1px solid var(--border); border-radius:14px;
+               padding:1.1rem 1.25rem; display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:1.1rem; }
+    .filters label { display:block; font-size:.7rem; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin-bottom:.45rem; }
+    .filters select, .filters input {
+      width:100%; background:var(--panel-2); border:1px solid var(--border); color:var(--text);
+      border-radius:9px; padding:.6rem .7rem; font-size:.9rem;
+    }
+    .stepper { display:flex; align-items:stretch; gap:.4rem; }
+    .stepper button { width:2.5rem; background:var(--chip); border:1px solid var(--border); color:var(--text);
+                      border-radius:9px; font-size:1.1rem; cursor:pointer; }
+    .stepper input { text-align:center; }
+
+    .toolbar { display:flex; align-items:center; gap:.8rem; margin-left:auto; font-size:.85rem; color:var(--muted); }
+    .btn { background:var(--neon); color:#04210f; border:none; border-radius:9px; padding:.55rem 1rem;
+           font-weight:700; cursor:pointer; }
+    .btn:disabled { opacity:.5; cursor:default; }
+
+    .opp { background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:1rem 1.1rem;
+           margin-bottom:.85rem; display:grid; grid-template-columns:auto 1fr auto; gap:1rem; align-items:center; }
+    .opp.sure { border-color:rgba(34,224,107,.5); box-shadow:0 0 0 1px rgba(34,224,107,.15) inset; }
+    .opp .sport-ic { width:2.6rem; height:2.6rem; border-radius:10px; background:var(--chip); border:1px solid var(--border);
+                     display:flex; align-items:center; justify-content:center; font-size:1.2rem; }
+    .opp .match { font-weight:700; font-size:1.02rem; }
+    .opp .meta { color:var(--muted); font-size:.82rem; margin-top:.15rem; display:flex; gap:.5rem; align-items:center; flex-wrap:wrap; }
+    .mbadge { border:1px solid var(--neon-dim); color:var(--neon); border-radius:20px; padding:.1rem .6rem; font-size:.72rem; }
+    .legs { margin-top:.6rem; display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:.4rem .9rem; }
+    .leg { font-size:.85rem; }
+    .leg .bk { color:var(--muted); }
+    .leg .out { font-weight:600; }
+    .leg .od { color:var(--neon); font-weight:800; margin-left:.15rem; }
+    .leg .stake { color:var(--muted); font-size:.78rem; }
+    .profit { text-align:right; min-width:120px; }
+    .profit .pct { font-size:1.6rem; font-weight:900; }
+    .profit .pct.pos { color:var(--neon); text-shadow:0 0 14px rgba(34,224,107,.4); }
+    .profit .pct.neg { color:var(--muted); }
+    .profit .lab { font-size:.68rem; letter-spacing:.09em; color:var(--muted); text-transform:uppercase; }
+    .profit .htg { font-size:.78rem; color:var(--muted); margin-top:.2rem; }
+
+    .empty { color:var(--muted); text-align:center; padding:2.5rem 1rem; border:1px dashed var(--border); border-radius:14px; }
+    .note { color:var(--muted); font-size:.8rem; margin:.4rem 0 1rem; }
+    a.leglink { color:inherit; text-decoration:none; }
+    a.leglink:hover .out { text-decoration:underline; }
+    @media(max-width:620px){ .opp{ grid-template-columns:auto 1fr; } .profit{ grid-column:1/-1; text-align:left; } }
   </style>
 </head>
 <body>
-  <header><h1>⚽ Surebet Haïti — Dashboard</h1></header>
+<div class="wrap">
+  <header class="top">
+    <span class="logo">SUREBET</span>
+    <span class="logo-badge">Arbitrage Scanner Pro</span>
+    <div class="toolbar">
+      <span id="lastscan">—</span>
+      <button class="btn" id="rescan" onclick="scan()">↻ Scanner</button>
+    </div>
+  </header>
 
   <section class="cards">
-    <div class="card"><div class="value">{{ total }}</div><div class="label">Opportunités détectées</div></div>
-    <div class="card"><div class="value">{{ "%.0f"|format(total_profit) }} HTG</div><div class="label">Profit cumulé théorique</div></div>
-    <div class="card"><div class="value">{{ ai_success_rate }} %</div><div class="label">Taux d'appariement IA ≥ seuil</div></div>
-  </section>
-
-  <section class="curve">
-    <h2 style="font-size:1rem;">Courbe de bankroll (profit cumulé)</h2>
-    {{ bankroll_svg|safe }}
-  </section>
-
-  <main>
-    <h2 style="font-size:1rem;">Opportunités récentes
-      <button hx-get="/fragments/opportunities" hx-target="#opps" hx-swap="innerHTML"
-              style="margin-left:1rem;">↻ Rafraîchir</button>
-    </h2>
-    <div id="opps" hx-get="/fragments/opportunities" hx-trigger="load, every 15s" hx-swap="innerHTML">
-      {% include "_opportunities.html" %}
+    <div class="card">
+      <div class="k">Statut scanner</div>
+      <div class="v neon" id="status"><span class="dot"></span>En attente</div>
+      <div class="sub" id="status-sub">Cliquez sur « Scanner »</div>
     </div>
-  </main>
+    <div class="card">
+      <div class="k">Matchs analysés</div>
+      <div class="v" id="matches">—</div>
+      <div class="sub" id="books-sub">Sur 0 bookmakers</div>
+    </div>
+    <div class="card">
+      <div class="k">Surebets détectés</div>
+      <div class="v neon" id="surebets">—</div>
+      <div class="sub">Opportunités de profit</div>
+    </div>
+  </section>
+
+  <div class="section-title">Filtres de Recherche</div>
+  <div class="filters">
+    <div>
+      <label>Sport</label>
+      <select id="f-sport" onchange="scan()">
+        <option value="football">Football</option>
+        <option value="basketball">Basketball</option>
+      </select>
+    </div>
+    <div>
+      <label>Profit minimum (%)</label>
+      <div class="stepper">
+        <button onclick="bumpProfit(-0.5)">−</button>
+        <input id="f-profit" type="number" step="0.5" value="{{ default_min_profit }}" onchange="render()">
+        <button onclick="bumpProfit(0.5)">+</button>
+      </div>
+    </div>
+    <div>
+      <label>Exclure des bookmakers</label>
+      <select id="f-exclude" multiple size="1" onchange="scan()" style="height:auto;">
+        {% for b in bookmakers %}<option value="{{ b }}">{{ b }}</option>{% endfor %}
+      </select>
+    </div>
+  </div>
+
+  <div class="section-title">Opportunités Arbitrage Actives</div>
+  <div class="note" id="scan-note">Le scan interroge les bookmakers à API rapide (1xBet, Golcash, Paryaj Pam). Un surebet réel est rare : la liste montre aussi les meilleures combinaisons proches, avec les cotes par issue.</div>
+  <div id="opps"><div class="empty">Aucun scan effectué. Cliquez sur « Scanner ».</div></div>
+</div>
+
+<script>
+let LAST = null;
+
+function bumpProfit(d){
+  const el = document.getElementById('f-profit');
+  el.value = Math.max(0, (parseFloat(el.value)||0) + d).toFixed(1);
+  render();
+}
+
+async function scan(){
+  const btn = document.getElementById('rescan');
+  const sport = document.getElementById('f-sport').value;
+  const exclude = [...document.getElementById('f-exclude').selectedOptions].map(o=>o.value).join(',');
+  btn.disabled = true; btn.textContent = '⏳ Scan…';
+  document.getElementById('status').innerHTML = '<span class="dot"></span>Scan en cours';
+  document.getElementById('status-sub').textContent = 'Scraping en continu';
+  try {
+    const r = await fetch(`/api/scan?sport=${sport}&min_profit=0&exclude=${encodeURIComponent(exclude)}`);
+    LAST = await r.json();
+    applyStats(LAST.stats);
+    render();
+    const t = new Date().toLocaleTimeString('fr-FR');
+    document.getElementById('lastscan').textContent = 'Dernier scan : ' + t;
+  } catch(e){
+    document.getElementById('opps').innerHTML = `<div class="empty">Erreur de scan : ${e}</div>`;
+    document.getElementById('status').innerHTML = '<span class="dot" style="background:#e04b4b;box-shadow:0 0 10px #e04b4b"></span>Erreur';
+  } finally {
+    btn.disabled = false; btn.textContent = '↻ Scanner';
+  }
+}
+
+function applyStats(s){
+  document.getElementById('status').innerHTML = '<span class="dot"></span>Actif';
+  document.getElementById('status-sub').textContent = 'Scraping en continu';
+  document.getElementById('matches').textContent = s.matches_analysed;
+  document.getElementById('books-sub').textContent = `Sur ${s.bookmakers_count} bookmakers` +
+      (s.bookmakers_down && s.bookmakers_down.length ? ` (${s.bookmakers_down.length} indispo)` : '');
+  document.getElementById('surebets').textContent = s.surebets;
+}
+
+function render(){
+  if(!LAST){ return; }
+  const min = parseFloat(document.getElementById('f-profit').value)||0;
+  const list = LAST.opportunities.filter(o => o.roi_pct >= min || (min<=0));
+  const shown = min>0 ? LAST.opportunities.filter(o=>o.roi_pct>=min) : LAST.opportunities;
+  const box = document.getElementById('opps');
+  if(!shown.length){
+    box.innerHTML = `<div class="empty">Aucune opportunité ≥ ${min}% pour l'instant.<br>
+      ${LAST.opportunities.length ? 'Baissez le profit minimum pour voir les cotes des meilleures combinaisons.' : ''}</div>`;
+    return;
+  }
+  box.innerHTML = shown.map(card).join('');
+}
+
+function sportIcon(s){ return s==='basketball' ? '🏀' : '⚽'; }
+
+function card(o){
+  const pos = o.is_surebet;
+  const legs = o.legs.map(l => `
+    <div class="leg"><a class="leglink" href="${l.url||'#'}" target="_blank" rel="noopener">
+      <span class="bk">${l.bookmaker} :</span>
+      <span class="out">${l.outcome}</span> <span class="od">@ ${l.odds.toFixed(2)}</span>
+      ${l.stake>0 ? `<div class="stake">miser ${Math.round(l.stake).toLocaleString('fr-FR')} HTG</div>`:''}
+    </a></div>`).join('');
+  return `
+  <div class="opp ${pos?'sure':''}">
+    <div class="sport-ic">${sportIcon(o.sport)}</div>
+    <div>
+      <div class="match">${o.match}</div>
+      <div class="meta">${o.competition||'—'} <span class="mbadge">${o.market}</span>
+        ${pos?'<span class="mbadge" style="border-color:var(--neon)">SUREBET</span>':''}</div>
+      <div class="legs">${legs}</div>
+    </div>
+    <div class="profit">
+      <div class="pct ${pos?'pos':'neg'}">${o.roi_pct>=0?'+':''}${o.roi_pct.toFixed(2)}%</div>
+      <div class="lab">Profit net</div>
+      ${pos?`<div class="htg">${Math.round(o.profit).toLocaleString('fr-FR')} HTG</div>`:''}
+    </div>
+  </div>`;
+}
+
+// scan auto au chargement
+scan();
+</script>
 </body>
 </html>

@@ -28,8 +28,27 @@ def client(tmp_path, monkeypatch):
 def test_index_renders(client):
     resp = client.get("/")
     assert resp.status_code == 200
-    assert "Surebet" in resp.text
-    assert "Courbe de bankroll" in resp.text
+    assert "SUREBET" in resp.text
+    assert "Arbitrage Scanner Pro" in resp.text
+    assert "Opportunités Arbitrage Actives" in resp.text
+    assert "/api/scan" in resp.text  # le scan live est cable
+
+
+def test_scan_endpoint_shape(client, monkeypatch):
+    """L'endpoint de scan renvoie stats + opportunites, meme si les books sont
+    injoignables depuis l'environnement de test (scrapers mockes a vide)."""
+    import surebet.dashboard.app as app_mod
+
+    def no_scrapers(exclude):
+        return []
+
+    monkeypatch.setattr(app_mod, "_build_fast_scrapers", no_scrapers)
+    resp = client.get("/api/scan?sport=football&min_profit=0")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert "stats" in body and "opportunities" in body
+    assert body["stats"]["matches_analysed"] == 0
+    assert body["opportunities"] == []
 
 
 def test_opportunities_fragment_empty(client):

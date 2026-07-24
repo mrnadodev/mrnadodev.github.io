@@ -6,6 +6,7 @@ rafraichissent la liste sans recharger la page.
 """
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 from fastapi import FastAPI, Request
@@ -13,8 +14,13 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 from ..config import settings
+from ..normalizer.schema import Odd
+from ..scrapers.base import ScraperUnavailableError
 from ..storage.db import make_engine, make_session_factory
 from ..storage.repository import OpportunityRepository
+from .live import LiveOpportunity, rank_cross_book, scan_stats
+
+logger = logging.getLogger("surebet.dashboard")
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 
@@ -23,6 +29,49 @@ templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 _engine = make_engine(settings.database_url)
 _repo = OpportunityRepository(make_session_factory(_engine))
+
+# Books a API rapide (sans navigateur) : reponse en quelques secondes, adaptes
+# a un scan declenche depuis le web. Paryaj Lakay (Playwright) est optionnel.
+FAST_BOOKMAKERS = ("1xBet", "Golcash", "Paryaj Pam")
+
+
+def _build_fast_scrapers(exclude: set[str]):
+    from ..scrapers.golcash import GolcashScraper
+    from ..scrapers.paryajpam import ParyajPamScraper
+    from ..scrapers.xbet import XBetScraper
+
+    candidates = [
+        XBetScraper(base_url=settings.xbet_base_url),
+        GolcashScraper(base_url=settings.golcash_base_url),
+        ParyajPamScraper(base_url=settings.paryajpam_base_url),
+    ]
+    return [s for s in candidates if s.bookmaker_name not in exclude]
+
+
+async def _live_scan(sport: str, min_roi: float, exclude: set[str]) -> dict:
+    """Scan en direct des books rapides -> stats + opportunites classees."""
+    pool: list[Odd] = []
+    up: list[str] = []
+    down: list[str] = []
+    for scraper in _build_fast_scrapers(exclude):
+        try:
+            odds = await scraper.scrape(sport)
+            pool.extend(odds)
+            up.append(scraper.bookmaker_name)
+        except (ScraperUnavailableError, Exception) as exc:  # noqa: BLE001
+            logger.warning("Scan live: %s indisponible (%s)", scraper.bookmaker_name, exc)
+            down.append(scraper.bookmaker_name)
+
+    ranked = rank_cross_book(pool, bankroll=settings.default_bankroll)
+    filtered = [o for o in ranked if o.roi_pct >= min_roi] if min_roi > 0 else ranked
+    stats = scan_stats(pool, ranked)
+    stats["bookmakers_down"] = down
+    return {
+        "stats": stats,
+        "opportunities": [o.to_dict() for o in filtered],
+        "sport": sport,
+        "min_roi": min_roi,
+    }
 
 
 def _bankroll_curve(rows) -> list[dict]:
@@ -68,17 +117,17 @@ def _ai_match_success_rate(rows) -> float:
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
-    rows = await _repo.all()
-    recent = sorted(rows, key=lambda r: r.date_detection, reverse=True)[:50]
-    context = {
-        "opportunities": recent,
-        "total": len(rows),
-        "bankroll_curve": _bankroll_curve(rows),
-        "bankroll_svg": _bankroll_svg(_bankroll_curve(rows)),
-        "ai_success_rate": _ai_match_success_rate(rows),
-        "total_profit": round(sum(r.profit or 0.0 for r in rows), 2),
-    }
-    return templates.TemplateResponse(request, "index.html", context)
+    return templates.TemplateResponse(request, "index.html", {
+        "default_min_profit": settings.min_roi_alert_pct,
+        "bookmakers": list(FAST_BOOKMAKERS),
+    })
+
+
+@app.get("/api/scan")
+async def api_scan(sport: str = "football", min_profit: float = 0.0, exclude: str = ""):
+    """Scan en direct : cotes par issue, surebets et quasi-surebets."""
+    excluded = {b.strip() for b in exclude.split(",") if b.strip()}
+    return await _live_scan(sport, min_profit, excluded)
 
 
 @app.get("/fragments/opportunities", response_class=HTMLResponse)
