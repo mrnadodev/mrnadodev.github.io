@@ -7,7 +7,59 @@ Aucun reseau : le client WebSocket est un double de test.
 import pytest
 
 from surebet.scrapers.golcash import GolcashScraper, _extract_line
-from surebet.scrapers.swarm import EVENT_TYPE_TO_SELECTION, MARKET_TYPE_MAP
+from surebet.scrapers.swarm import (
+    EVENT_TYPE_TO_SELECTION,
+    MARKET_TYPE_MAP,
+    pattern_market,
+    resolve_swarm_market,
+)
+
+
+class TestDynamicMarketRecognition:
+    """Repond a : si Golcash AJOUTE des marches de niche (cartons, fautes,
+    tirs...) sur un match, le systeme les reconnait-il sans modif du code ?
+
+    Oui : resolve_swarm_market combine la liste blanche explicite ET une
+    reconnaissance par motif des noms BetConstruct.
+    """
+
+    def test_known_corners_via_whitelist(self):
+        assert resolve_swarm_market("CornersOverUnder") == ("corners_total", 2, None)
+        assert resolve_swarm_market("HomeTeamCornersOverUnder") == ("corners_team", 2, "home")
+
+    @pytest.mark.parametrize("swarm_type,expected", [
+        ("YellowCardsOverUnder", ("cards_total", 2, None)),
+        ("HomeTeamYellowCardsOverUnder", ("cards_team", 2, "home")),
+        ("AwayTeamYellowCardsOverUnder", ("cards_team", 2, "away")),
+        ("FoulsOverUnder", ("fouls_total", 2, None)),
+        ("ShotsOnTargetOverUnder", ("shots_on_target_total", 2, None)),
+        ("TotalShotsOverUnder", ("shots_total", 2, None)),
+        ("TacklesOverUnder", ("tackles_total", 2, None)),
+        ("OffsidesOverUnder", ("offside_total", 2, None)),
+        ("GoalKicksOverUnder", ("goalkicks_total", 2, None)),
+        ("SavesOverUnder", ("saves_total", 2, None)),
+        ("ThrowInsOverUnder", ("throwins_total", 2, None)),
+    ])
+    def test_added_niche_markets_auto_recognized(self, swarm_type, expected):
+        """Marches non presents aujourd'hui mais que l'operateur pourrait ajouter."""
+        assert resolve_swarm_market(swarm_type) == expected
+
+    def test_half_time_and_second_half_suffixes(self):
+        assert pattern_market("HalfTimeFoulsOverUnder")[0] == "fouls_total_1h"
+        assert pattern_market("2ndHalfCardsOver/Under")[0] == "cards_total_2h"
+
+    @pytest.mark.parametrize("swarm_type", [
+        "AsianHandicap", "CornerHandicap", "CornerOddEven", "P1XP2",
+        "CorrectScore", "BothTeamsToScore", "HalfTimeResult",
+    ])
+    def test_non_over_under_markets_rejected(self, swarm_type):
+        """Handicap / odd-even / 1x2 ne sont pas des paires over/under -> ignores."""
+        assert pattern_market(swarm_type) is None
+
+    def test_shots_on_target_matched_before_shots(self):
+        """L'ordre des mots-cles evite de classer 'tirs cadres' en 'tirs'."""
+        assert pattern_market("ShotsOnTargetOverUnder")[0] == "shots_on_target_total"
+        assert pattern_market("TotalShotsOverUnder")[0] == "shots_total"
 
 # Structure reelle Swarm : sport -> competition -> game -> market -> event
 LIVE_SHAPED_PAYLOAD = {

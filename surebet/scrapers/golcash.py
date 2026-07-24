@@ -17,7 +17,7 @@ from datetime import datetime, timezone
 
 from ..normalizer.schema import Odd, make_match_id
 from .base import BookmakerScraper, ScraperUnavailableError
-from .swarm import EVENT_TYPE_TO_SELECTION, MARKET_TYPE_MAP, SWARM_TEAM_SCOPE, SwarmClient
+from .swarm import EVENT_TYPE_TO_SELECTION, SwarmClient, resolve_swarm_market
 
 logger = logging.getLogger("surebet.scrapers.golcash")
 
@@ -42,10 +42,14 @@ class GolcashScraper(BookmakerScraper):
 
         try:
             async with SwarmClient(site_id=self.site_id) as client:
+                # market_types=None : on demande TOUS les marches, pas seulement
+                # une liste blanche, pour capter ceux que l'operateur ajoute
+                # (cartons, fautes, tirs... sur les grands matchs). La
+                # reconnaissance se fait ensuite par resolve_swarm_market.
                 data = await client.fetch_markets(
                     sport_alias=alias,
                     game_type=1 if self.live else 0,
-                    market_types=list(MARKET_TYPE_MAP),
+                    market_types=None,
                 )
         except Exception as exc:
             raise ScraperUnavailableError(f"Golcash (Swarm): {exc}") from exc
@@ -78,12 +82,10 @@ class GolcashScraper(BookmakerScraper):
 
         out: list[Odd] = []
         for market in (game.get("market") or {}).values():
-            swarm_type = market.get("type")
-            mapped = MARKET_TYPE_MAP.get(swarm_type)
-            if mapped is None:
+            resolved = resolve_swarm_market(market.get("type"))
+            if resolved is None:
                 continue
-            market_type, n_outcomes = mapped
-            team_scope = SWARM_TEAM_SCOPE.get(swarm_type)
+            market_type, n_outcomes, team_scope = resolved
 
             for event in (market.get("event") or {}).values():
                 selection = EVENT_TYPE_TO_SELECTION.get(event.get("type"))

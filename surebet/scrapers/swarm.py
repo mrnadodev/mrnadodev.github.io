@@ -75,6 +75,71 @@ SWARM_TEAM_SCOPE = {
     "HalfTimeTeam1CornersOverUnder": "home", "HalfTimeTeam2CornersOverUnder": "away",
 }
 
+# --- Reconnaissance DYNAMIQUE des marches-stat BetConstruct par motif ---------
+#
+# Repond a : "si Golcash AJOUTE cartons/fautes/tirs sur un match (ex. Premier
+# League), le systeme les reconnaitra-t-il sans que j'aie code chaque nom ?"
+# Oui : au lieu d'une liste blanche figee, on detecte le type par mots-cles.
+# BetConstruct nomme ses marches de facon reguliere :
+#   "{Prefix}OverUnder", "HomeTeam{Prefix}OverUnder", "AwayTeam{Prefix}OverUnder",
+#   "HalfTime{Prefix}OverUnder", "2ndHalf{Prefix}Over/Under", ...
+import re as _re
+
+# Mots-cles de statistique -> prefixe canonique (ordre : le plus specifique d'abord)
+_SWARM_STAT_KEYWORDS: list[tuple[_re.Pattern, str]] = [
+    # Pas de \b : les noms BetConstruct sont en camelCase sans separateur
+    # ("2ndHalfCardsOverUnder"), donc les frontieres de mot ne s'appliquent pas.
+    (_re.compile(r"shots?ontarget", _re.I), "shots_on_target"),
+    (_re.compile(r"corners?", _re.I), "corners"),
+    (_re.compile(r"yellowcards?|redcards?|cards?", _re.I), "cards"),
+    (_re.compile(r"fouls?", _re.I), "fouls"),
+    (_re.compile(r"tackles?", _re.I), "tackles"),
+    (_re.compile(r"offsides?", _re.I), "offside"),
+    (_re.compile(r"goalkicks?", _re.I), "goalkicks"),
+    (_re.compile(r"throwins?", _re.I), "throwins"),
+    (_re.compile(r"saves?", _re.I), "saves"),
+    (_re.compile(r"var", _re.I), "var"),
+    (_re.compile(r"shots?", _re.I), "shots"),
+]
+_SWARM_HOME_RE = _re.compile(r"hometeam|\bteam1\b|home", _re.I)
+_SWARM_AWAY_RE = _re.compile(r"awayteam|\bteam2\b|away", _re.I)
+_SWARM_OVERUNDER_RE = _re.compile(r"over\s*/?\s*under|totals?\b", _re.I)
+_SWARM_HALF1_RE = _re.compile(r"halftime|1sthalf|firsthalf", _re.I)
+_SWARM_HALF2_RE = _re.compile(r"2ndhalf|secondhalf", _re.I)
+_SWARM_EXCLUDE_RE = _re.compile(r"handicap|asian|oddeven|odd/even|winner|doublechance|raceto|3ways?", _re.I)
+
+
+def pattern_market(type_str: str) -> tuple[str, int, str | None] | None:
+    """Reconnait un marche-stat Over/Under BetConstruct par motif.
+
+    Retourne (market_type, n_outcomes=2, team_scope) ou None. Ne matche que les
+    totaux Over/Under (pas handicap/oddeven/1x2, qui ne sont pas des paires
+    over/under exploitables ici).
+    """
+    if not type_str or _SWARM_EXCLUDE_RE.search(type_str):
+        return None
+    if not _SWARM_OVERUNDER_RE.search(type_str):
+        return None
+    stat = next((s for rx, s in _SWARM_STAT_KEYWORDS if rx.search(type_str)), None)
+    if stat is None:
+        return None
+    scope = "home" if _SWARM_HOME_RE.search(type_str) else "away" if _SWARM_AWAY_RE.search(type_str) else None
+    suffix = "_1h" if _SWARM_HALF1_RE.search(type_str) else "_2h" if _SWARM_HALF2_RE.search(type_str) else ""
+    base = f"{stat}_team" if scope else f"{stat}_total"
+    return f"{base}{suffix}", 2, scope
+
+
+def resolve_swarm_market(type_str: str) -> tuple[str, int, str | None] | None:
+    """Type BetConstruct -> (market_type, n_outcomes, team_scope).
+
+    Liste blanche explicite d'abord (controle precis), puis reconnaissance par
+    motif (capte les marches AJOUTES par l'operateur sans modification du code).
+    """
+    mapped = MARKET_TYPE_MAP.get(type_str)
+    if mapped is not None:
+        return mapped[0], mapped[1], SWARM_TEAM_SCOPE.get(type_str)
+    return pattern_market(type_str)
+
 
 class SwarmClient:
     """Client WebSocket minimal pour l'API Swarm de BetConstruct."""

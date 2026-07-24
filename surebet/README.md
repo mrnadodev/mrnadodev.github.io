@@ -213,9 +213,14 @@ hors-jeu, touches — état réel constaté en live (juillet 2026) :
 - **Paryaj Lakay** : format spécifique **« N ou + »** (« 5 ou + » = Over 4.5),
   désormais reconnu par `markets.py`. Vérifié live : 13 cotes `corners_team`
   captées sur un match. La profondeur des marchés de niche varie selon le match.
-- **Golcash** : son feed BetConstruct (240 types) ne propose **que les corners**
-  au-delà des buts — aucun cartons/fautes/tirs n'existe côté opérateur. On ne
-  peut pas ajouter ce que le book ne cote pas.
+- **Golcash** : son feed BetConstruct ne propose aujourd'hui **que les corners**
+  au-delà des buts. **Mais reconnaissance dynamique** : le scraper demande
+  désormais *tous* les marchés (plus de liste blanche figée) et `resolve_swarm_market`
+  reconnaît par motif les noms BetConstruct (`{Prefix}OverUnder`,
+  `HomeTeam{Prefix}OverUnder`…). **Si Golcash ajoute cartons/fautes/tirs sur un
+  match (ex. Premier League), ils sont captés automatiquement, sans modifier le
+  code** — `YellowCardsOverUnder` → `cards_total`, `FoulsOverUnder` →
+  `fouls_total`, etc. (handicap / odd-even / 1x2 correctement ignorés).
 
 ### Couverture des marchés de niche (Paryaj Pam / 1xBet, détail)
 
