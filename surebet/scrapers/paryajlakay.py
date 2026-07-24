@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 import re
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from ..normalizer.schema import Odd
 from .parsing import MatchMeta
@@ -90,9 +90,34 @@ class ParyajLakayScraper(PlaywrightScraper):
 
     @staticmethod
     def _extract_start_time(soup) -> datetime:
-        # La recon montrait "Aujourd'hui 18:00" ; a defaut d'un timestamp fiable
-        # dans le DOM, on rattache au jour courant (le match_id tolere le jour UTC).
-        return datetime.now(timezone.utc)
+        """Heure de debut du match depuis le DOM ("Aujourd'hui 18:00", "24/07 18:00").
+
+        IMPORTANT : `match_id` est un hash (equipes + jour UTC). Retourner
+        systematiquement l'heure courante ferait echouer l'appariement avec les
+        autres bookmakers des qu'un match n'est pas le jour meme.
+        """
+        text = soup.get_text(" ", strip=True)[:2000]
+        now = datetime.now(timezone.utc)
+
+        time_match = re.search(r"\b([01]?\d|2[0-3])[:h]([0-5]\d)\b", text)
+        hour, minute = (int(time_match.group(1)), int(time_match.group(2))) if time_match else (0, 0)
+
+        # Date explicite JJ/MM (eventuellement /AAAA)
+        date_match = re.search(r"\b(\d{1,2})[/.](\d{1,2})(?:[/.](\d{2,4}))?\b", text)
+        if date_match:
+            day, month = int(date_match.group(1)), int(date_match.group(2))
+            year = int(date_match.group(3) or now.year)
+            if year < 100:
+                year += 2000
+            try:
+                return datetime(year, month, day, hour, minute, tzinfo=timezone.utc)
+            except ValueError:
+                pass
+
+        base = now
+        if re.search(r"\bdemain\b|\btomorrow\b|\bdemen\b", text, re.I):
+            base = now + timedelta(days=1)
+        return base.replace(hour=hour, minute=minute, second=0, microsecond=0)
 
     async def scrape(self, sport: str) -> list[Odd]:
         all_odds: list[Odd] = []

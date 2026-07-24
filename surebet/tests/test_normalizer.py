@@ -110,6 +110,45 @@ def test_corners_first_half_vs_full_match_are_distinct_markets():
     assert full_match.market_type != first_half.market_type
 
 
+class TestPromoVariantsNeverMergeWith1x2:
+    """Regression : "Resultat du match 2UP" est une variante promotionnelle.
+
+    Releve en test live sur Paryaj Lakay : son titre matche "Resultat du match"
+    et ses selections "1: 2UP"/"X: 2UP"/"2: 2UP" matchent 1/X/2. Sans separation,
+    il fusionnait avec le vrai 1X2 -> deux jeux de cotes sous le meme
+    market_type, donc de faux arbitrages.
+    """
+
+    def test_2up_is_a_distinct_market_type(self):
+        standard = normalize_market_label("Resultat du match", "1", HOME, AWAY)
+        promo = normalize_market_label("Resultat du match 2UP", "1: 2UP", HOME, AWAY)
+        assert standard.market_type == "1x2"
+        assert promo.market_type == "1x2_promo"
+        assert standard.market_type != promo.market_type
+
+    @pytest.mark.parametrize("selection", ["1: 2UP", "X: 2UP", "2: 2UP"])
+    def test_all_2up_selections_are_flagged(self, selection):
+        result = normalize_market_label("Resultat du match 2UP", selection, HOME, AWAY)
+        assert result.market_type == "1x2_promo"
+
+    def test_2up_keeps_correct_selection(self):
+        assert normalize_market_label("Resultat du match 2UP", "1: 2UP", HOME, AWAY).selection == "home"
+        assert normalize_market_label("Resultat du match 2UP", "X: 2UP", HOME, AWAY).selection == "draw"
+        assert normalize_market_label("Resultat du match 2UP", "2: 2UP", HOME, AWAY).selection == "away"
+
+    @pytest.mark.parametrize("label", [
+        "Resultat du match avec assurance",
+        "Match result cashback",
+        "Resultat du match rembourse si nul",
+    ])
+    def test_other_promo_wordings_are_separated(self, label):
+        assert normalize_market_label(label, "1", HOME, AWAY).market_type == "1x2_promo"
+
+    def test_plain_1x2_is_not_flagged_as_promo(self):
+        assert normalize_market_label("Resultat du match", "1", HOME, AWAY).market_type == "1x2"
+        assert normalize_market_label("Match Result", "Home", HOME, AWAY).market_type == "1x2"
+
+
 def test_1x2_first_half_vs_full_match_are_distinct():
     full_match = normalize_market_label("Resultat du match", "1", HOME, AWAY)
     first_half = normalize_market_label("Resultat du match 1ere mi-temps", "1", HOME, AWAY)

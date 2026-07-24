@@ -95,6 +95,23 @@ structurellement attendu entre ces deux books seuls.**
 > stratégiquement important, et pourquoi les exemples de la mission combinent
 > justement 1xBet et Paryaj Lakay avec ces deux books.
 
+### Pièges d'appariement relevés en live
+
+Trois faux appariements détectés sur des données réelles, chacun capable de
+fabriquer un surebet fantôme. Tous sont désormais bloqués et couverts par des
+tests de non-régression :
+
+| Piège | Symptôme | Traitement |
+|---|---|---|
+| **Variante promo « 2UP »** (Paryaj Lakay) | « Résultat du match **2UP** » a un titre qui matche `Résultat du match` et des sélections `1: 2UP`/`X: 2UP`/`2: 2UP` qui matchent `1`/`X`/`2` → deux jeux de cotes sous le même `1x2` | `market_type` distinct `1x2_promo` |
+| **Périodes** (Paryaj Pam, Golcash) | Le même type de marché sert le temps réglementaire et les mi-temps | suffixes `_1h` / `_2h` ; période inconnue = marché écarté |
+| **Variantes Team1/Team2** | « tirs équipe A » et « tirs équipe B » partagent le `market_type` | `team_scope` obligatoire (`home`/`away`) |
+
+> Signe d'alerte utile : une marge implicite aberrante. Un « 1X2 » à `M ≈ 1,80`
+> n'est pas un 1X2 — c'est un marché mal apparié (double chance ou variante
+> promo). Le `scorer` traite d'ailleurs un ROI > 25 % comme un drapeau rouge
+> pour cette raison (§6.3).
+
 ### Couverture des marchés de niche
 
 Les marchés de niche sont **systématiquement moins margés** que le 1X2, donc
