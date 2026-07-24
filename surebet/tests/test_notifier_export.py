@@ -71,6 +71,40 @@ def test_format_alert_contains_stakes_links_and_explanation():
     assert "Fè vit!" in text
 
 
+def test_format_alert_is_valid_html_with_special_chars():
+    """Regression : market_type "shots_team" (underscore) et noms d'equipes
+    cassaient le parseur Markdown herite -> on emet du HTML echappe (parse_mode
+    HTML), teste envoye avec succes en live sur Telegram."""
+    opp = _three_way_opp()
+    opp.market_type = "shots_team"          # underscore : cassait le Markdown
+    opp.match_label = "A & B <C>"           # &, <, > : doivent etre echappes
+    text = format_alert(opp)
+    # balises HTML valides, pas de Markdown
+    assert "<b>SUREBET" in text and "</b>" in text
+    assert "<a href=" in text
+    # caracteres speciaux echappes
+    assert "A &amp; B &lt;C&gt;" in text
+    # l'underscore n'est plus un marqueur d'italique
+    assert "shots_team" in text
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_notifier_uses_html_parse_mode():
+    import json as _json
+
+    captured = {}
+
+    def _capture(request):
+        captured.update(_json.loads(request.content))
+        return httpx.Response(200, json={"ok": True})
+
+    respx.post(url__regex=r".*/sendMessage").mock(side_effect=_capture)
+    notifier = TelegramNotifier(bot_token="123:abc", chat_id="@chan")
+    await notifier.send(_three_way_opp())
+    assert captured["parse_mode"] == "HTML"
+
+
 @pytest.mark.asyncio
 async def test_notifier_not_configured_returns_false():
     notifier = TelegramNotifier(bot_token=None, chat_id=None)

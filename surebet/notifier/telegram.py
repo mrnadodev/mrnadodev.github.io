@@ -6,11 +6,17 @@ Envoi via l'API Bot Telegram (httpx) ; scaffold uniquement (pas de token en dur)
 """
 from __future__ import annotations
 
+import html
 import logging
 
 import httpx
 
 from ..normalizer.schema import Opportunity
+
+
+def _esc(value) -> str:
+    """Echappe pour le parse_mode HTML de Telegram (seuls & < > importent)."""
+    return html.escape(str(value), quote=False)
 
 logger = logging.getLogger("surebet.notifier.telegram")
 
@@ -23,26 +29,33 @@ def should_alert(opp: Opportunity, min_roi: float = 2.0, min_score: int = 70) ->
 
 
 def format_alert(opp: Opportunity) -> str:
-    """Message Markdown : calcul complet, mises arrondies, liens directs, explication."""
+    """Message HTML : calcul complet, mises arrondies, liens directs, explication.
+
+    HTML plutot que Markdown : les noms d'equipes et market_type contiennent des
+    caracteres (`_`, `*`...) qui cassent le parseur Markdown herite de Telegram.
+    En HTML, seuls &, <, > doivent etre echappes (via _esc).
+    """
+    ligne = f" · ligne {_esc(opp.line)}" if opp.line is not None else ""
     header = (
-        f"*SUREBET {opp.roi_pct:.2f}%* — {opp.match_label}\n"
-        f"_{opp.sport} · {opp.market_type}"
-        + (f" · ligne {opp.line}" if opp.line is not None else "")
-        + f" · {opp.n_outcomes} issues_\n"
+        f"<b>SUREBET {opp.roi_pct:.2f}%</b> — {_esc(opp.match_label)}\n"
+        f"<i>{_esc(opp.sport)} · {_esc(opp.market_type)}{ligne} · {opp.n_outcomes} issues</i>\n"
     )
+    score = f"{opp.score_ia}/100" if opp.score_ia is not None else "—"
     stats = (
-        f"Marge M : `{opp.margin:.4f}`\n"
-        f"Bankroll : `{opp.bankroll:.0f}` HTG → Profit garanti : *{opp.profit:.0f} HTG*\n"
-        f"Score IA : `{opp.score_ia}/100`\n"
+        f"Marge M : <code>{opp.margin:.4f}</code>\n"
+        f"Bankroll : <code>{opp.bankroll:.0f}</code> HTG → Profit garanti : "
+        f"<b>{opp.profit:.0f} HTG</b>\n"
+        f"Score IA : <code>{score}</code>\n"
     )
     legs_lines = []
     for i, leg in enumerate(opp.legs, start=1):
         legs_lines.append(
-            f"{i}. *{leg.selection}* @ `{leg.odds}` chez *{leg.bookmaker}* → miser `{leg.stake:.0f}` HTG\n"
-            f"   [Placer le pari]({leg.url})"
+            f"{i}. <b>{_esc(leg.selection)}</b> @ <code>{_esc(leg.odds)}</code> "
+            f"chez <b>{_esc(leg.bookmaker)}</b> → miser <code>{leg.stake:.0f}</code> HTG\n"
+            f'   <a href="{_esc(leg.url)}">Placer le pari</a>'
         )
     legs_block = "\n".join(legs_lines)
-    explanation = f"\n\n_{opp.explanation}_" if opp.explanation else ""
+    explanation = f"\n\n<i>{_esc(opp.explanation)}</i>" if opp.explanation else ""
     return f"{header}\n{stats}\n{legs_block}{explanation}"
 
 
@@ -69,7 +82,7 @@ class TelegramNotifier:
         payload = {
             "chat_id": self.chat_id,
             "text": text,
-            "parse_mode": "Markdown",
+            "parse_mode": "HTML",
             "disable_web_page_preview": True,
         }
         try:
