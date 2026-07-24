@@ -119,6 +119,56 @@ class TestProtocolMappings:
         assert period_suffix({}) is None
 
 
+class TestDynamicNameRecognition:
+    """Si Paryaj Pam ajoute un marche avec un tp non mappe, il est reconnu par
+    son nom `nm` (fallback dynamique), au lieu d'etre ignore."""
+
+    def test_known_names(self):
+        from surebet.scrapers.pamws import market_from_name
+
+        assert market_from_name("CornersTotal") == ("corners_total", 2, None)
+        assert market_from_name("CornersTeam1Total") == ("corners_team", 2, "home")
+        assert market_from_name("FoulsTeam2Total") == ("fouls_team", 2, "away")
+
+    @pytest.mark.parametrize("name,expected", [
+        ("YellowCardsTotal", ("cards_total", 2, None)),
+        ("ShotsOnTargetTotal", ("shots_on_target_total", 2, None)),
+        ("ShotsAllTotal", ("shots_total", 2, None)),
+        ("TacklesTotal", ("tackles_total", 2, None)),
+        ("SavesTotal", ("saves_total", 2, None)),
+        ("VARTotal", ("var_total", 2, None)),   # VAR non offert aujourd'hui, mais capte si ajoute
+    ])
+    def test_added_markets_recognized_by_name(self, name, expected):
+        from surebet.scrapers.pamws import market_from_name
+
+        assert market_from_name(name) == expected
+
+    @pytest.mark.parametrize("name", [
+        "CornersHandicap", "CornersDoubleChance", "CornersTotalOddEven",
+        "CornersWinner3Ways", "Winner3Ways", "DoubleChance",
+    ])
+    def test_non_over_under_rejected(self, name):
+        from surebet.scrapers.pamws import market_from_name
+
+        assert market_from_name(name) is None
+
+    def test_unmapped_tp_falls_back_to_name(self):
+        """Un marche avec tp inconnu mais nom reconnu doit produire des cotes."""
+        payload = {"1": [{"trn": "T", "events": [{
+            "id": "1", "nm": "A - B", "cms": ["A", "B"], "tm": "2026-07-24T10:00:00Z",
+            "mr": {"x": {
+                "tp": 99999, "pn": "MainTime", "nm": "VARTotal", "vl": "2.5",
+                "ou": [
+                    {"[k0]": {"nm": "Over", "kf": 1.9, "vl": "2.5"}},
+                    {"[k1]": {"nm": "Under", "kf": 1.9, "vl": "2.5"}},
+                ],
+            }},
+        }]}]}
+        odds = ParyajPamScraper()._parse(payload, "football", 1)
+        assert len(odds) == 2
+        assert all(o.market_type == "var_total" for o in odds)
+
+
 class TestParseOutcomes:
     def test_extracts_selection_odds_and_line(self):
         m = market(4, "MainTime", [

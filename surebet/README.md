@@ -208,7 +208,9 @@ hors-jeu, touches — état réel constaté en live (juillet 2026) :
 | VAR | ❌ | ✅ | ❌ | ❌ |
 
 - **Paryaj Pam** : 40+ types déjà mappés (`pamws.py`) — tout sauf VAR, que le
-  book n'offre pas.
+  book n'offre pas. **Reconnaissance dynamique** : si l'opérateur ajoute un
+  marché avec un `tp` non mappé, `market_from_name` le reconnaît par son nom
+  (`CornersTotal`, `YellowCardsTeam1Total`… et `VARTotal` s'il est ajouté).
 - **1xBet** : tous via le feed par-événement (`xbet_stats.py`), VAR compris.
 - **Paryaj Lakay** : format spécifique **« N ou + »** (« 5 ou + » = Over 4.5),
   désormais reconnu par `markets.py`. Vérifié live : 13 cotes `corners_team`

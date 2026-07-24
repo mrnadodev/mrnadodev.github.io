@@ -24,6 +24,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import re
 
 logger = logging.getLogger("surebet.scrapers.pamws")
 
@@ -126,6 +127,47 @@ TEAM_SCOPE_BY_TP = {
     381: "home", 382: "away",       # arrets
     420: "home", 421: "away",       # tacles
 }
+
+# --- Reconnaissance DYNAMIQUE par nom de marche (fallback) -------------------
+#
+# Comme pour Golcash : si Paryaj Pam AJOUTE un marche de niche avec un `tp` non
+# encore mappe, on le reconnait par son nom `nm` plutot que de l'ignorer.
+# Les noms Pam sont en camelCase ("CornersTotal", "YellowCardsTeam1Total"...).
+# La periode reste fournie par `pn` (MainTime/Half1/Half2) -> on renvoie le
+# type de base SANS suffixe, le suffixe est applique ensuite.
+_PAM_STAT_KEYWORDS: list[tuple[re.Pattern, str]] = [
+    (re.compile(r"shotsontarget", re.I), "shots_on_target"),
+    (re.compile(r"corners?", re.I), "corners"),
+    (re.compile(r"yellowcards?|redcards?|cards?", re.I), "cards"),
+    (re.compile(r"fouls?", re.I), "fouls"),
+    (re.compile(r"tackles?", re.I), "tackles"),
+    (re.compile(r"offsides?", re.I), "offside"),
+    (re.compile(r"goalkicks?", re.I), "goalkicks"),
+    (re.compile(r"throwins?", re.I), "throwins"),
+    (re.compile(r"saves?", re.I), "saves"),
+    (re.compile(r"var", re.I), "var"),
+    (re.compile(r"shots?", re.I), "shots"),
+]
+_PAM_EXCLUDE_RE = re.compile(r"oddeven|handicap|doublechance|winner|raceto|3ways?|halftimeandmaintime", re.I)
+
+
+def market_from_name(name: str) -> tuple[str, int, str | None] | None:
+    """Reconnait un total Over/Under de niche par son nom (fallback dynamique).
+
+    Retourne (market_type_base, n_outcomes=2, team_scope) sans suffixe de
+    periode (applique ensuite via `pn`). None si ce n'est pas un total
+    over/under de statistique.
+    """
+    if not name or _PAM_EXCLUDE_RE.search(name):
+        return None
+    if not re.search(r"total", name, re.I):  # les over/under Pam sont nommes "...Total"
+        return None
+    stat = next((s for rx, s in _PAM_STAT_KEYWORDS if rx.search(name)), None)
+    if stat is None:
+        return None
+    scope = "home" if re.search(r"team1", name, re.I) else "away" if re.search(r"team2", name, re.I) else None
+    return (f"{stat}_team" if scope else f"{stat}_total"), 2, scope
+
 
 # `pn` (nom de periode) -> suffixe de market_type.
 # CRITIQUE : le flux renvoie le meme `tp` pour le temps reglementaire et pour

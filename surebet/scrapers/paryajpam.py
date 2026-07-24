@@ -20,6 +20,7 @@ from .pamws import (
     MARKET_TYPE_BY_TP,
     TEAM_SCOPE_BY_TP,
     ParyajPamWSClient,
+    market_from_name,
     parse_outcomes,
     period_suffix,
 )
@@ -89,16 +90,23 @@ class ParyajPamScraper(BookmakerScraper):
             if not isinstance(market, dict):
                 continue
             mapped = MARKET_TYPE_BY_TP.get(market.get("tp"))
+            team_scope = TEAM_SCOPE_BY_TP.get(market.get("tp"))
             if mapped is None:
-                continue
+                # Fallback dynamique : marche ajoute par l'operateur, reconnu
+                # par son nom `nm` (voir market_from_name). Le scope vient alors
+                # du nom (Team1/Team2), pas de la table figee.
+                by_name = market_from_name(market.get("nm", ""))
+                if by_name is None:
+                    continue
+                base_type, n_outcomes, team_scope = by_name
+            else:
+                base_type, n_outcomes = mapped
             # Periode inconnue -> on ecarte, plutot que de risquer d'apparier
             # une mi-temps avec un match entier (spec MISSION §6.1).
             suffix = period_suffix(market)
             if suffix is None:
                 continue
-            base_type, n_outcomes = mapped
             market_type = f"{base_type}{suffix}"
-            team_scope = TEAM_SCOPE_BY_TP.get(market.get("tp"))
 
             for selection, odds_value, line in parse_outcomes(market):
                 try:
