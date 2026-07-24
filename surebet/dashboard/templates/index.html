@@ -133,10 +133,17 @@
         {% for b in bookmakers %}<option value="{{ b }}">{{ b }}</option>{% endfor %}
       </select>
     </div>
+    <div>
+      <label>Paryaj Lakay</label>
+      <label style="display:flex;align-items:center;gap:.5rem;text-transform:none;letter-spacing:0;color:var(--text);font-size:.85rem;cursor:pointer;margin:0;">
+        <input type="checkbox" id="f-lakay" onchange="scan()" style="width:auto;">
+        Inclure (plus lent, ~1 min)
+      </label>
+    </div>
   </div>
 
   <div class="section-title">Opportunités Arbitrage Actives</div>
-  <div class="note" id="scan-note">Le scan interroge les bookmakers à API rapide (1xBet, Golcash, Paryaj Pam). Un surebet réel est rare : la liste montre aussi les meilleures combinaisons proches, avec les cotes par issue.</div>
+  <div class="note" id="scan-note">Le scan interroge 1xBet, Golcash et Paryaj Pam (API rapide). Cochez « Paryaj Lakay » pour l'ajouter — il passe par un navigateur et rend le scan plus lent (~1 min). Un surebet réel est rare : la liste montre aussi les meilleures combinaisons proches, avec les cotes par issue.</div>
   <div id="opps"><div class="empty">Aucun scan effectué. Cliquez sur « Scanner ».</div></div>
 </div>
 
@@ -153,11 +160,13 @@ async function scan(){
   const btn = document.getElementById('rescan');
   const sport = document.getElementById('f-sport').value;
   const exclude = [...document.getElementById('f-exclude').selectedOptions].map(o=>o.value).join(',');
-  btn.disabled = true; btn.textContent = '⏳ Scan…';
+  const lakay = document.getElementById('f-lakay').checked;
+  btn.disabled = true; btn.textContent = lakay ? '⏳ Scan… (~1 min)' : '⏳ Scan…';
   document.getElementById('status').innerHTML = '<span class="dot"></span>Scan en cours';
-  document.getElementById('status-sub').textContent = 'Scraping en continu';
+  document.getElementById('status-sub').textContent = lakay
+      ? 'Paryaj Lakay via navigateur, patientez…' : 'Scraping en continu';
   try {
-    const r = await fetch(`/api/scan?sport=${sport}&min_profit=0&exclude=${encodeURIComponent(exclude)}`);
+    const r = await fetch(`/api/scan?sport=${sport}&min_profit=0&exclude=${encodeURIComponent(exclude)}&include_lakay=${lakay}`);
     LAST = await r.json();
     applyStats(LAST.stats);
     render();

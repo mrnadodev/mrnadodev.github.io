@@ -6,8 +6,11 @@ rafraichissent la liste sans recharger la page.
 """
 from __future__ import annotations
 
+import asyncio
 import logging
 from pathlib import Path
+
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
@@ -24,7 +27,16 @@ logger = logging.getLogger("surebet.dashboard")
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 
-app = FastAPI(title="Surebet Haiti — Dashboard")
+
+@asynccontextmanager
+async def _lifespan(_app: FastAPI):
+    yield
+    # Fermeture propre de la session navigateur Paryaj Lakay si elle a servi.
+    if _lakay_session is not None:
+        await _lakay_session.stop()
+
+
+app = FastAPI(title="Surebet Haiti — Dashboard", lifespan=_lifespan)
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 _engine = make_engine(settings.database_url)
@@ -48,19 +60,72 @@ def _build_fast_scrapers(exclude: set[str]):
     return [s for s in candidates if s.bookmaker_name not in exclude]
 
 
-async def _live_scan(sport: str, min_roi: float, exclude: set[str]) -> dict:
-    """Scan en direct des books rapides -> stats + opportunites classees."""
-    pool: list[Odd] = []
+# --- Paryaj Lakay : navigateur persistant, reutilise entre les scans ---------
+# Optionnel (lent, ~1 min via Playwright). Une seule session est maintenue en
+# vie pour eviter de relancer Chromium a chaque scan et pour conserver la
+# clearance Cloudflare ; un verrou serialise les scans concurrents.
+_lakay_scraper = None
+_lakay_session = None
+_lakay_lock = asyncio.Lock()
+LAKAY_EVENT_LIMIT = 20
+
+
+async def _scrape_lakay(sport: str) -> list[Odd]:
+    global _lakay_scraper, _lakay_session
+    from ..collector.session import BrowserSession
+    from ..scrapers.paryajlakay import ParyajLakayScraper
+
+    async with _lakay_lock:
+        if _lakay_scraper is None:
+            _lakay_scraper = ParyajLakayScraper(base_url=settings.paryajlakay_base_url)
+            _lakay_session = BrowserSession(name="Paryaj Lakay", headless=settings.browser_headless)
+            _lakay_scraper.attach_session(_lakay_session)
+            await _lakay_session.start()
+
+        urls = await _lakay_scraper._list_event_urls(sport, limit=LAKAY_EVENT_LIMIT)
+        odds: list[Odd] = []
+        for url in urls:
+            try:
+                odds.extend(await _lakay_scraper._scrape_event(url, sport))
+            except Exception:
+                logger.debug("Scan live: evenement Paryaj Lakay illisible (%s)", url)
+        return odds
+
+
+async def _live_scan(sport: str, min_roi: float, exclude: set[str],
+                     include_lakay: bool = False) -> dict:
+    """Scan en direct -> stats + opportunites classees.
+
+    Les books rapides tournent en concurrence ; Paryaj Lakay (optionnel, lent)
+    est lance en parallele et fusionne au pool s'il repond.
+    """
     up: list[str] = []
     down: list[str] = []
-    for scraper in _build_fast_scrapers(exclude):
+
+    async def run(scraper):
         try:
             odds = await scraper.scrape(sport)
-            pool.extend(odds)
             up.append(scraper.bookmaker_name)
-        except (ScraperUnavailableError, Exception) as exc:  # noqa: BLE001
+            return odds
+        except Exception as exc:  # noqa: BLE001
             logger.warning("Scan live: %s indisponible (%s)", scraper.bookmaker_name, exc)
             down.append(scraper.bookmaker_name)
+            return []
+
+    tasks = [run(s) for s in _build_fast_scrapers(exclude)]
+    if include_lakay and "Paryaj Lakay" not in exclude:
+        async def run_lakay():
+            try:
+                odds = await _scrape_lakay(sport)
+                up.append("Paryaj Lakay")
+                return odds
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("Scan live: Paryaj Lakay indisponible (%s)", exc)
+                down.append("Paryaj Lakay")
+                return []
+        tasks.append(run_lakay())
+
+    pool: list[Odd] = [o for batch in await asyncio.gather(*tasks) for o in batch]
 
     ranked = rank_cross_book(pool, bankroll=settings.default_bankroll)
     filtered = [o for o in ranked if o.roi_pct >= min_roi] if min_roi > 0 else ranked
@@ -119,15 +184,16 @@ def _ai_match_success_rate(rows) -> float:
 async def index(request: Request):
     return templates.TemplateResponse(request, "index.html", {
         "default_min_profit": settings.min_roi_alert_pct,
-        "bookmakers": list(FAST_BOOKMAKERS),
+        "bookmakers": list(FAST_BOOKMAKERS) + ["Paryaj Lakay"],
     })
 
 
 @app.get("/api/scan")
-async def api_scan(sport: str = "football", min_profit: float = 0.0, exclude: str = ""):
+async def api_scan(sport: str = "football", min_profit: float = 0.0,
+                   exclude: str = "", include_lakay: bool = False):
     """Scan en direct : cotes par issue, surebets et quasi-surebets."""
     excluded = {b.strip() for b in exclude.split(",") if b.strip()}
-    return await _live_scan(sport, min_profit, excluded)
+    return await _live_scan(sport, min_profit, excluded, include_lakay=include_lakay)
 
 
 @app.get("/fragments/opportunities", response_class=HTMLResponse)

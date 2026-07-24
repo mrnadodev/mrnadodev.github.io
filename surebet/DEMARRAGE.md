@@ -37,6 +37,17 @@ Exemple de rapport :
 
 Fermer la fenêtre pour tout arrêter.
 
+### Le tableau de bord
+
+Le dashboard affiche les **cotes de chaque issue** par bookmaker, façon
+« Arbitrage Scanner Pro ». Par défaut il interroge les 3 books à API rapide
+(1xBet, Golcash, Paryaj Pam) — réponse en quelques secondes. Cochez
+**« Inclure Paryaj Lakay »** pour l'ajouter : il passe par un navigateur, donc
+le scan devient plus lent (~1 min), mais c'est le book à cotation la plus
+indépendante, celui qui crée le plus d'occasions d'arbitrage. Le bouton
+« ↻ Scanner » relance à la demande ; le filtre « Profit minimum » masque les
+combinaisons sous le seuil.
+
 ## À quoi s'attendre, honnêtement
 
 **La plupart des scans ne trouveront rien.** C'est normal et attendu :

@@ -51,6 +51,48 @@ def test_scan_endpoint_shape(client, monkeypatch):
     assert body["opportunities"] == []
 
 
+def test_scan_includes_lakay_only_when_requested(client, monkeypatch):
+    """Paryaj Lakay (lent) n'est scrape que si include_lakay=true."""
+    import surebet.dashboard.app as app_mod
+
+    monkeypatch.setattr(app_mod, "_build_fast_scrapers", lambda exclude: [])
+    calls = {"lakay": 0}
+
+    async def fake_lakay(sport):
+        calls["lakay"] += 1
+        return []
+
+    monkeypatch.setattr(app_mod, "_scrape_lakay", fake_lakay)
+
+    client.get("/api/scan?sport=football")  # defaut : sans Lakay
+    assert calls["lakay"] == 0
+
+    client.get("/api/scan?sport=football&include_lakay=true")
+    assert calls["lakay"] == 1
+
+
+def test_scan_excludes_lakay_even_if_requested(client, monkeypatch):
+    """Si Paryaj Lakay est dans la liste d'exclusion, on ne le scrape pas."""
+    import surebet.dashboard.app as app_mod
+
+    monkeypatch.setattr(app_mod, "_build_fast_scrapers", lambda exclude: [])
+    calls = {"lakay": 0}
+
+    async def fake_lakay(sport):
+        calls["lakay"] += 1
+        return []
+
+    monkeypatch.setattr(app_mod, "_scrape_lakay", fake_lakay)
+    client.get("/api/scan?sport=football&include_lakay=true&exclude=Paryaj Lakay")
+    assert calls["lakay"] == 0
+
+
+def test_index_exposes_lakay_toggle(client):
+    resp = client.get("/")
+    assert "f-lakay" in resp.text
+    assert "Paryaj Lakay" in resp.text
+
+
 def test_opportunities_fragment_empty(client):
     resp = client.get("/fragments/opportunities")
     assert resp.status_code == 200
