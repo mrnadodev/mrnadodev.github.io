@@ -33,7 +33,14 @@ KNOWN_ALIASES: dict[str, str] = {
 # marqueur (les deux U-23, ou aucun des deux).
 SQUAD_MARKERS: dict[str, re.Pattern] = {
     "youth": re.compile(r"\bu-?\s?(?:15|16|17|18|19|20|21|22|23)\b|\byouth\b|\bjunior|\bjeunes?\b", re.I),
-    "reserve": re.compile(r"\breserves?\b|\bres\.\b|\bII\b|\bB\b(?!\w)|\bacademy\b|\bacad[eé]mie\b", re.I),
+    # reserve : suffixes generiques + noms propres d'equipes reserves connues
+    # (Castilla = Real Madrid B, Atletic = Barcelona B) pour ne pas fusionner un
+    # derby reserve avec le match de l'equipe premiere.
+    "reserve": re.compile(
+        r"\breserves?\b|\bres\.\b|\bII\b|\bB\b(?!\w)|\bacademy\b|\bacad[eé]mie\b|"
+        r"\bcastilla\b|\batl[eè]tic\b|\bbis\b",
+        re.I,
+    ),
     "women": re.compile(r"\b(?:women|feminin|f[eé]minines?|dames|ladies|\(w\)|\bw\b)\b", re.I),
 }
 
@@ -78,6 +85,23 @@ def teams_match(name_a: str, name_b: str, threshold: int = DEFAULT_THRESHOLD) ->
     a = resolve_alias(name_a)
     b = resolve_alias(name_b)
     score = fuzz.token_sort_ratio(_canonical_key(a), _canonical_key(b))
+    return score >= threshold
+
+
+def teams_similar(name_a: str, name_b: str, threshold: int = DEFAULT_THRESHOLD) -> bool:
+    """Comme teams_match mais tolerant aux abreviations ("FC Arges" ~ "Arges").
+
+    Utilise token_set_ratio (robuste quand un nom est un sous-ensemble de l'autre)
+    au lieu de token_sort_ratio. Reserve a la reconciliation cross-book, ou l'on
+    exige que LES DEUX equipes matchent : cette double exigence compense la
+    plus grande permissivite du scorer. Le garde-fou de niveau d'equipe reste
+    applique en premier.
+    """
+    if not same_squad_level(name_a, name_b):
+        return False
+    a = _canonical_key(resolve_alias(name_a))
+    b = _canonical_key(resolve_alias(name_b))
+    score = max(fuzz.token_set_ratio(a, b), fuzz.token_sort_ratio(a, b))
     return score >= threshold
 
 

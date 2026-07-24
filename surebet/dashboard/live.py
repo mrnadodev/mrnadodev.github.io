@@ -12,6 +12,7 @@ from dataclasses import asdict, dataclass, field
 
 from ..arbitrage.combinatorics import best_three_way, best_two_way, group_by_match_market
 from ..arbitrage.detector import implied_margin, roi_percent
+from ..arbitrage.reconcile import reconcile_pool
 from ..arbitrage.stakes import split_stakes
 from ..normalizer.schema import Odd
 
@@ -100,6 +101,7 @@ def rank_cross_book(
     montre toujours les cotes par issue. Seules les combinaisons reunissant au
     moins deux bookmakers distincts sont retenues.
     """
+    pool = reconcile_pool(pool)  # relier les memes matchs entre books (fuzzy)
     results: list[LiveOpportunity] = []
     for (_, market_type, line, team_scope), group in group_by_match_market(pool).items():
         if not group:

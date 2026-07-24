@@ -196,6 +196,63 @@ async def api_scan(sport: str = "football", min_profit: float = 0.0,
     return await _live_scan(sport, min_profit, excluded, include_lakay=include_lakay)
 
 
+@app.get("/api/funbets")
+async def api_funbets():
+    """FunBets Paryaj Lakay (paris boostes) chiffres contre les cotes 1xBet."""
+    from ..funbet.pricing import value_funbet
+    from ..scrapers.xbet import XBetScraper
+
+    try:
+        funbets = await _scrape_lakay_funbets()
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("FunBets: extraction impossible (%s)", exc)
+        return {"funbets": [], "error": "Paryaj Lakay FunBet indisponible"}
+
+    try:
+        async with XBetScraper(base_url=settings.xbet_base_url) as xbet:
+            pool = await xbet.scrape("football")
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("FunBets: 1xBet indisponible pour le pricing (%s)", exc)
+        pool = []
+
+    out = []
+    for fb in funbets:
+        val = value_funbet(fb, pool)
+        out.append({
+            "match": fb.match,
+            "description": fb.description,
+            "boosted_odds": fb.boosted_odds,
+            "event_url": (settings.paryajlakay_base_url + fb.event_url) if fb.event_url else None,
+            "complete": val.complete,
+            "fair_odds": round(val.fair_odds, 2) if val.fair_odds else None,
+            "edge_pct": round(val.edge_pct, 1) if val.edge_pct is not None else None,
+            "unpriced_count": val.unpriced_count,
+            "legs": [
+                {"label": p.detail or p.condition.raw,
+                 "raw": p.condition.raw,
+                 "fair_odds": round(p.fair_odds, 2) if p.fair_odds else None,
+                 "bookmaker": p.bookmaker}
+                for p in val.priced
+            ],
+        })
+    out.sort(key=lambda f: (f["edge_pct"] is None, -(f["edge_pct"] or 0)))
+    return {"funbets": out}
+
+
+async def _scrape_lakay_funbets():
+    global _lakay_scraper, _lakay_session
+    from ..collector.session import BrowserSession
+    from ..scrapers.paryajlakay import ParyajLakayScraper
+
+    async with _lakay_lock:
+        if _lakay_scraper is None:
+            _lakay_scraper = ParyajLakayScraper(base_url=settings.paryajlakay_base_url)
+            _lakay_session = BrowserSession(name="Paryaj Lakay", headless=settings.browser_headless)
+            _lakay_scraper.attach_session(_lakay_session)
+            await _lakay_session.start()
+        return await _lakay_scraper.scrape_funbets()
+
+
 @app.get("/fragments/opportunities", response_class=HTMLResponse)
 async def opportunities_fragment(request: Request):
     rows = await _repo.list_recent(limit=50)

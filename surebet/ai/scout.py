@@ -18,6 +18,7 @@ from datetime import datetime, timezone
 
 from ..arbitrage.combinatorics import best_three_way, best_two_way, group_by_match_market
 from ..arbitrage.detector import find_three_way, find_two_way, implied_margin, roi_percent
+from ..arbitrage.reconcile import reconcile_pool
 from ..arbitrage.stakes import split_stakes
 from ..normalizer.schema import Leg, Odd, Opportunity
 
@@ -51,6 +52,7 @@ class Scout:
 
     def evaluate(self, pool: list[Odd]) -> list[Opportunity]:
         """Genere et evalue toutes les combinaisons 2 et 3 issues cross-bookmakers."""
+        pool = reconcile_pool(pool)  # relier les memes matchs entre books (fuzzy)
         opportunities = find_two_way(pool, self.min_roi, self.bankroll) + find_three_way(
             pool, self.min_roi, self.bankroll
         )

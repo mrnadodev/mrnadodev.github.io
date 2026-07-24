@@ -201,3 +201,16 @@ class ParyajLakayScraper(PlaywrightScraper):
             except Exception:
                 logger.exception("Paryaj Lakay: echec sur l'evenement %s", url)
         return all_odds
+
+    async def scrape_funbets(self):
+        """Paris boostes de la section FunBet (spec utilisateur).
+
+        Retourne une liste de FunBet (parses en conditions elementaires). Ces
+        cotes gonflees se combinent avec 1xBet pour des surebets a fort
+        pourcentage ; le pricing est dans surebet/funbet/pricing.py.
+        """
+        from ..funbet.scrape import extract_funbets_from_html
+
+        url = f"{self.base_url}/sports/manual-odds-boosts"
+        html = await self._render_html(url, wait_selector=".manual-odds-boost")
+        return extract_funbets_from_html(html)

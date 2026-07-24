@@ -138,6 +138,47 @@ réserve / féminine) **avant** toute comparaison de similarité — dans
 > promo). Le `scorer` traite d'ailleurs un ROI > 25 % comme un drapeau rouge
 > pour cette raison (§6.3).
 
+### Réconciliation floue des matchs entre bookmakers
+
+`arbitrage/reconcile.py` relie les cotes du même match réel quand les books
+nomment les équipes différemment (« FC Arges » ↔ « Arges »). Sans cela, le
+`match_id` (hash exact) les sépare et elles ne se combinent jamais.
+
+- regroupement par (sport, jour) puis fusion des paires d'équipes jugées
+  identiques par `teams_similar` (token_set_ratio, seuil 85) ;
+- garde-fous conservés : niveau d'équipe (U-23/réserve/féminine) et orientation
+  domicile/extérieur (une inversion changerait les sélections) ;
+- **mesuré en live : matchs cross-book 16 → 46** (×2,9), 37 `match_id` fusionnés.
+
+Appliquée dans le scan du dashboard et dans `Scout.evaluate`.
+
+### FunBets Paryaj Lakay (paris boostés)
+
+La section « FunBet » de Paryaj Lakay (`/sports/manual-odds-boosts`) propose des
+**paris combinés boostés** à cote gonflée (15, 20, 45, 130…), du type
+« X gagne & les deux marquent & chaque équipe 6 corners ou + ». Vous les
+combinez manuellement avec 1xBet pour des surebets à fort pourcentage.
+
+Pipeline (`surebet/funbet/`) :
+- **`scrape.py`** — extraction DOM (`.manual-odds-boost` → `.manual-odds-with-event-item`,
+  `.odds-name` + `.value`) ; **12 FunBets lus en live**.
+- **`parser.py`** — chaque libellé (un ET de conditions) est découpé en
+  conditions élémentaires : victoire, BTTS, seuils (corners/tirs/tirs cadrés
+  ≥ N → Over N−0.5), par équipe ou « chaque équipe ». Les accents sont
+  normalisés (« tirs cadrés »).
+- **`pricing.py`** — chaque condition est chiffrée depuis les cotes 1xBet ;
+  prix juste = produit des cotes (indépendance). Si la cote boostée dépasse ce
+  prix, c'est un **edge positif**. **Honnêteté** : on ne chiffre que ce qu'on
+  trouve chez 1xBet ; si une condition n'est pas chiffrable, la valuation est
+  marquée incomplète et **aucun edge n'est annoncé** — les jambes chiffrables
+  restent affichées pour le hedge manuel.
+
+> Limite actuelle : 1xBet est intégré pour 1x2 / totaux / BTTS, mais **pas encore
+> pour les corners/tirs** (feed par-événement `GetGameZip` requis). Les FunBets
+> étant dominés par ces marchés, la plupart s'affichent en « chiffrage partiel »
+> avec les conditions corners/tirs signalées à vérifier manuellement. Ajouter le
+> feed corners/tirs de 1xBet est l'étape qui débloquera le calcul d'edge complet.
+
 ### Couverture des marchés de niche
 
 Les marchés de niche sont **systématiquement moins margés** que le 1X2, donc

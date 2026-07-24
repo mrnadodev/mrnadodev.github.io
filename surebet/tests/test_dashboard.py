@@ -93,6 +93,63 @@ def test_index_exposes_lakay_toggle(client):
     assert "Paryaj Lakay" in resp.text
 
 
+def test_index_exposes_funbet_section(client):
+    resp = client.get("/")
+    assert "FunBets" in resp.text
+    assert "/api/funbets" in resp.text
+
+
+def test_funbets_endpoint_prices_against_xbet(client, monkeypatch):
+    """L'endpoint FunBet chiffre les jambes disponibles et signale les autres."""
+    import surebet.dashboard.app as app_mod
+    from surebet.funbet.parser import parse_funbet
+
+    async def fake_funbets():
+        return [parse_funbet("Real Madrid - Barcelona",
+                             "Real Madrid gagne & obtient 8 corners ou +", 6.0)]
+
+    monkeypatch.setattr(app_mod, "_scrape_lakay_funbets", fake_funbets)
+
+    # 1xBet a la victoire mais pas les corners -> chiffrage partiel
+    from datetime import datetime, timezone
+
+    from surebet.normalizer.schema import Odd, make_match_id
+
+    day = datetime(2026, 7, 25, 18, 0, tzinfo=timezone.utc)
+    mid = make_match_id("Real Madrid", "Barcelona", day)
+
+    class FakeXBet:
+        bookmaker_name = "1xBet"
+
+        def __init__(self, **k):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *a):
+            return False
+
+        async def scrape(self, sport):
+            return [Odd(bookmaker="1xBet", sport="football", competition="X", match_id=mid,
+                        home_team="Real Madrid", away_team="Barcelona", start_time=day,
+                        market_type="1x2", n_outcomes=3, selection="home", line=None,
+                        team_scope=None, odds=1.8, url="https://x/e",
+                        scraped_at=datetime.now(timezone.utc))]
+
+    monkeypatch.setattr("surebet.scrapers.xbet.XBetScraper", FakeXBet)
+
+    body = client.get("/api/funbets").json()
+    assert len(body["funbets"]) == 1
+    fb = body["funbets"][0]
+    assert fb["boosted_odds"] == 6.0
+    assert fb["complete"] is False          # corners non chiffrables
+    assert fb["edge_pct"] is None
+    # la jambe victoire est chiffree (1.8), la jambe corners signalee
+    priced = [l for l in fb["legs"] if l["fair_odds"] is not None]
+    assert any(l["fair_odds"] == 1.8 for l in priced)
+
+
 def test_opportunities_fragment_empty(client):
     resp = client.get("/fragments/opportunities")
     assert resp.status_code == 200
