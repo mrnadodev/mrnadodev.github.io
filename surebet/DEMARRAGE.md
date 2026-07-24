@@ -66,6 +66,41 @@ Pour réellement attraper les fenêtres, laissez tourner la surveillance continu
 python -m surebet.main --collector
 ```
 
+## Surveillance continue (recommandé pour attraper les surebets)
+
+Un scan matinal ne prend qu'une **photo** ; les fenêtres d'arbitrage durent
+quelques minutes. Pour ne rien rater, laissez tourner la **surveillance
+continue** : elle collecte les 4 bookmakers en boucle et envoie chaque surebet
+détecté sur Telegram.
+
+### Option A — manuelle (une fenêtre qu'on laisse ouverte)
+
+Double-cliquer **« Surebet - Surveillance »** sur le Bureau (ou
+`surebet\Surveillance.bat`). Laisser la fenêtre ouverte. Elle **redémarre
+automatiquement** si le collector s'arrête. Fermer la fenêtre = arrêter.
+
+### Option B — automatique (démarre avec Windows) ⭐
+
+Pour que la surveillance tourne **toute seule à chaque ouverture de session**,
+sans y penser :
+
+1. Clic droit sur `surebet\installer_surveillance.ps1` → **Exécuter avec
+   PowerShell**.
+2. Répondre **O** pour démarrer tout de suite.
+
+La tâche est enregistrée dans le Planificateur Windows :
+- démarre au logon,
+- se relance automatiquement si elle échoue,
+- tourne en tâche de fond (les alertes partent sur `@NADOTOBET`).
+
+Pour **désinstaller** :
+```
+powershell -ExecutionPolicy Bypass -File surebet\installer_surveillance.ps1 -Remove
+```
+
+> Les alertes n'arrivent que si le bot **@Nadobetbot** est administrateur du
+> canal (permission « Publier des messages »). Vérifiez-le une fois.
+
 ## Alertes Telegram (optionnel)
 
 Sans configuration, aucune alerte n'est envoyée (le scan affiche simplement le
