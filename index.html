@@ -24,12 +24,38 @@
     // Email de l'administrateur : le panneau "Qui est en ligne" ne s'affiche QUE pour ce compte.
     ADMIN_EMAIL: "mrnado.trading@gmail.com",
 
-    /* ── Optionnel : notification Telegram ──
-       Quand l'admin publie un surebet, un message d'alerte est envoyé
-       automatiquement dans votre canal Telegram (sans les détails du surebet).
-       Laissez vide "" pour désactiver. Voir le guide pour créer le bot. */
-    TELEGRAM_BOT_TOKEN: "8995154321:AAE9LxkU9T9t0SuVzermRoGyt2bg3eidNtY",   // ex : "123456:ABC-DEF..."
-    TELEGRAM_CHAT_ID:   "@nadobet_surebets"    // ex : "@nadobet_surebets" ou "-1001234567890"
+    /* ── Notification Telegram ──
+       Le token N'EST PLUS ici (sécurité) : il vit dans les secrets Supabase
+       et l'envoi passe par l'Edge Function « notify-telegram ».
+       Voir supabase/functions/notify-telegram/ pour le déploiement. */
+
+    /* ── ABONNEMENT SUREBETS (paywall 7 jours renouvelable) ──
+       Le panneau « Surebets » se verrouille quand l'abonnement expire.
+       L'utilisateur voit une fenêtre de paiement manuel (QR + numéro),
+       envoie une preuve, et l'admin débloque depuis le panneau admin.
+       ⚠️ La vraie sécurité est assurée par le script abonnement_surebets.sql
+          (à exécuter dans Supabase). Ce bloc ne fait que l'affichage. */
+    SUBSCRIPTION: {
+      ENABLED: true,
+      DURATION_DAYS: 7,                 // durée d'un abonnement (7 = hebdo)
+      PLAN_LABEL: "Accès Surebets — 7 jours",
+      PRICE: "500 HTG",                 // montant à payer (affiché)
+      // Un ou plusieurs canaux de paiement. Remplissez vos vraies infos.
+      CHANNELS: [
+        {
+          name: "MonCash",
+          number: "+509 0000 0000",     // votre numéro MonCash
+          business: "NADOBET",          // nom ou code du business
+          qr: ""                         // (optionnel) URL ou data:image de votre QR MonCash
+        },
+        {
+          name: "NatCash",
+          number: "+509 0000 0000",     // votre numéro NatCash
+          business: "NADOBET",
+          qr: ""                         // (optionnel) URL ou data:image de votre QR NatCash
+        }
+      ]
+    }
   };
 </script>
 <style>
@@ -259,6 +285,64 @@
   .tour-dontshow input{width:15px;height:15px;accent-color:var(--mint);cursor:pointer}
   .tour-btns{display:flex;gap:8px}
   .tour-btns .btn{padding:8px 16px;font-size:13px}
+
+  /* ===== ABONNEMENT / PAYWALL SUREBETS ===== */
+  /* Puce d'état d'abonnement dans le header */
+  .sub-chip{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:9px;
+    border:1px solid var(--line);background:var(--panel-2);cursor:pointer;font-family:var(--mono);
+    font-size:11.5px;font-weight:700;color:var(--ink-dim);transition:.15s;line-height:1}
+  .sub-chip:hover{transform:translateY(-1px)}
+  .sub-chip .sc-ic{font-size:13px}
+  .sub-chip.active{color:var(--mint);border-color:rgba(47,230,168,.35);background:rgba(47,230,168,.08)}
+  .sub-chip.warn{color:var(--gold);border-color:rgba(245,197,66,.4);background:rgba(245,197,66,.08)}
+  .sub-chip.locked{color:var(--red);border-color:rgba(255,93,108,.4);background:rgba(255,93,108,.08);
+    animation:subPulse 2.4s infinite}
+  @keyframes subPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,93,108,.0)}50%{box-shadow:0 0 0 4px rgba(255,93,108,.10)}}
+  /* Fenêtre de paiement */
+  .pay-head-sub{font-size:12.5px;color:var(--ink-dim);line-height:1.5;margin-bottom:14px}
+  .pay-status{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:11px;
+    border:1px solid var(--line);background:var(--panel-2);margin-bottom:16px}
+  .pay-status .ps-ic{font-size:20px}
+  .pay-status .ps-k{font-size:10.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-faint)}
+  .pay-status .ps-v{font-family:var(--mono);font-size:15px;font-weight:700;color:var(--ink)}
+  .pay-status.active .ps-v{color:var(--mint)} .pay-status.locked .ps-v{color:var(--red)}
+  .pay-plan{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:14px 16px;
+    border-radius:12px;border:1px solid rgba(47,230,168,.3);
+    background:linear-gradient(135deg,rgba(47,230,168,.10),rgba(245,197,66,.05));margin-bottom:16px}
+  .pay-plan .pp-name{font-size:14px;font-weight:700;color:var(--ink)}
+  .pay-plan .pp-sub{font-size:11.5px;color:var(--ink-dim)}
+  .pay-plan .pp-price{font-family:var(--mono);font-size:22px;font-weight:700;color:var(--gold);white-space:nowrap}
+  .pay-chan-label{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--ink-faint);margin:4px 0 10px}
+  .pay-chans{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+  @media(max-width:560px){.pay-chans{grid-template-columns:1fr}}
+  .pay-chan{border:1px solid var(--line);border-radius:12px;background:var(--panel-2);padding:14px;
+    display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center}
+  .pay-chan .pc-name{font-size:13px;font-weight:700;color:var(--mint)}
+  .pay-chan .pc-qr{width:150px;height:150px;border-radius:10px;background:#fff;object-fit:contain;
+    border:1px solid var(--line);display:grid;place-items:center}
+  .pay-chan .pc-qr.empty{color:var(--ink-faint);font-size:11px;font-family:var(--mono);padding:8px}
+  .pay-chan .pc-line{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;
+    font-size:12px;padding:6px 0;border-top:1px solid var(--line-soft)}
+  .pay-chan .pc-k{color:var(--ink-faint)} .pay-chan .pc-v{font-family:var(--mono);font-weight:700;color:var(--ink)}
+  .pay-copy{background:none;border:1px solid var(--line);border-radius:7px;color:var(--mint);cursor:pointer;
+    font-size:11px;padding:3px 8px;font-family:var(--mono)}
+  .pay-copy:hover{border-color:var(--mint)}
+  .pay-ref{margin-bottom:6px}
+  .pay-note{font-size:11.5px;color:var(--ink-faint);line-height:1.5;margin-top:4px}
+  /* Panneau surbet verrouillé (overlay) */
+  .sig-locked{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;padding:26px 18px}
+  .sig-locked .sl-ic{font-size:40px}
+  .sig-locked .sl-t{font-size:16px;font-weight:700;color:var(--ink)}
+  .sig-locked .sl-d{font-size:13px;color:var(--ink-dim);line-height:1.55;max-width:340px}
+  /* Demandes de paiement (admin) */
+  .pay-req{display:flex;flex-direction:column;gap:8px;padding:11px 12px;border:1px solid var(--line);
+    border-radius:10px;background:var(--panel-2);margin-bottom:9px}
+  .pay-req .pr-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .pay-req .pr-user{font-size:12.5px;font-weight:700;color:var(--ink)}
+  .pay-req .pr-meta{font-size:11px;color:var(--ink-dim);font-family:var(--mono)}
+  .pay-req .pr-ref{font-size:11.5px;color:var(--ink-dim);word-break:break-word}
+  .pay-req .pr-actions{display:flex;gap:6px}
+  .pay-req .u-btn{flex:1;justify-content:center}
 
   /* Popup de notification surebet (utilisateur) */
   .signal-popup{position:fixed;right:22px;top:22px;z-index:120;display:flex;align-items:center;gap:10px;
@@ -908,6 +992,7 @@
       <div class="chip">Seuil actif <b id="thrChip">4%</b></div>
       <div class="chip">Paris enregistrés <b id="countChip">0</b></div>
       <span class="chip" id="syncChip" style="display:none">☁️ <b id="syncState">Synchronisé</b></span>
+      <button class="sub-chip" id="subChip" style="display:none" title="Abonnement Surebets"><span class="sc-ic">🎯</span><span id="subChipTxt">Surebets</span></button>
       <a href="https://t.me/nadobet_surebets" target="_blank" rel="noopener" class="btn ghost" id="tgBtn" style="padding:6px 12px;font-size:12px;text-decoration:none" title="Recevoir les alertes surebet sur Telegram">📲 Telegram</a>
       <button class="btn ghost" id="tourBtn" style="padding:6px 12px;font-size:12px" title="Revoir le guide">❔ Guide</button>
       <a href="https://www.sofascore.com/" target="_blank" rel="noopener" class="btn ghost" id="statsBtn" style="padding:6px 14px;font-size:12px;text-decoration:none">📊 Scores & stats ↗</a>
@@ -1259,6 +1344,35 @@
   </div>
 </div>
 
+<!-- ===== FENÊTRE DE PAIEMENT / ABONNEMENT (utilisateur) ===== -->
+<div id="payModal" class="edit-modal" style="display:none">
+  <div class="edit-backdrop" id="payBackdrop"></div>
+  <div class="edit-box">
+    <div class="edit-head"><span>🔓 Débloquer les surebets</span><button class="edit-x" id="payClose">✕</button></div>
+    <div class="edit-body">
+      <div class="pay-status" id="payStatus"><span class="ps-ic">🔒</span>
+        <div><div class="ps-k">Votre accès</div><div class="ps-v" id="payStatusV">—</div></div></div>
+      <p class="pay-head-sub">Le panneau <b>Surebets</b> est réservé aux abonnés. Payez par MonCash ou NatCash, envoyez votre référence de transaction, et un administrateur débloque votre accès pour <b id="payDurTxt">7 jours</b>.</p>
+      <div class="pay-plan">
+        <div><div class="pp-name" id="payPlanName">Accès Surebets</div><div class="pp-sub" id="payPlanSub">7 jours renouvelables</div></div>
+        <div class="pp-price" id="payPrice">—</div>
+      </div>
+      <div class="pay-chan-label">1 · Payez sur l'un de ces canaux</div>
+      <div class="pay-chans" id="payChans"></div>
+      <div class="pay-chan-label">2 · Envoyez votre preuve</div>
+      <label class="fld pay-ref"><span class="lab">Canal utilisé</span>
+        <select id="payRefChannel"></select></label>
+      <label class="fld pay-ref"><span class="lab">Référence de transaction / téléphone payeur</span>
+        <input type="text" id="payRefInput" placeholder="ex : n° de transaction MonCash ou votre numéro" maxlength="60"></label>
+      <div class="pay-note" id="payReqNote"></div>
+    </div>
+    <div class="edit-foot">
+      <button class="btn ghost" id="payCancel">Fermer</button>
+      <button class="btn primary" id="paySend">J'ai payé — envoyer la demande</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== CONFIRMATION EMAIL RÉUSSIE ===== -->
 <div id="confirmModal" class="tour-modal" style="display:none">
   <div class="tour-backdrop"></div>
@@ -1388,6 +1502,7 @@
       <div class="admin-tabs">
         <button class="admin-tab on" data-atab="online"><span class="live-dot"></span> En ligne</button>
         <button class="admin-tab" data-atab="users">Utilisateurs</button>
+        <button class="admin-tab" data-atab="pay">Paiements <span id="payBadge" class="admin-count" style="display:none;position:static;margin-left:2px">0</span></button>
       </div>
       <button class="admin-close" id="adminClose" aria-label="Fermer">✕</button>
     </div>
@@ -1398,6 +1513,13 @@
         <button class="btn ghost" id="usersRefresh" style="padding:5px 11px;font-size:11px">↻ Actualiser</button>
       </div>
       <div id="usersList"></div>
+    </div>
+    <div class="admin-users" id="adminPayments" style="display:none">
+      <div class="admin-users-head">
+        <span id="paySummary">—</span>
+        <button class="btn ghost" id="payRefresh" style="padding:5px 11px;font-size:11px">↻ Actualiser</button>
+      </div>
+      <div id="payReqList"></div>
     </div>
     <div class="admin-foot" id="adminFoot">Vue administrateur · présence en temps réel</div>
   </div>
@@ -1422,6 +1544,27 @@
   const adminEmail = (cfg.ADMIN_EMAIL||'').trim().toLowerCase();
   function isAdmin(user){ return user && adminEmail && user.email
     && user.email.trim().toLowerCase()===adminEmail; }
+
+  /* ===== ABONNEMENT SUREBETS ===== */
+  const SUB = Object.assign({ ENABLED:true, DURATION_DAYS:7, PLAN_LABEL:'Accès Surebets — 7 jours',
+    PRICE:'', CHANNELS:[] }, cfg.SUBSCRIPTION||{});
+  let currentSubExpires=null;   // Date | null (abonnement de l'utilisateur courant)
+  let subTimer=null;            // rafraîchit l'affichage + reverrouille à l'expiration
+  // Rôles qui voient toujours les surebets (pas besoin d'abonnement)
+  function isPrivileged(){ return currentRole==='admin' || currentRole==='publisher' || currentRole==='moderator'; }
+  function hasActiveSub(){
+    if(!SUB.ENABLED) return true;
+    if(isPrivileged()) return true;
+    return !!(currentSubExpires && currentSubExpires.getTime() > Date.now());
+  }
+  function subMsLeft(){ return currentSubExpires ? currentSubExpires.getTime()-Date.now() : 0; }
+  function fmtSubLeft(){
+    const ms=subMsLeft(); if(ms<=0) return 'expiré';
+    const d=Math.floor(ms/86400000), h=Math.floor((ms%86400000)/3600000), m=Math.floor((ms%3600000)/60000);
+    if(d>0) return d+'j '+h+'h';
+    if(h>0) return h+'h '+m+'min';
+    return m+'min';
+  }
 
   function initSupabase(){
     if(!configured){$('#configWarn').style.display='block';return false;}
@@ -2397,7 +2540,7 @@
     // username éventuellement stocké dans les métadonnées à l'inscription
     const metaUsername = (user.user_metadata && user.user_metadata.username) || '';
     try{
-      const {data,error}=await sb.from('profiles').select('status,role,tour_seen,username').eq('id',user.id).single();
+      const {data,error}=await sb.from('profiles').select('status,role,tour_seen,username,sub_expires_at,sub_plan').eq('id',user.id).single();
       if(error){
         // Profil pas encore créé : on le crée en "pending" avec le username des métadonnées
         if(error.code==='PGRST116'||/no rows/i.test(error.message||'')){
@@ -2405,11 +2548,19 @@
           currentUsername=metaUsername||'';
           return isAdmin(user)?'approved':'pending';
         }
+        // Colonnes d'abonnement absentes ? On dégrade proprement (SQL pas encore exécuté)
+        if(/column .*(sub_expires_at|sub_plan)/i.test(error.message||'')){
+          const {data:d2}=await sb.from('profiles').select('status,role,tour_seen,username').eq('id',user.id).single();
+          currentRole = isAdmin(user)?'admin':((d2&&d2.role)||'user');
+          tourSeen=!!(d2&&d2.tour_seen); currentUsername=(d2&&d2.username)||''; currentSubExpires=null;
+          return isAdmin(user)?'approved':((d2&&d2.status)||'pending');
+        }
         console.error(error); return isAdmin(user)?'approved':'pending';
       }
       currentRole = isAdmin(user)?'admin':((data&&data.role)||'user');
       tourSeen = !!(data && data.tour_seen);
       currentUsername = (data&&data.username)||'';
+      currentSubExpires = (data&&data.sub_expires_at) ? new Date(data.sub_expires_at) : null;
       // Si le profil existe mais sans username, et qu'on en a un dans les métadonnées → on le complète
       if(!currentUsername && metaUsername){
         try{ await sb.from('profiles').update({username:metaUsername}).eq('id',user.id); currentUsername=metaUsername; }catch(e){}
@@ -2519,6 +2670,7 @@
     $('#adminHistBtns').style.display = isAdmin(user) ? 'inline-flex' : 'none';
     $('#adminChatBtns').style.display = isAdmin(user) ? 'inline-flex' : 'none';
     $('#publishBtn').style.display = canPublish() ? 'inline-flex' : 'none';
+    renderSubChip(); startSubTimer();
     await loadHistory();
     await loadBankroll();
     renderHistory();
@@ -2528,6 +2680,7 @@
     startPolls();
     chatUnread=0; updateChatFab();
     setTimeout(updateComposeState,300);
+    if(isAdmin(user)) setTimeout(loadPayments,1000); // alimente le badge « Paiements »
     if(!tourSeen) setTimeout(()=>startTour(),600);
   }
 
@@ -2666,6 +2819,9 @@
 
   function startSignals(user){
     if(!sb||signalsChannel)return;
+    // Paywall : seuls les abonnés actifs (ou rôles privilégiés) reçoivent les surebets.
+    // La RLS Supabase bloque déjà côté serveur ; ceci évite un abonnement temps réel inutile.
+    if(!hasActiveSub()) return;
     // 1) charge les surebets encore valides (pour ceux qui arrivent après la publication)
     loadActiveSignals();
     // 2) écoute les nouvelles publications en temps réel
@@ -2684,6 +2840,217 @@
     if(signalSweepTimer){ clearInterval(signalSweepTimer); signalSweepTimer=null; }
     activeSignals=[]; signalsSeen={}; signalsUsed={}; updateSignalPopup();
   }
+
+  /* ===== ABONNEMENT : PUCE HEADER + FENÊTRE DE PAIEMENT ===== */
+  function renderSubChip(){
+    const chip=$('#subChip'), txt=$('#subChipTxt');
+    if(!chip) return;
+    if(!SUB.ENABLED || !currentUser){ chip.style.display='none'; return; }
+    chip.style.display='inline-flex';
+    chip.classList.remove('active','warn','locked');
+    if(isPrivileged()){
+      txt.textContent='Surebets · accès complet'; chip.classList.add('active');
+      chip.title='Accès surebets (rôle privilégié)'; return;
+    }
+    if(hasActiveSub()){
+      txt.textContent='Surebets · '+fmtSubLeft();
+      chip.classList.add(subMsLeft() < 2*86400000 ? 'warn' : 'active'); // alerte si < 2 jours
+      chip.title='Abonnement actif — cliquez pour renouveler';
+    }else{
+      txt.textContent='🔒 Débloquer les surebets'; chip.classList.add('locked');
+      chip.title='Abonnement expiré — cliquez pour vous abonner';
+    }
+  }
+  function startSubTimer(){
+    if(subTimer) clearInterval(subTimer);
+    subTimer=setInterval(()=>{
+      const was=hasActiveSub();
+      renderSubChip();
+      if(was && !hasActiveSub()){ // reverrouillage automatique à l'expiration
+        stopSignals();
+        $('#signalModal') && ($('#signalModal').style.display='none');
+        showToast('Abonnement expiré — surebets verrouillés',true);
+      }
+    }, 30000);
+  }
+  // Source de l'image QR d'un canal (config.qr prioritaire, sinon génération en ligne)
+  function chanQrSrc(ch){
+    if(ch.qr) return ch.qr;
+    const info=[ch.name, ch.business, ch.number, SUB.PRICE].filter(Boolean).join(' | ');
+    return 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=6&data='+encodeURIComponent(info);
+  }
+  function buildPayChannels(){
+    const box=$('#payChans'); const chans=(SUB.CHANNELS||[]).filter(c=>c&&c.name);
+    box.innerHTML = chans.map(ch=>{
+      const qr=chanQrSrc(ch);
+      const qrHtml = qr
+        ? `<img class="pc-qr" src="${escapeHTML(qr)}" alt="QR ${escapeHTML(ch.name)}" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'pc-qr empty',textContent:'QR indisponible'}))">`
+        : `<div class="pc-qr empty">Ajoutez un QR<br>dans la config</div>`;
+      return `<div class="pay-chan">
+        <div class="pc-name">${escapeHTML(ch.name)}</div>
+        ${qrHtml}
+        <div class="pc-line"><span class="pc-k">Numéro</span><span class="pc-v">${escapeHTML(ch.number||'—')} <button class="pay-copy" data-copy="${escapeHTML(ch.number||'')}">copier</button></span></div>
+        <div class="pc-line"><span class="pc-k">Business</span><span class="pc-v">${escapeHTML(ch.business||'—')}</span></div>
+        <div class="pc-line"><span class="pc-k">Montant</span><span class="pc-v">${escapeHTML(SUB.PRICE||'—')}</span></div>
+      </div>`;
+    }).join('') || '<div class="sig-empty">Aucun canal de paiement configuré.</div>';
+    const sel=$('#payRefChannel');
+    if(sel) sel.innerHTML = chans.map(c=>`<option value="${escapeHTML(c.name)}">${escapeHTML(c.name)}</option>`).join('');
+    $$('#payChans [data-copy]').forEach(b=>b.addEventListener('click',()=>{
+      const v=b.dataset.copy||''; if(!v) return;
+      if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(v).then(()=>showToast('Numéro copié ✓')).catch(()=>showToast('Numéro : '+v)); }
+      else showToast('Numéro : '+v);
+    }));
+  }
+  async function openPaywall(){
+    $('#payPlanName').textContent = SUB.PLAN_LABEL||'Accès Surebets';
+    $('#payPlanSub').textContent = SUB.DURATION_DAYS+' jours renouvelables';
+    $('#payDurTxt').textContent = SUB.DURATION_DAYS+' jours';
+    $('#payPrice').textContent = SUB.PRICE||'—';
+    const st=$('#payStatus'), stv=$('#payStatusV');
+    st.classList.remove('active','locked');
+    if(hasActiveSub()){ st.classList.add('active'); stv.textContent='Actif · '+fmtSubLeft()+' restants'; st.querySelector('.ps-ic').textContent='✅'; }
+    else { st.classList.add('locked'); stv.textContent='Aucun accès actif'; st.querySelector('.ps-ic').textContent='🔒'; }
+    buildPayChannels();
+    $('#payRefInput').value=''; $('#payReqNote').textContent='';
+    await refreshMyPendingRequest();
+    $('#payModal').style.display='flex';
+  }
+  function closePaywall(){ $('#payModal').style.display='none'; }
+  async function refreshMyPendingRequest(){
+    const note=$('#payReqNote'), btn=$('#paySend');
+    if(!sb||!currentUser){ note.textContent=''; return; }
+    try{
+      const {data,error}=await sb.from('payment_requests').select('status,created_at,channel')
+        .eq('user_id',currentUser.id).order('created_at',{ascending:false}).limit(1);
+      if(error) throw error;
+      const r=(data&&data[0]);
+      if(r && r.status==='pending'){
+        note.innerHTML='⏳ Une demande est <b>en attente de validation</b> ('+escapeHTML(r.channel||'')+'). Un admin la vérifie bientôt.';
+        btn.disabled=true; btn.textContent='Demande envoyée ✓';
+      } else { btn.disabled=false; btn.textContent="J'ai payé — envoyer la demande"; note.textContent=''; }
+    }catch(e){ note.textContent=''; }
+  }
+  async function submitPaymentRequest(){
+    if(!sb||!currentUser){ showToast('Reconnectez-vous',true); return; }
+    const channel=$('#payRefChannel').value||'';
+    const reference=($('#payRefInput').value||'').trim();
+    if(!reference){ showToast('Entrez votre référence de transaction',true); $('#payRefInput').focus(); return; }
+    const btn=$('#paySend'); const old=btn.textContent; btn.disabled=true; btn.textContent='Envoi…';
+    try{
+      const {error}=await sb.from('payment_requests').insert({
+        user_id:currentUser.id, email:currentUser.email, username:currentUsername||null,
+        plan:'week', amount:SUB.PRICE||null, channel, reference, status:'pending'
+      });
+      if(error) throw error;
+      showToast('Demande envoyée ✓ — en attente de validation');
+      $('#payReqNote').innerHTML='⏳ Demande <b>en attente de validation</b>. Vous serez débloqué après vérification.';
+      btn.textContent='Demande envoyée ✓';
+    }catch(err){
+      console.error(err); btn.disabled=false; btn.textContent=old;
+      if(/relation .*payment_requests/i.test(err.message||'')) showToast('Base non prête : exécutez abonnement_surebets.sql',true);
+      else showToast('Échec de l’envoi, réessayez',true);
+    }
+  }
+  // Point d'entrée surebets : abonné → fenêtre surebets ; sinon → paywall
+  function openSurebetsOrPaywall(){ if(hasActiveSub()) openSignals(); else openPaywall(); }
+  $('#subChip') && $('#subChip').addEventListener('click',openPaywall);
+  $('#payClose') && $('#payClose').addEventListener('click',closePaywall);
+  $('#payCancel') && $('#payCancel').addEventListener('click',closePaywall);
+  $('#payBackdrop') && $('#payBackdrop').addEventListener('click',closePaywall);
+  $('#paySend') && $('#paySend').addEventListener('click',submitPaymentRequest);
+
+  /* ===== ADMIN : VALIDATION DES PAIEMENTS ===== */
+  async function loadPayments(){
+    if(!sb||!isAdmin(currentUser))return;
+    const list=$('#payReqList');
+    list.innerHTML='<div class="users-empty">Chargement…</div>';
+    try{
+      const {data,error}=await sb.from('payment_requests').select('*').order('created_at',{ascending:false}).limit(100);
+      if(error) throw error;
+      renderPayments(data||[]);
+    }catch(err){ console.error(err); list.innerHTML='<div class="users-empty">Impossible de charger.<br>Table « payment_requests » créée ? (abonnement_surebets.sql)</div>'; }
+  }
+  function renderPayments(reqs){
+    const list=$('#payReqList');
+    const pending=reqs.filter(r=>r.status==='pending');
+    $('#paySummary').textContent=reqs.length+' demande(s) · '+pending.length+' en attente';
+    const badge=$('#payBadge');
+    if(badge){ if(pending.length){ badge.style.display='inline-grid'; badge.textContent=pending.length; } else badge.style.display='none'; }
+    if(!reqs.length){ list.innerHTML='<div class="users-empty">Aucune demande de paiement.</div>'; return; }
+    const labels={pending:'En attente',approved:'Validé',rejected:'Refusé'};
+    list.innerHTML=reqs.map(r=>{
+      const when=r.created_at?new Date(r.created_at).toLocaleString('fr-FR'):'';
+      const who=escapeHTML(r.username||r.email||'(inconnu)');
+      const badgeCls=r.status==='approved'?'approved':(r.status==='pending'?'pending':'blocked');
+      const actions = r.status==='pending'
+        ? `<button class="u-btn ok" data-approve-pay="${r.id}">✓ Valider (${SUB.DURATION_DAYS}j)</button>
+           <button class="u-btn block" data-reject-pay="${r.id}">✕ Refuser</button>`
+        : `<span class="u-badge ${badgeCls}">${labels[r.status]||r.status}</span>`;
+      return `<div class="pay-req">
+        <div class="pr-top"><span class="pr-user">${who}</span><span class="u-badge ${badgeCls}">${labels[r.status]||r.status}</span></div>
+        <div class="pr-meta">${escapeHTML(r.channel||'?')} · ${escapeHTML(r.amount||'')} · ${when}</div>
+        <div class="pr-ref">Réf : ${escapeHTML(r.reference||'—')}</div>
+        <div class="pr-actions">${actions}</div>
+      </div>`;
+    }).join('');
+    $$('#payReqList [data-approve-pay]').forEach(b=>b.addEventListener('click',()=>approvePayment(b.dataset.approvePay)));
+    $$('#payReqList [data-reject-pay]').forEach(b=>b.addEventListener('click',()=>rejectPayment(b.dataset.rejectPay)));
+  }
+  // Nouvelle expiration (renouvelable : prolonge si l'abonnement est encore actif)
+  function computeNewExpiry(current){
+    const base = (current && new Date(current).getTime()>Date.now()) ? new Date(current).getTime() : Date.now();
+    return new Date(base + SUB.DURATION_DAYS*86400000).toISOString();
+  }
+  async function approvePayment(reqId){
+    if(!sb||!isAdmin(currentUser))return;
+    try{
+      const {data:reqs,error:e1}=await sb.from('payment_requests').select('*').eq('id',reqId).limit(1);
+      if(e1) throw e1;
+      const req=reqs&&reqs[0]; if(!req){ showToast('Demande introuvable',true); return; }
+      const {data:prof}=await sb.from('profiles').select('sub_expires_at').eq('id',req.user_id).single();
+      const newExp=computeNewExpiry(prof&&prof.sub_expires_at);
+      const {error:e2}=await sb.from('profiles').update({sub_expires_at:newExp, sub_plan:'week'}).eq('id',req.user_id);
+      if(e2) throw e2;
+      await sb.from('payment_requests').update({status:'approved', reviewed_at:new Date().toISOString(), reviewed_by:currentUser.id}).eq('id',reqId);
+      showToast('Paiement validé ✓ — accès débloqué '+SUB.DURATION_DAYS+'j');
+      if(req.user_id===currentUser.id){ currentSubExpires=new Date(newExp); renderSubChip(); }
+      loadPayments();
+    }catch(err){ console.error(err); showToast('Validation impossible (droits admin ?)',true); }
+  }
+  async function rejectPayment(reqId){
+    if(!sb||!isAdmin(currentUser))return;
+    try{
+      const {error}=await sb.from('payment_requests').update({status:'rejected', reviewed_at:new Date().toISOString(), reviewed_by:currentUser.id}).eq('id',reqId);
+      if(error) throw error;
+      showToast('Demande refusée'); loadPayments();
+    }catch(err){ console.error(err); showToast('Action impossible',true); }
+  }
+  // Prolongation / révocation manuelle depuis la liste utilisateurs (admin)
+  async function extendUserSub(userId, days){
+    if(!sb||!isAdmin(currentUser))return;
+    try{
+      const {data:prof}=await sb.from('profiles').select('sub_expires_at').eq('id',userId).single();
+      const base=(prof&&prof.sub_expires_at&&new Date(prof.sub_expires_at).getTime()>Date.now())?new Date(prof.sub_expires_at).getTime():Date.now();
+      const newExp=new Date(base+days*86400000).toISOString();
+      const {error}=await sb.from('profiles').update({sub_expires_at:newExp, sub_plan:'week'}).eq('id',userId);
+      if(error) throw error;
+      showToast('Abonnement prolongé de '+days+'j ✓');
+      if(userId===currentUser.id){ currentSubExpires=new Date(newExp); renderSubChip(); }
+      loadUsers();
+    }catch(err){ console.error(err); showToast('Action impossible',true); }
+  }
+  async function revokeUserSub(userId){
+    if(!sb||!isAdmin(currentUser))return;
+    try{
+      const {error}=await sb.from('profiles').update({sub_expires_at:null}).eq('id',userId);
+      if(error) throw error;
+      showToast('Abonnement révoqué');
+      if(userId===currentUser.id){ currentSubExpires=null; renderSubChip(); }
+      loadUsers();
+    }catch(err){ console.error(err); showToast('Action impossible',true); }
+  }
+  $('#payRefresh') && $('#payRefresh').addEventListener('click',loadPayments);
 
   /* ===== CHAT COMMUNAUTAIRE ===== */
   let chatChannel=null, chatMsgs=[], replyTo=null, lastMsgTime=0, cooldownOn=true;
@@ -3464,6 +3831,8 @@
   }
   // Changement de salon
   $$('#chatRooms .chat-room-tab').forEach(tab=>tab.addEventListener('click',()=>{
+    // Salon "Surebets" réservé aux abonnés : on ouvre le paywall au lieu d'y entrer
+    if(tab.dataset.room==='surebets' && !hasActiveSub()){ openPaywall(); return; }
     $$('#chatRooms .chat-room-tab').forEach(t=>t.classList.toggle('on',t===tab));
     tab.classList.remove('has-new');
     currentRoom=tab.dataset.room;
@@ -3723,19 +4092,31 @@
     }
   }
 
-  // Envoie une alerte générique dans le canal Telegram (pas de détails du surebet)
+  // Envoie une alerte générique via l'Edge Function « notify-telegram ».
+  // Le token Telegram n'est PLUS dans le client : il vit dans les secrets
+  // Supabase. La fonction vérifie que l'appelant est admin/publisher.
   async function notifyTelegram(){
-    const token=(cfg.TELEGRAM_BOT_TOKEN||'').trim();
-    const chat=(cfg.TELEGRAM_CHAT_ID||'').trim();
-    if(!token||!chat)return; // Telegram non configuré : on ignore
-    const text='🔔 Surebet détecté !\nVérifie vite ton dashboard NADOBET pour voir les détails. ⚽💰';
+    if(!sb) return;
     try{
-      await fetch('https://api.telegram.org/bot'+token+'/sendMessage',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({chat_id:chat, text})
-      });
-    }catch(err){ console.error('Telegram:',err); }
+      const {error}=await sb.functions.invoke('notify-telegram',{ body:{} });
+      if(error){
+        let detail='';
+        try{
+          if(error.context){
+            const j=await error.context.json().catch(()=>null);
+            detail=' [HTTP '+error.context.status+(j&&j.error?' · '+j.error:'')+']';
+          }
+        }catch(_){}
+        console.error('Telegram fn:', error);
+        showToast('Alerte Telegram échouée'+detail, true);
+      } else {
+        // diagnostic temporaire : on confirme aussi le succès
+        showToast('✅ Alerte Telegram envoyée');
+      }
+    }catch(err){
+      console.error('Telegram:',err);
+      showToast('Alerte Telegram — exception : '+((err&&err.message)||err), true);
+    }
   }
 
   // Nettoyage manuel des surebets expirés (admin)
@@ -3760,7 +4141,7 @@
   $('#pubSend').addEventListener('click',sendPublish);
   $('#pubClean').addEventListener('click',cleanExpiredSignals);
   $('#pubAddLeg').addEventListener('click',()=>{ $('#pubLegs').appendChild(buildPubLeg()); computePubRoi(); });
-  $('#signalPopup').addEventListener('click',openSignals);
+  $('#signalPopup').addEventListener('click',openSurebetsOrPaywall);
   $('#signalClose').addEventListener('click',closeSignals);
   $('#signalCloseBtn').addEventListener('click',closeSignals);
   $('#signalBackdrop').addEventListener('click',closeSignals);
@@ -3856,6 +4237,9 @@
     $('#adminHistBtns').style.display='none';
     $('#publishBtn').style.display='none';
     currentRole='user';
+    currentSubExpires=null; if(subTimer){ clearInterval(subTimer); subTimer=null; }
+    $('#subChip') && ($('#subChip').style.display='none');
+    $('#payModal') && ($('#payModal').style.display='none');
     $('#signalPopup').style.display='none';
     $('#chatFab') && ($('#chatFab').style.display='none'); chatUnread=0;
     $('#authEmail').value='';$('#authPass').value='';clearAuthError();
@@ -3955,11 +4339,13 @@
   $$('.admin-tab').forEach(t=>t.addEventListener('click',()=>{
     adminTab=t.dataset.atab;
     $$('.admin-tab').forEach(x=>x.classList.toggle('on',x===t));
-    const online=adminTab==='online';
+    const online=adminTab==='online', users=adminTab==='users', pay=adminTab==='pay';
     $('#adminList').style.display=online?'':'none';
-    $('#adminUsers').style.display=online?'none':'block';
-    $('#adminFoot').textContent=online?'Vue administrateur · présence en temps réel':'Vue administrateur · gestion des accès';
-    if(online) renderPresence(); else loadUsers();
+    $('#adminUsers').style.display=users?'block':'none';
+    $('#adminPayments').style.display=pay?'block':'none';
+    $('#adminFoot').textContent=online?'Vue administrateur · présence en temps réel'
+      :pay?'Vue administrateur · paiements & abonnements':'Vue administrateur · gestion des accès';
+    if(online) renderPresence(); else if(pay) loadPayments(); else loadUsers();
   }));
   $('#usersRefresh').addEventListener('click',loadUsers);
 
@@ -4002,20 +4388,38 @@
           actions += isMod
             ? '<button class="u-btn mod-off" data-role="user:'+u.id+'">✕ Modo</button>'
             : '<button class="u-btn mod" data-role="moderator:'+u.id+'">🛡 Modo</button>';
+          // Abonnement surebets : prolonger / révoquer
+          actions += '<button class="u-btn ok" data-extend="'+u.id+'">＋'+SUB.DURATION_DAYS+'j surebets</button>';
+          if(u.sub_expires_at && new Date(u.sub_expires_at).getTime()>Date.now())
+            actions += '<button class="u-btn block" data-revoke="'+u.id+'">✕ Abo</button>';
         }
       }
       const roleBadge = isPub?'<span class="u-badge pub-badge">Publisher</span>':(isMod?'<span class="u-badge mod-badge">Modérateur</span>':'');
+      // Badge d'abonnement surebets
+      let subBadge='';
+      if(!isPub && !isMod){
+        const active=u.sub_expires_at && new Date(u.sub_expires_at).getTime()>Date.now();
+        if(active){
+          const ms=new Date(u.sub_expires_at).getTime()-Date.now();
+          const d=Math.max(0,Math.ceil(ms/86400000));
+          subBadge='<span class="u-badge approved" title="Abonnement surebets">🎯 '+d+'j</span>';
+        }else if(u.sub_expires_at){
+          subBadge='<span class="u-badge blocked" title="Abonnement expiré">🎯 expiré</span>';
+        }
+      }
       const uname = u.username ? escapeHTML(u.username) : '(sans pseudo)';
       return `<div class="user-row">
         <div class="u-av">${initial}</div>
         <div class="u-meta"><div class="u-mail">${uname}</div>
           <div class="u-sub">${u.email||'(sans email)'}</div>
-          <div class="u-badges"><span class="u-badge ${st}">${labels[st]||st}</span>${roleBadge}</div></div>
+          <div class="u-badges"><span class="u-badge ${st}">${labels[st]||st}</span>${roleBadge}${subBadge}</div></div>
         <div class="u-actions">${actions}</div>
       </div>`;
     }).join('');
     $$('#usersList [data-approve]').forEach(b=>b.addEventListener('click',()=>setUserStatus(b.dataset.approve,'approved')));
     $$('#usersList [data-block]').forEach(b=>b.addEventListener('click',()=>setUserStatus(b.dataset.block,'blocked')));
+    $$('#usersList [data-extend]').forEach(b=>b.addEventListener('click',()=>extendUserSub(b.dataset.extend, SUB.DURATION_DAYS)));
+    $$('#usersList [data-revoke]').forEach(b=>b.addEventListener('click',()=>revokeUserSub(b.dataset.revoke)));
     $$('#usersList [data-role]').forEach(b=>b.addEventListener('click',()=>{
       const [role,id]=b.dataset.role.split(':'); setUserRole(id,role);
     }));
