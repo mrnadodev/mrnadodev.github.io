@@ -877,6 +877,29 @@
     .row.r2{grid-template-columns:1fr}
     .bkline{grid-template-columns:1fr}
   }
+
+  /* ===== TABLEAU DE BORD ADMIN ===== */
+  .adash{position:fixed; inset:0; z-index:200; display:none; background:var(--bg)}
+  .adash-side{width:230px; flex:none; border-right:1px solid var(--line); background:var(--panel-2); padding:20px 14px; display:flex; flex-direction:column; gap:6px}
+  .adash-brand{display:flex; align-items:center; gap:8px; font-size:16px; font-weight:800; color:var(--ink); padding:4px 8px 16px}
+  .adash-brand span{color:var(--mint)}
+  .adash-nav{border:none; background:none; color:var(--ink-dim); font-size:13.5px; font-weight:650; text-align:left; padding:11px 12px; border-radius:10px; cursor:pointer; transition:.14s}
+  .adash-nav:hover{background:var(--panel); color:var(--ink)}
+  .adash-nav.on{background:rgba(47,230,168,.12); color:var(--mint)}
+  .adash-close{border:1px solid var(--line); background:var(--panel); color:var(--ink-dim); border-radius:10px; padding:10px; font-size:12.5px; font-weight:650; cursor:pointer}
+  .adash-close:hover{border-color:var(--red); color:var(--red)}
+  .adash-main{flex:1; min-width:0; overflow:auto; padding:30px 34px}
+  .adash-main h2{font-size:22px; font-weight:800; letter-spacing:-.02em}
+  .adash-p{font-size:13px; color:var(--ink-dim); margin:6px 0 18px; max-width:64ch; line-height:1.55}
+  .adash-card{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:18px; max-width:640px}
+  .adash-lab{font-size:11px; text-transform:uppercase; letter-spacing:.1em; color:var(--ink-faint); font-weight:700; margin-bottom:10px}
+  .ad-empty{font-size:13px; color:var(--ink-dim); background:var(--panel-2); border:1px dashed var(--line); border-radius:12px; padding:16px; max-width:640px}
+  .ad-srow{display:flex; align-items:center; justify-content:space-between; gap:12px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin-bottom:9px; max-width:640px}
+  .ad-nm{font-weight:700; font-size:13.5px} .ad-sub{font-size:12px; color:var(--ink-dim); margin-top:3px}
+  .ad-on{font-size:10px; font-weight:700; color:var(--mint); background:rgba(47,230,168,.14); border-radius:999px; padding:2px 8px; margin-left:6px}
+  .ad-off{font-size:10px; font-weight:700; color:var(--ink-faint); background:var(--panel-2); border:1px solid var(--line); border-radius:999px; padding:2px 8px; margin-left:6px}
+  .ad-sact{display:flex; gap:7px; flex:none}
+  @media(max-width:700px){ .adash{flex-direction:column} .adash-side{width:auto; flex-direction:row; flex-wrap:wrap; height:auto; gap:6px} .adash-side>div[style]{display:none} .adash-main{padding:20px 16px} }
 </style>
 </head>
 <body>
@@ -998,6 +1021,7 @@
       <button class="btn ghost" id="tourBtn" style="padding:6px 12px;font-size:12px" title="Revoir le guide" data-i18n="hdr.guide">❔ Guide</button>
       <a href="https://www.sofascore.com/" target="_blank" rel="noopener" class="btn ghost" id="statsBtn" style="padding:6px 14px;font-size:12px;text-decoration:none" data-i18n="hdr.stats">📊 Scores & stats ↗</a>
       <button class="btn primary" id="publishBtn" style="display:none;padding:6px 14px;font-size:12px" data-i18n="hdr.publish">📢 Publier un surebet</button>
+      <button class="btn ghost" id="adminBtn" style="display:none;padding:6px 14px;font-size:12px" title="Tableau de bord admin" data-i18n="hdr.admin">🛡️ Admin</button>
       <button class="icon-chip" id="userChip" style="display:none" title="—" aria-label="Compte connecté"><span id="userInitial">?</span></button>
       <button class="icon-chip logout" id="logoutBtn" style="display:none" title="Déconnexion" aria-label="Déconnexion">
         <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -1371,6 +1395,77 @@
       <button class="btn ghost" id="payCancel">Fermer</button>
       <button class="btn primary" id="paySend">J'ai payé — envoyer la demande</button>
     </div>
+  </div>
+</div>
+
+<!-- ===== TABLEAU DE BORD ADMIN (page séparée) ===== -->
+<div id="adminDash" class="adash" style="display:none">
+  <aside class="adash-side">
+    <div class="adash-brand">🛡️ <span>Admin</span></div>
+    <button class="adash-nav on" data-sec="abo">💳 Abonnement</button>
+    <button class="adash-nav" data-sec="spons">📣 Sponsors &amp; pub</button>
+    <button class="adash-nav" data-sec="appear">🎨 Apparence</button>
+    <button class="adash-nav" data-sec="manage">👥 Comptes &amp; paiements</button>
+    <div style="flex:1"></div>
+    <button class="adash-close" id="adashClose">✕ Fermer</button>
+  </aside>
+  <div class="adash-main">
+    <!-- Abonnement -->
+    <section class="adash-sec" data-sec="abo">
+      <h2>Abonnement</h2>
+      <p class="adash-p">Modifiez le prix et la durée. La fenêtre de paiement des utilisateurs est mise à jour immédiatement.</p>
+      <div class="adash-card">
+        <div class="row2">
+          <label class="fld"><span class="lab">Prix affiché</span><input type="text" id="adPrice" placeholder="ex : 500 HTG"></label>
+          <label class="fld"><span class="lab">Durée (jours)</span><input type="number" id="adDuration" min="1" value="7"></label>
+        </div>
+        <label class="fld" style="margin-top:12px"><span class="lab">Libellé du plan</span><input type="text" id="adPlanName" placeholder="Accès Surebets — 7 jours"></label>
+        <div style="margin-top:14px"><button class="btn primary" id="adAboSave">Enregistrer</button></div>
+      </div>
+    </section>
+
+    <!-- Sponsors -->
+    <section class="adash-sec" data-sec="spons" style="display:none">
+      <h2>Sponsors &amp; publicité</h2>
+      <p class="adash-p">Réservé aux entreprises <b>hors paris</b> (télécoms, paiement, commerces). Tant que la liste est vide, <b>rien ne s'affiche</b> côté utilisateurs. Plusieurs sponsors = carrousel automatique.</p>
+      <div class="adash-card">
+        <div class="adash-lab">Ajouter un sponsor</div>
+        <div class="row2">
+          <label class="fld"><span class="lab">Nom</span><input type="text" id="spName" placeholder="ex : Digicel"></label>
+          <label class="fld"><span class="lab">Logo (lettre / emoji)</span><input type="text" id="spLogo" placeholder="ex : D" maxlength="2"></label>
+        </div>
+        <label class="fld" style="margin-top:12px"><span class="lab">Accroche</span><input type="text" id="spTag" placeholder="ex : Internet & recharge partout en Haïti"></label>
+        <div class="row2" style="margin-top:12px">
+          <label class="fld"><span class="lab">Texte du bouton</span><input type="text" id="spCta" placeholder="Découvrir"></label>
+          <label class="fld"><span class="lab">Lien</span><input type="text" id="spUrl" placeholder="https://…"></label>
+        </div>
+        <div style="margin-top:14px"><button class="btn primary" id="spAdd">＋ Ajouter</button></div>
+      </div>
+      <div class="adash-lab" style="margin-top:18px">Sponsors actuels</div>
+      <div id="adSponsorList"></div>
+    </section>
+
+    <!-- Apparence -->
+    <section class="adash-sec" data-sec="appear" style="display:none">
+      <h2>Apparence</h2>
+      <p class="adash-p">Choisissez la police du site (appliquée à tous les utilisateurs). L'édition complète des textes (FR/EN) arrivera avec le mini-CMS.</p>
+      <div class="adash-card">
+        <label class="fld"><span class="lab">Police du site</span>
+          <select id="adFont"><option>System</option><option>Inter</option><option>Poppins</option><option>Roboto</option><option>Montserrat</option></select></label>
+        <div style="margin-top:14px"><button class="btn primary" id="adFontSave">Appliquer &amp; enregistrer</button></div>
+      </div>
+    </section>
+
+    <!-- Comptes & paiements -->
+    <section class="adash-sec" data-sec="manage" style="display:none">
+      <h2>Comptes &amp; paiements</h2>
+      <p class="adash-p">Accréditer les comptes, rôles (publisher / modérateur), autoriser / révoquer un abonnement, valider les paiements.</p>
+      <div class="adash-card" style="display:flex; gap:10px; flex-wrap:wrap">
+        <button class="btn primary" id="adManageUsers">👥 Gérer les comptes</button>
+        <button class="btn" id="adManagePay">💳 Valider les paiements</button>
+      </div>
+      <p class="adash-p" style="margin-top:12px">Le chat (verrouiller / effacer / minuteur) et la présence « en ligne » restent dans le panneau flottant. Ils seront intégrés ici à l'étape suivante.</p>
+    </section>
   </div>
 </div>
 
@@ -2671,6 +2766,8 @@
     $('#adminHistBtns').style.display = isAdmin(user) ? 'inline-flex' : 'none';
     $('#adminChatBtns').style.display = isAdmin(user) ? 'inline-flex' : 'none';
     $('#publishBtn').style.display = canPublish() ? 'inline-flex' : 'none';
+    $('#adminBtn') && ($('#adminBtn').style.display = isAdmin(user) ? 'inline-flex' : 'none');
+    await loadAppSettings();          // prix / durée / police dynamiques
     renderSubChip(); startSubTimer();
     await loadHistory();
     await loadBankroll();
@@ -3052,6 +3149,103 @@
     }catch(err){ console.error(err); showToast('Action impossible',true); }
   }
   $('#payRefresh') && $('#payRefresh').addEventListener('click',loadPayments);
+
+  /* ===== PARAMÈTRES DYNAMIQUES (prix, durée, police) ===== */
+  const FONTS = {
+    'System':{stack:"-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,system-ui,sans-serif", url:''},
+    'Inter':{stack:"'Inter',system-ui,sans-serif", url:'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap'},
+    'Poppins':{stack:"'Poppins',system-ui,sans-serif", url:'https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap'},
+    'Roboto':{stack:"'Roboto',system-ui,sans-serif", url:'https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap'},
+    'Montserrat':{stack:"'Montserrat',system-ui,sans-serif", url:'https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap'}
+  };
+  function applyFont(name){
+    const f=FONTS[name]||FONTS['System'];
+    if(f.url && !document.querySelector('link[data-font="'+name+'"]')){
+      const l=document.createElement('link'); l.rel='stylesheet'; l.href=f.url; l.setAttribute('data-font',name); document.head.appendChild(l);
+    }
+    document.documentElement.style.setProperty('--sans', f.stack);
+  }
+  async function loadAppSettings(){
+    if(!sb) return;
+    try{
+      const {data}=await sb.from('app_settings').select('key,value').in('key',['sub_price','sub_duration_days','site_font']);
+      (data||[]).forEach(r=>{
+        if(r.key==='sub_price' && r.value) SUB.PRICE=r.value;
+        if(r.key==='sub_duration_days' && r.value){ const d=parseInt(r.value); if(d>0) SUB.DURATION_DAYS=d; }
+        if(r.key==='site_font' && r.value) applyFont(r.value);
+      });
+    }catch(e){ /* tables absentes : on garde les valeurs par défaut */ }
+  }
+
+  /* ===== TABLEAU DE BORD ADMIN (page séparée) ===== */
+  function openAdminDash(){ if(!isAdmin(currentUser))return; $('#adminDash').style.display='flex'; adashSection('abo'); loadAboSettings(); loadSponsorsAdmin(); }
+  function closeAdminDash(){ $('#adminDash').style.display='none'; }
+  function adashSection(sec){
+    $$('#adminDash .adash-nav').forEach(b=>b.classList.toggle('on', b.dataset.sec===sec));
+    $$('#adminDash .adash-sec').forEach(s=>s.style.display=(s.dataset.sec===sec?'block':'none'));
+  }
+  $$('#adminDash .adash-nav').forEach(b=>b.addEventListener('click',()=>adashSection(b.dataset.sec)));
+  $('#adashClose') && $('#adashClose').addEventListener('click',closeAdminDash);
+  $('#adminBtn') && $('#adminBtn').addEventListener('click',openAdminDash);
+
+  // Abonnement (prix / durée / libellé)
+  function loadAboSettings(){ $('#adPrice').value=SUB.PRICE||''; $('#adDuration').value=SUB.DURATION_DAYS||7; $('#adPlanName').value=SUB.PLAN_LABEL||''; if($('#adFont')) $('#adFont').value=($('#adFont').value||'System'); }
+  async function saveAboSettings(){
+    if(!sb||!isAdmin(currentUser))return;
+    const price=($('#adPrice').value||'').trim(), dur=parseInt($('#adDuration').value)||7, plan=($('#adPlanName').value||'').trim();
+    const btn=$('#adAboSave'); btn.disabled=true;
+    try{
+      await sb.from('app_settings').upsert({key:'sub_price', value:price});
+      await sb.from('app_settings').upsert({key:'sub_duration_days', value:String(dur)});
+      SUB.PRICE=price; SUB.DURATION_DAYS=dur; if(plan)SUB.PLAN_LABEL=plan;
+      renderSubChip(); showToast('Abonnement mis à jour ✓');
+    }catch(e){ console.error(e); showToast('Échec de l’enregistrement (droits admin ?)',true); }
+    finally{ btn.disabled=false; }
+  }
+  $('#adAboSave') && $('#adAboSave').addEventListener('click',saveAboSettings);
+
+  // Apparence (police)
+  async function saveFont(){
+    if(!sb||!isAdmin(currentUser))return;
+    const f=$('#adFont').value; applyFont(f);
+    try{ await sb.from('app_settings').upsert({key:'site_font', value:f}); showToast('Police appliquée ✓'); }
+    catch(e){ console.error(e); showToast('Échec (droits admin ?)',true); }
+  }
+  $('#adFont') && $('#adFont').addEventListener('change',()=>applyFont($('#adFont').value));
+  $('#adFontSave') && $('#adFontSave').addEventListener('click',saveFont);
+
+  // Sponsors / publicité
+  async function loadSponsorsAdmin(){
+    if(!sb||!isAdmin(currentUser))return;
+    const list=$('#adSponsorList'); list.innerHTML='<div class="ad-empty">Chargement…</div>';
+    try{
+      const {data,error}=await sb.from('sponsors').select('*').order('sort',{ascending:true});
+      if(error)throw error;
+      if(!(data&&data.length)){ list.innerHTML='<div class="ad-empty">Aucun sponsor. La section pub reste <b>cachée</b> côté utilisateurs tant que rien n’est ajouté.</div>'; return; }
+      list.innerHTML=data.map(s=>`<div class="ad-srow">
+        <div class="ad-si"><span class="ad-nm">${escapeHTML(s.name)}</span> ${s.active?'<span class="ad-on">actif</span>':'<span class="ad-off">inactif</span>'}<div class="ad-sub">${escapeHTML(s.tagline||'')}</div></div>
+        <div class="ad-sact"><button class="u-btn" data-sp-toggle="${s.id}" data-active="${s.active?1:0}">${s.active?'Désactiver':'Activer'}</button><button class="u-btn block" data-sp-del="${s.id}">✕</button></div>
+      </div>`).join('');
+      $$('#adSponsorList [data-sp-toggle]').forEach(b=>b.addEventListener('click',()=>toggleSponsor(b.dataset.spToggle, b.dataset.active!=='1')));
+      $$('#adSponsorList [data-sp-del]').forEach(b=>b.addEventListener('click',()=>delSponsor(b.dataset.spDel)));
+    }catch(e){ console.error(e); list.innerHTML='<div class="ad-empty">Impossible de charger (table « sponsors » ?).</div>'; }
+  }
+  async function addSponsor(){
+    if(!sb||!isAdmin(currentUser))return;
+    const name=($('#spName').value||'').trim(); if(!name){ showToast('Nom du sponsor requis',true); return; }
+    const payload={ name, tagline:($('#spTag').value||'').trim()||null, cta_label:($('#spCta').value||'').trim()||'Découvrir', url:($('#spUrl').value||'').trim()||null, logo:($('#spLogo').value||'').trim()||name[0].toUpperCase(), active:true };
+    try{ const {error}=await sb.from('sponsors').insert(payload); if(error)throw error;
+      ['spName','spTag','spCta','spUrl','spLogo'].forEach(id=>{ if($('#'+id))$('#'+id).value=''; });
+      showToast('Sponsor ajouté ✓'); loadSponsorsAdmin();
+    }catch(e){ console.error(e); showToast('Échec (droits admin ?)',true); }
+  }
+  async function toggleSponsor(id,active){ try{ await sb.from('sponsors').update({active}).eq('id',id); loadSponsorsAdmin(); }catch(e){ showToast('Action impossible',true); } }
+  async function delSponsor(id){ try{ await sb.from('sponsors').delete().eq('id',id); showToast('Sponsor supprimé'); loadSponsorsAdmin(); }catch(e){ showToast('Action impossible',true); } }
+  $('#spAdd') && $('#spAdd').addEventListener('click',addSponsor);
+
+  // Comptes & paiements : ouvre le panneau existant (tout reste accessible)
+  $('#adManageUsers') && $('#adManageUsers').addEventListener('click',()=>{ closeAdminDash(); $('#adminDrawer').classList.add('open'); const t=document.querySelector('.admin-tab[data-atab="users"]'); if(t)t.click(); });
+  $('#adManagePay') && $('#adManagePay').addEventListener('click',()=>{ closeAdminDash(); $('#adminDrawer').classList.add('open'); const t=document.querySelector('.admin-tab[data-atab="pay"]'); if(t)t.click(); });
 
   /* ===== CHAT COMMUNAUTAIRE ===== */
   let chatChannel=null, chatMsgs=[], replyTo=null, lastMsgTime=0, cooldownOn=true;
@@ -4600,7 +4794,8 @@
       "hdr.saved":"Paris enregistrés",
       "hdr.guide":"❔ Guide",
       "hdr.stats":"📊 Scores & stats ↗",
-      "hdr.publish":"📢 Publier un surebet"
+      "hdr.publish":"📢 Publier un surebet",
+      "hdr.admin":"🛡️ Admin"
     },
     en: {
       "auth.sub":"Your bets, synced and secure",
@@ -4617,7 +4812,8 @@
       "hdr.saved":"Saved bets",
       "hdr.guide":"❔ Guide",
       "hdr.stats":"📊 Scores & stats ↗",
-      "hdr.publish":"📢 Publish a surebet"
+      "hdr.publish":"📢 Publish a surebet",
+      "hdr.admin":"🛡️ Admin"
     }
   };
   let LANG='fr';
