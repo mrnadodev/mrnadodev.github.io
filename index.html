@@ -900,6 +900,34 @@
   .ad-off{font-size:10px; font-weight:700; color:var(--ink-faint); background:var(--panel-2); border:1px solid var(--line); border-radius:999px; padding:2px 8px; margin-left:6px}
   .ad-sact{display:flex; gap:7px; flex:none}
   @media(max-width:700px){ .adash{flex-direction:column} .adash-side{width:auto; flex-direction:row; flex-wrap:wrap; height:auto; gap:6px} .adash-side>div[style]{display:none} .adash-main{padding:20px 16px} }
+
+  /* ===== CARROUSEL SPONSORS (utilisateur) ===== */
+  #sponsorZone{margin:0 0 22px} #sponsorZone:empty{display:none}
+  .sp-carousel{overflow:hidden; border-radius:var(--radius)}
+  .sp-track{display:flex; transition:transform .5s ease}
+  .sp-slide{min-width:100%}
+  .sponsor{position:relative; display:flex; align-items:center; gap:16px; padding:15px 18px; border-radius:var(--radius);
+    border:1px solid rgba(47,230,168,.22); background:linear-gradient(120deg, rgba(47,230,168,.08), transparent 72%), var(--panel)}
+  .sponsor .sp-tag{position:absolute; top:9px; right:12px; font-size:8.5px; font-family:var(--mono); text-transform:uppercase; letter-spacing:.12em; color:var(--ink-faint)}
+  .sponsor .sp-logo{width:48px;height:48px;border-radius:13px;display:grid;place-items:center;font-weight:800;font-size:20px;color:#fff;background:linear-gradient(150deg,#3a86ff,#2667cc);flex:none}
+  .sponsor .sp-txt{flex:1; min-width:0}
+  .sponsor .sp-t{font-weight:700; font-size:15px} .sponsor .sp-d{font-size:12.5px; color:var(--ink-dim); margin-top:2px}
+  .sponsor .sp-cta{flex:none; border:none; border-radius:11px; padding:11px 18px; font-weight:700; font-size:13px; background:var(--mint); color:var(--bg); text-decoration:none}
+  .sp-dots{display:flex; gap:7px; justify-content:center; margin-top:10px}
+  .sp-dot{width:8px;height:8px;border-radius:50%;border:none;background:var(--line);cursor:pointer;padding:0;transition:.2s}
+  .sp-dot.on{background:var(--mint); width:22px; border-radius:4px}
+  @media(max-width:560px){.sponsor{flex-wrap:wrap} .sponsor .sp-cta{width:100%; text-align:center}}
+
+  /* ===== POP-UP NOUVEAU MESSAGE CHAT ===== */
+  .chatpop{position:fixed; right:22px; bottom:92px; z-index:75; display:none; align-items:center; gap:11px;
+    background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:11px 40px 11px 12px; box-shadow:0 18px 40px -18px rgba(0,0,0,.6);
+    cursor:pointer; max-width:320px; animation:cpop .28s ease}
+  .chatpop.show{display:flex}
+  @keyframes cpop{from{opacity:0; transform:translateY(12px)}to{opacity:1; transform:none}}
+  .chatpop .cav{width:34px;height:34px;border-radius:10px;flex:none;display:grid;place-items:center;font-size:12px;font-weight:700;background:var(--panel-2);color:var(--ink)}
+  .chatpop .cw{font-weight:700; font-size:12.5px} .chatpop .cm{font-size:12px; color:var(--ink-dim); margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:230px}
+  .chatpop .cx{position:absolute; top:7px; right:9px; border:none; background:none; color:var(--ink-faint); font-size:13px; cursor:pointer}
+  .chatpop .cx:hover{color:var(--ink)}
 </style>
 </head>
 <body>
@@ -1029,6 +1057,9 @@
       <span id="userEmail" style="display:none"></span>
     </div>
   </header>
+
+  <!-- Carrousel sponsors : rempli par l'app si l'admin a ajouté des sponsors (sinon vide = masqué) -->
+  <div id="sponsorZone"></div>
 
   <div class="cols">
 
@@ -1323,6 +1354,13 @@
   <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
   <span class="chat-fab-badge" id="chatFabBadge" style="display:none">0</span>
 </button>
+
+<!-- ===== POP-UP NOUVEAU MESSAGE CHAT ===== -->
+<div class="chatpop" id="chatPop">
+  <div class="cav" id="chatPopAv">?</div>
+  <div class="cbody"><div class="cw" id="chatPopWho">—</div><div class="cm" id="chatPopMsg">—</div></div>
+  <button class="cx" id="chatPopX" aria-label="Fermer">✕</button>
+</div>
 
 <!-- ===== PUBLIER UN SUREBET (admin) ===== -->
 <div id="pubModal" class="edit-modal" style="display:none">
@@ -2768,6 +2806,7 @@
     $('#publishBtn').style.display = canPublish() ? 'inline-flex' : 'none';
     $('#adminBtn') && ($('#adminBtn').style.display = isAdmin(user) ? 'inline-flex' : 'none');
     await loadAppSettings();          // prix / durée / police dynamiques
+    loadSponsorsPublic();             // carrousel sponsors (caché si vide)
     renderSubChip(); startSubTimer();
     await loadHistory();
     await loadBankroll();
@@ -3236,16 +3275,53 @@
     const payload={ name, tagline:($('#spTag').value||'').trim()||null, cta_label:($('#spCta').value||'').trim()||'Découvrir', url:($('#spUrl').value||'').trim()||null, logo:($('#spLogo').value||'').trim()||name[0].toUpperCase(), active:true };
     try{ const {error}=await sb.from('sponsors').insert(payload); if(error)throw error;
       ['spName','spTag','spCta','spUrl','spLogo'].forEach(id=>{ if($('#'+id))$('#'+id).value=''; });
-      showToast('Sponsor ajouté ✓'); loadSponsorsAdmin();
+      showToast('Sponsor ajouté ✓'); loadSponsorsAdmin(); loadSponsorsPublic();
     }catch(e){ console.error(e); showToast('Échec (droits admin ?)',true); }
   }
-  async function toggleSponsor(id,active){ try{ await sb.from('sponsors').update({active}).eq('id',id); loadSponsorsAdmin(); }catch(e){ showToast('Action impossible',true); } }
-  async function delSponsor(id){ try{ await sb.from('sponsors').delete().eq('id',id); showToast('Sponsor supprimé'); loadSponsorsAdmin(); }catch(e){ showToast('Action impossible',true); } }
+  async function toggleSponsor(id,active){ try{ await sb.from('sponsors').update({active}).eq('id',id); loadSponsorsAdmin(); loadSponsorsPublic(); }catch(e){ showToast('Action impossible',true); } }
+  async function delSponsor(id){ try{ await sb.from('sponsors').delete().eq('id',id); showToast('Sponsor supprimé'); loadSponsorsAdmin(); loadSponsorsPublic(); }catch(e){ showToast('Action impossible',true); } }
   $('#spAdd') && $('#spAdd').addEventListener('click',addSponsor);
 
   // Comptes & paiements : ouvre le panneau existant (tout reste accessible)
   $('#adManageUsers') && $('#adManageUsers').addEventListener('click',()=>{ closeAdminDash(); $('#adminDrawer').classList.add('open'); const t=document.querySelector('.admin-tab[data-atab="users"]'); if(t)t.click(); });
   $('#adManagePay') && $('#adManagePay').addEventListener('click',()=>{ closeAdminDash(); $('#adminDrawer').classList.add('open'); const t=document.querySelector('.admin-tab[data-atab="pay"]'); if(t)t.click(); });
+
+  /* ===== CARROUSEL SPONSORS (côté utilisateur, caché si vide) ===== */
+  let spPubList=[], spPubI=0, spPubTimer=null;
+  async function loadSponsorsPublic(){
+    const zone=$('#sponsorZone'); if(!zone||!sb){ if(zone)zone.innerHTML=''; return; }
+    try{ const {data}=await sb.from('sponsors').select('*').eq('active',true).order('sort',{ascending:true}); spPubList=data||[]; }
+    catch(e){ spPubList=[]; }
+    renderSponsorsPublic();
+  }
+  function renderSponsorsPublic(){
+    const zone=$('#sponsorZone'); if(!zone) return;
+    if(!spPubList.length){ zone.innerHTML=''; if(spPubTimer){clearInterval(spPubTimer);spPubTimer=null;} return; } // aucun sponsor → masqué
+    spPubI=0;
+    zone.innerHTML='<div class="sp-carousel"><div class="sp-track" id="spPubTrack">'+spPubList.map(s=>{
+      const color=s.color||'linear-gradient(150deg,#3a86ff,#2667cc)';
+      const cta = s.url ? '<a class="sp-cta" href="'+escapeHTML(s.url)+'" target="_blank" rel="noopener nofollow">'+escapeHTML(s.cta_label||'Découvrir')+'</a>'
+                        : '<span class="sp-cta">'+escapeHTML(s.cta_label||'Découvrir')+'</span>';
+      return '<div class="sp-slide"><div class="sponsor"><span class="sp-tag">Sponsorisé</span><div class="sp-logo" style="background:'+escapeHTML(color)+'">'+escapeHTML(s.logo||(s.name||'?')[0])+'</div><div class="sp-txt"><div class="sp-t">'+escapeHTML(s.name||'')+'</div><div class="sp-d">'+escapeHTML(s.tagline||'')+'</div></div>'+cta+'</div></div>';
+    }).join('')+'</div></div>'+(spPubList.length>1 ? '<div class="sp-dots" id="spPubDots">'+spPubList.map((_,i)=>'<button class="sp-dot '+(i===0?'on':'')+'" data-spd="'+i+'" aria-label="Sponsor '+(i+1)+'"></button>').join('')+'</div>' : '');
+    $$('#spPubDots .sp-dot').forEach(d=>d.addEventListener('click',()=>{ spPubGo(+d.dataset.spd); restartSpPub(); }));
+    restartSpPub();
+  }
+  function spPubGo(i){ spPubI=(i+spPubList.length)%spPubList.length; const t=$('#spPubTrack'); if(t)t.style.transform='translateX(-'+(spPubI*100)+'%)'; $$('#spPubDots .sp-dot').forEach((d,k)=>d.classList.toggle('on',k===spPubI)); }
+  function restartSpPub(){ if(spPubTimer)clearInterval(spPubTimer); if(spPubList.length>1) spPubTimer=setInterval(()=>spPubGo(spPubI+1),6000); }
+
+  /* ===== POP-UP NOUVEAU MESSAGE ===== */
+  let chatPopTimer=null;
+  function showChatPop(who, text, room){
+    const pop=$('#chatPop'); if(!pop) return;
+    $('#chatPopAv').textContent=((who||'?')[0]||'?').toUpperCase();
+    $('#chatPopWho').textContent=(who||'?')+(room && room!=='general' ? ' · '+room : '');
+    $('#chatPopMsg').textContent=(text||'').slice(0,80);
+    pop.classList.add('show');
+    clearTimeout(chatPopTimer); chatPopTimer=setTimeout(()=>pop.classList.remove('show'), 6000);
+  }
+  $('#chatPop') && $('#chatPop').addEventListener('click',()=>{ $('#chatPop').classList.remove('show'); goToChat(); });
+  $('#chatPopX') && $('#chatPopX').addEventListener('click',e=>{ e.stopPropagation(); $('#chatPop').classList.remove('show'); });
 
   /* ===== CHAT COMMUNAUTAIRE ===== */
   let chatChannel=null, chatMsgs=[], replyTo=null, lastMsgTime=0, cooldownOn=true;
@@ -3343,8 +3419,8 @@
             const tab=document.querySelector('.chat-room-tab[data-room="'+room+'"]');
             if(tab)tab.classList.add('has-new');
           }
-          // compteur bulle flottante (message d'un autre, chat non visible)
-          if(!mine && !chatInView()){ chatUnread++; }
+          // compteur bulle flottante + pop-up (message d'un autre, chat non visible)
+          if(!mine && !chatInView()){ chatUnread++; showChatPop(displayNameFor(m.email,m.username,m.sender_role), m.text, room); }
           // notification si on est mentionné
           if(!mine && mentionsMe(m.text)){
             const who = displayNameFor(m.email,m.username,m.sender_role);
