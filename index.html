@@ -1454,6 +1454,7 @@
     <div class="adash-brand">🛡️ <span>Admin</span></div>
     <button class="adash-nav on" data-sec="abo">💳 Abonnement</button>
     <button class="adash-nav" data-sec="spons">📣 Sponsors &amp; pub</button>
+    <button class="adash-nav" data-sec="chatmod">💬 Chat &amp; modération</button>
     <button class="adash-nav" data-sec="texts">📝 Textes (FR/EN)</button>
     <button class="adash-nav" data-sec="appear">🎨 Apparence</button>
     <button class="adash-nav" data-sec="manage">👥 Comptes &amp; paiements</button>
@@ -1494,6 +1495,29 @@
       </div>
       <div class="adash-lab" style="margin-top:18px">Sponsors actuels</div>
       <div id="adSponsorList"></div>
+    </section>
+
+    <!-- Chat & modération -->
+    <section class="adash-sec" data-sec="chatmod" style="display:none">
+      <h2>Chat &amp; modération</h2>
+      <p class="adash-p">Verrouillez un salon, activez le minuteur anti-spam, lancez un sondage ou videz le chat. Pour nommer un modérateur, allez dans <b>Comptes &amp; paiements</b>.</p>
+      <div class="adash-card">
+        <div class="adash-lab">Salon en cours</div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap">
+          <button class="btn" id="adChatLock">🔒 Verrouiller / ouvrir le salon</button>
+          <button class="btn" id="adChatTimer">⏱️ Minuteur anti-spam</button>
+        </div>
+        <div class="adash-lab" style="margin-top:18px">Sondages</div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap">
+          <button class="btn" id="adChatPoll">📊 Lancer un sondage</button>
+          <button class="btn" id="adChatResults">🗂 Voir les résultats</button>
+        </div>
+        <div class="adash-lab" style="margin-top:18px">Zone sensible</div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap">
+          <button class="btn" id="adChatClear" style="border-color:var(--red);color:var(--red)">🧹 Vider tout le chat</button>
+        </div>
+        <p class="adash-p" style="margin:14px 0 0">Les actions sur un message précis (supprimer, répondre) se font directement dans le chat.</p>
+      </div>
     </section>
 
     <!-- Textes (mini-CMS bilingue) -->
@@ -1607,13 +1631,13 @@
 <div id="tourModal" class="tour-modal" style="display:none">
   <div class="tour-backdrop"></div>
   <div class="tour-box">
-    <button class="tour-skip" id="tourSkip">Passer ✕</button>
+    <button class="tour-skip" id="tourSkip" data-i18n="tour.skip">Passer ✕</button>
     <div class="tour-slide" id="tourSlide"></div>
     <div class="tour-dots" id="tourDots"></div>
     <div class="tour-nav">
-      <label class="tour-dontshow"><input type="checkbox" id="tourDontShow"> Ne plus afficher</label>
+      <label class="tour-dontshow"><input type="checkbox" id="tourDontShow"> <span data-i18n="tour.dontshow">Ne plus afficher</span></label>
       <div class="tour-btns">
-        <button class="btn ghost" id="tourPrev">Précédent</button>
+        <button class="btn ghost" id="tourPrev" data-i18n="tour.prev">Précédent</button>
         <button class="btn primary" id="tourNext">Suivant</button>
       </div>
     </div>
@@ -2870,15 +2894,22 @@
       title:'C\u2019est parti ! 🎯', desc:'Vous êtes prêt à utiliser NADOBET. Vérifiez toujours les cotes chez le bookmaker avant de miser. Bonne chance !' }
   ];
   let tourIdx=0;
+  // Traduction avec repli : si la clé n'existe pas, on garde le texte d'origine
+  function tOr(key, fallback){
+    const T=window.NADOBET_I18N; if(!T) return fallback;
+    const v=T.t(key); return (v && v!==key) ? v : fallback;
+  }
   function renderTourSlide(){
     const s=TOUR_SLIDES[tourIdx];
+    const k='tour.s'+(tourIdx+1);
+    const title=tOr(k+'_title', s.title), desc=tOr(k+'_desc', s.desc);
     const ctaHtml = s.cta
-      ? `<a href="${s.cta.url}" target="_blank" rel="noopener" class="btn primary ts-cta">${s.cta.label}</a>`
+      ? `<a href="${s.cta.url}" target="_blank" rel="noopener" class="btn primary ts-cta">${tOr(k+'_cta', s.cta.label)}</a>`
       : '';
-    $('#tourSlide').innerHTML=`<div class="ts-art">${s.art}</div><div class="ts-title">${s.title}</div><div class="ts-desc">${s.desc}</div>${ctaHtml}`;
+    $('#tourSlide').innerHTML=`<div class="ts-art">${s.art}</div><div class="ts-title">${title}</div><div class="ts-desc">${desc}</div>${ctaHtml}`;
     $('#tourDots').innerHTML=TOUR_SLIDES.map((_,i)=>`<span class="td ${i===tourIdx?'on':''}"></span>`).join('');
     $('#tourPrev').style.visibility = tourIdx===0 ? 'hidden':'visible';
-    $('#tourNext').textContent = tourIdx===TOUR_SLIDES.length-1 ? 'Terminer' : 'Suivant';
+    $('#tourNext').textContent = tourIdx===TOUR_SLIDES.length-1 ? tOr('tour.finish','Terminer') : tOr('tour.next','Suivant');
   }
   function startTour(){ tourIdx=0; renderTourSlide(); $('#tourDontShow').checked=false; $('#tourModal').style.display='flex'; }
   async function endTour(){
@@ -3368,6 +3399,18 @@
   $('#cmsSave') && $('#cmsSave').addEventListener('click',saveCms);
   $('#cmsReset') && $('#cmsReset').addEventListener('click',resetCms);
   $('#cmsSearch') && $('#cmsSearch').addEventListener('input',e=>renderCmsEditor(e.target.value));
+
+  // Chat & modération : relaie vers les contrôles existants du chat
+  function relayChat(id, keepOpen){
+    const el=document.getElementById(id); if(!el){ showToast('Contrôle indisponible',true); return; }
+    if(!keepOpen) closeAdminDash();
+    el.click();
+  }
+  $('#adChatLock')    && $('#adChatLock').addEventListener('click',   ()=>relayChat('chatRoomLock', true));
+  $('#adChatTimer')   && $('#adChatTimer').addEventListener('click',  ()=>relayChat('chatTimerToggle', true));
+  $('#adChatPoll')    && $('#adChatPoll').addEventListener('click',   ()=>relayChat('chatPoll'));
+  $('#adChatResults') && $('#adChatResults').addEventListener('click',()=>relayChat('chatPollArchive'));
+  $('#adChatClear')   && $('#adChatClear').addEventListener('click',  ()=>relayChat('chatClear'));
 
   // Comptes & paiements : ouvre le panneau existant (tout reste accessible)
   $('#adManageUsers') && $('#adManageUsers').addEventListener('click',()=>{ closeAdminDash(); $('#adminDrawer').classList.add('open'); const t=document.querySelector('.admin-tab[data-atab="users"]'); if(t)t.click(); });
@@ -5002,7 +5045,26 @@
       "pay.step1":"1 · Payez sur l'un de ces canaux","pay.step2":"2 · Envoyez votre preuve",
       "pay.channel":"Canal utilisé","pay.ref":"Référence de transaction / téléphone payeur",
       "pay.ref_ph":"ex : n° de transaction MonCash ou votre numéro",
-      "pay.close":"Fermer","pay.send":"J'ai payé — envoyer la demande"
+      "pay.close":"Fermer","pay.send":"J'ai payé — envoyer la demande",
+      "tour.skip":"Passer ✕","tour.dontshow":"Ne plus afficher","tour.prev":"Précédent",
+      "tour.next":"Suivant","tour.finish":"Terminer",
+      "tour.s1_title":"Bienvenue sur NADOBET 👋",
+      "tour.s1_desc":"Votre outil pour détecter et calculer les surebets (paris sûrs). Voici un tour rapide des fonctions principales.",
+      "tour.s2_title":"1 · Détecteur",
+      "tour.s2_desc":"Entrez la cote que vous avez repérée, et le détecteur vous dit quelle cote adverse chercher pour garantir un profit.",
+      "tour.s3_title":"2 · Calculateur",
+      "tour.s3_desc":"Entrez vos cotes et votre montant : NADOBET calcule les mises exactes pour chaque bookmaker et votre profit garanti. Vous pouvez arrondir les mises.",
+      "tour.s4_title":"3 · Caisse (bankroll)",
+      "tour.s4_desc":"Suivez votre capital : dépôts, retraits, solde et croissance. Vous voyez toujours combien vous avez et votre performance.",
+      "tour.s5_title":"4 · Historique",
+      "tour.s5_desc":"Tous vos paris sont sauvegardés et synchronisés. Filtrez, ajoutez des notes, exportez en Excel, et voyez vos stats par mois et par bookmaker.",
+      "tour.s6_title":"5 · Chat & alertes",
+      "tour.s6_desc":"Discutez avec les autres parieurs en direct. Quand un surebet est publié, une alerte apparaît — cliquez pour voir les détails et les charger dans le calculateur.",
+      "tour.s7_title":"📢 Abonnez-vous à Telegram !",
+      "tour.s7_desc":"<b>Important :</b> pour recevoir une notification sur votre téléphone dès qu'un surebet est détecté (même dashboard fermé), abonnez-vous à notre canal Telegram. Les détails restent visibles uniquement ici, sur votre dashboard.",
+      "tour.s7_cta":"📲 Rejoindre @nadobet_surebets",
+      "tour.s8_title":"C'est parti ! 🎯",
+      "tour.s8_desc":"Vous êtes prêt à utiliser NADOBET. Vérifiez toujours les cotes chez le bookmaker avant de miser. Bonne chance !"
     },
     en: {
       "auth.sub":"Your bets, synced and secure",
@@ -5064,7 +5126,26 @@
       "pay.step1":"1 · Pay through one of these channels","pay.step2":"2 · Send your proof",
       "pay.channel":"Channel used","pay.ref":"Transaction reference / payer phone number",
       "pay.ref_ph":"e.g. MonCash transaction no. or your number",
-      "pay.close":"Close","pay.send":"I have paid — send the request"
+      "pay.close":"Close","pay.send":"I have paid — send the request",
+      "tour.skip":"Skip ✕","tour.dontshow":"Don't show again","tour.prev":"Previous",
+      "tour.next":"Next","tour.finish":"Finish",
+      "tour.s1_title":"Welcome to NADOBET 👋",
+      "tour.s1_desc":"Your tool to detect and calculate surebets (guaranteed bets). Here is a quick tour of the main features.",
+      "tour.s2_title":"1 · Detector",
+      "tour.s2_desc":"Enter the odds you spotted, and the detector tells you which opposing odds to look for to guarantee a profit.",
+      "tour.s3_title":"2 · Calculator",
+      "tour.s3_desc":"Enter your odds and your amount: NADOBET computes the exact stake for each bookmaker and your guaranteed profit. You can round the stakes.",
+      "tour.s4_title":"3 · Bankroll",
+      "tour.s4_desc":"Track your capital: deposits, withdrawals, balance and growth. You always see how much you have and how you perform.",
+      "tour.s5_title":"4 · History",
+      "tour.s5_desc":"All your bets are saved and synced. Filter them, add notes, export to Excel, and view your stats by month and by bookmaker.",
+      "tour.s6_title":"5 · Chat & alerts",
+      "tour.s6_desc":"Talk with other bettors live. When a surebet is published, an alert appears — click it to see the details and load them into the calculator.",
+      "tour.s7_title":"📢 Subscribe on Telegram!",
+      "tour.s7_desc":"<b>Important:</b> to get a notification on your phone as soon as a surebet is detected (even with the dashboard closed), subscribe to our Telegram channel. The details stay visible only here, on your dashboard.",
+      "tour.s7_cta":"📲 Join @nadobet_surebets",
+      "tour.s8_title":"You're all set! 🎯",
+      "tour.s8_desc":"You are ready to use NADOBET. Always check the odds at the bookmaker before staking. Good luck!"
     }
   };
   let LANG='fr';
