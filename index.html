@@ -1079,55 +1079,55 @@
     <div class="card">
       <div class="card-head">
         <div class="title"><span class="num"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg></span>
-          <div><h2>Détecteur de cote complémentaire</h2>
-          <span class="sub">Ma cote → cotes qui donnent le surebet</span></div>
+          <div><h2 data-i18n="det.title">Détecteur de cote complémentaire</h2>
+          <span class="sub" data-i18n="det.sub">Ma cote → cotes qui donnent le surebet</span></div>
         </div>
       </div>
       <div class="card-body">
         <details class="odds-conv" id="oddsConv">
-          <summary>🔁 Convertisseur de cotes (décimale / fractionnaire / américaine)</summary>
+          <summary data-i18n="conv.title">🔁 Convertisseur de cotes (décimale / fractionnaire / américaine)</summary>
           <div class="oc-body">
             <div class="oc-grid">
-              <label class="fld" style="margin:0"><span class="lab">Décimale</span>
+              <label class="fld" style="margin:0"><span class="lab" data-i18n="conv.dec">Décimale</span>
                 <input type="text" id="ocDec" placeholder="ex : 2.50" inputmode="decimal"></label>
-              <label class="fld" style="margin:0"><span class="lab">Fractionnaire</span>
+              <label class="fld" style="margin:0"><span class="lab" data-i18n="conv.frac">Fractionnaire</span>
                 <input type="text" id="ocFrac" placeholder="ex : 3/2"></label>
-              <label class="fld" style="margin:0"><span class="lab">Américaine</span>
+              <label class="fld" style="margin:0"><span class="lab" data-i18n="conv.us">Américaine</span>
                 <input type="text" id="ocAmer" placeholder="ex : +150"></label>
             </div>
-            <div class="oc-note" id="ocNote">Tapez dans un champ, les deux autres se calculent. La cote décimale est celle à utiliser dans le détecteur et le calculateur.</div>
+            <div class="oc-note" id="ocNote" data-i18n="conv.note">Tapez dans un champ, les deux autres se calculent. La cote décimale est celle à utiliser dans le détecteur et le calculateur.</div>
           </div>
         </details>
 
         <div class="row r2" style="margin-bottom:16px">
-          <label class="fld" style="margin:0"><span class="lab">Ma cote détectée</span>
+          <label class="fld" style="margin:0"><span class="lab" data-i18n="det.myodd">Ma cote détectée</span>
             <input type="number" id="detOdd" value="2.00" step="0.01" min="1.01"></label>
-          <label class="fld" style="margin:0"><span class="lab">Seuil surebet min.</span>
+          <label class="fld" style="margin:0"><span class="lab" data-i18n="det.threshold">Seuil surebet min.</span>
             <div style="display:flex;gap:8px;align-items:center">
               <input type="number" id="detThr" value="4" step="0.5" min="0" style="text-align:right">
               <span style="font-family:var(--mono);color:var(--ink-dim);font-size:16px">%</span></div></label>
         </div>
         <div class="thr-note">Avec une cote de <b id="echoOdd">2.00</b>, il faut une cote adverse ≥ <b id="minOdd">—</b> pour <b id="echoThr">4%</b> de profit.</div>
-        <div class="det-hero"><div class="big" id="minOddBig">—</div><div class="cap">Cote adverse minimale à chercher</div></div>
-        <table><thead><tr><th>Cote adverse</th><th>Surebet</th><th>ROI garanti</th><th>Statut</th></tr></thead>
+        <div class="det-hero"><div class="big" id="minOddBig">—</div><div class="cap" data-i18n="det.cap">Cote adverse minimale à chercher</div></div>
+        <table><thead><tr><th data-i18n="det.th_odd">Cote adverse</th><th data-i18n="det.th_sure">Surebet</th><th data-i18n="det.th_roi">ROI garanti</th><th data-i18n="det.th_status">Statut</th></tr></thead>
           <tbody id="detTable"></tbody></table>
-        <div class="hint"><b>Lecture :</b> chaque ligne verte est exploitable. Reportez-la dans le calculateur pour connaître vos mises.</div>
+        <div class="hint" data-i18n-html="det.hint"><b>Lecture :</b> chaque ligne verte est exploitable. Reportez-la dans le calculateur pour connaître vos mises.</div>
 
         <div class="mini-caisse" id="miniCaisse">
-          <div class="mc-head">💰 Ma caisse</div>
+          <div class="mc-head" data-i18n="mc.head">💰 Ma caisse</div>
           <div class="mc-balance">
-            <span class="mc-k">Solde actuel</span>
+            <span class="mc-k" data-i18n="mc.balance">Solde actuel</span>
             <span class="mc-v" id="mcBalance">—</span>
           </div>
           <div class="mc-row">
-            <div class="mc-cell"><span class="mc-ck">Déposé (net)</span><span class="mc-cv" id="mcDeposited">—</span></div>
-            <div class="mc-cell"><span class="mc-ck">Profit paris</span><span class="mc-cv" id="mcProfit">—</span></div>
+            <div class="mc-cell"><span class="mc-ck" data-i18n="mc.deposited">Déposé (net)</span><span class="mc-cv" id="mcDeposited">—</span></div>
+            <div class="mc-cell"><span class="mc-ck" data-i18n="mc.profit">Profit paris</span><span class="mc-cv" id="mcProfit">—</span></div>
           </div>
           <div class="mc-row">
-            <div class="mc-cell"><span class="mc-ck">En attente</span><span class="mc-cv" id="mcPending">—</span></div>
-            <div class="mc-cell"><span class="mc-ck">Réussite</span><span class="mc-cv" id="mcWinrate">—</span></div>
+            <div class="mc-cell"><span class="mc-ck" data-i18n="mc.pending">En attente</span><span class="mc-cv" id="mcPending">—</span></div>
+            <div class="mc-cell"><span class="mc-ck" data-i18n="mc.winrate">Réussite</span><span class="mc-cv" id="mcWinrate">—</span></div>
           </div>
-          <div class="mc-hint" id="mcHint">Ajoutez un dépôt dans la section « Caisse » pour suivre votre capital.</div>
+          <div class="mc-hint" id="mcHint" data-i18n="mc.hint">Ajoutez un dépôt dans la section « Caisse » pour suivre votre capital.</div>
         </div>
       </div>
     </div>
@@ -1136,28 +1136,28 @@
     <div class="card">
       <div class="card-head">
         <div class="title"><span class="num"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="8" y2="10"/><line x1="12" y1="10" x2="12" y2="10"/><line x1="16" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="18"/><line x1="8" y1="18" x2="12" y2="18"/></svg></span>
-          <div><h2>Calculateur & enregistrement</h2>
-          <span class="sub">Mises · bookmaker · date · historique</span></div>
+          <div><h2 data-i18n="calc.title">Calculateur & enregistrement</h2>
+          <span class="sub" data-i18n="calc.sub">Mises · bookmaker · date · historique</span></div>
         </div>
       </div>
       <div class="card-body">
         <div class="row r2" style="margin-bottom:18px">
-          <div><span class="lab">Nombre de cotes</span>
-            <div class="seg" id="segLegs"><button data-legs="2" class="on">2 cotes</button><button data-legs="3">3 cotes</button></div></div>
-          <div><span class="lab">Mode de mise</span>
-            <div class="seg" id="segMode"><button data-mode="equal" class="on">Profit égal</button><button data-mode="fixed">Mise fixe</button></div></div>
+          <div><span class="lab" data-i18n="calc.nlegs">Nombre de cotes</span>
+            <div class="seg" id="segLegs"><button data-legs="2" class="on" data-i18n="calc.legs2">2 cotes</button><button data-legs="3" data-i18n="calc.legs3">3 cotes</button></div></div>
+          <div><span class="lab" data-i18n="calc.mode">Mode de mise</span>
+            <div class="seg" id="segMode"><button data-mode="equal" class="on" data-i18n="calc.mode_equal">Profit égal</button><button data-mode="fixed" data-i18n="calc.mode_fixed">Mise fixe</button></div></div>
         </div>
 
         <div class="row r2" id="amountRow" style="margin-bottom:16px">
-          <label class="fld" style="margin:0"><span class="lab" id="amtLab">Montant total à investir</span>
+          <label class="fld" style="margin:0"><span class="lab" id="amtLab" data-i18n="calc.amount">Montant total à investir</span>
             <input type="number" id="amount" value="100" step="1" min="0"></label>
-          <label class="fld" style="margin:0" id="fixedLegWrap"><span class="lab">Jambe à fixer</span>
+          <label class="fld" style="margin:0" id="fixedLegWrap"><span class="lab" data-i18n="calc.fixleg">Jambe à fixer</span>
             <select id="fixedLeg"><option value="0">Cote #1</option><option value="1">Cote #2</option><option value="2">Cote #3</option></select></label>
         </div>
 
-        <label class="fld" style="margin-bottom:16px"><span class="lab">Arrondir les mises</span>
+        <label class="fld" style="margin-bottom:16px"><span class="lab" data-i18n="calc.round">Arrondir les mises</span>
           <select id="roundStep">
-            <option value="0">Aucun (mise exacte)</option>
+            <option value="0" data-i18n="calc.round_none">Aucun (mise exacte)</option>
             <option value="1">À 1 HTG</option>
             <option value="5">À 5 HTG</option>
             <option value="10">À 10 HTG</option>
@@ -1165,12 +1165,12 @@
             <option value="50">À 50 HTG</option>
           </select></label>
 
-        <label class="fld"><span class="lab">Date du pari</span><input type="date" id="betDate"></label>
+        <label class="fld"><span class="lab" data-i18n="calc.date">Date du pari</span><input type="date" id="betDate"></label>
 
         <div class="row r2" style="margin-bottom:16px">
-          <label class="fld" style="margin:0"><span class="lab">Match</span>
+          <label class="fld" style="margin:0"><span class="lab" data-i18n="calc.match">Match</span>
             <input type="text" id="match1" placeholder="ex : PSG vs Marseille"></label>
-          <label class="fld" style="margin:0"><span class="lab">Championnat</span>
+          <label class="fld" style="margin:0"><span class="lab" data-i18n="calc.league">Championnat</span>
             <input type="text" id="match2" placeholder="ex : Ligue 1"></label>
         </div>
 
@@ -1180,9 +1180,9 @@
         <div id="calcOut"></div>
 
         <div class="actions">
-          <button class="btn primary" id="saveBtn">＋ Enregistrer le pari</button>
-          <button class="btn ghost" id="exportBtn">⤓ Exporter Excel</button>
-          <button class="btn ghost" id="resetBtn">↺ Réinitialiser</button>
+          <button class="btn primary" id="saveBtn" data-i18n="calc.save">＋ Enregistrer le pari</button>
+          <button class="btn ghost" id="exportBtn" data-i18n="calc.export">⤓ Exporter Excel</button>
+          <button class="btn ghost" id="resetBtn" data-i18n="calc.reset">↺ Réinitialiser</button>
         </div>
       </div>
     </div>
@@ -1193,22 +1193,22 @@
   <div class="card bankroll-card" id="bankrollCard">
     <div class="card-head">
       <div class="title"><span class="num"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h13a1 1 0 0 1 1 1v2"/><path d="M3 7v10a2 2 0 0 0 2 2h14a1 1 0 0 0 1-1v-3"/><path d="M21 10v4h-4a2 2 0 0 1 0-4z"/></svg></span>
-        <div><h2>Caisse (bankroll)</h2><span class="sub">Suivi de votre capital de jeu</span></div></div>
+        <div><h2 data-i18n="bk.title">Caisse (bankroll)</h2><span class="sub" data-i18n="bk.sub">Suivi de votre capital de jeu</span></div></div>
       <div class="hist-head-actions">
-        <button class="btn ghost" id="bkDepositBtn" style="padding:9px 14px;font-size:12.5px">＋ Dépôt</button>
-        <button class="btn ghost" id="bkWithdrawBtn" style="padding:9px 14px;font-size:12.5px">－ Retrait</button>
+        <button class="btn ghost" id="bkDepositBtn" style="padding:9px 14px;font-size:12.5px" data-i18n="bk.deposit">＋ Dépôt</button>
+        <button class="btn ghost" id="bkWithdrawBtn" style="padding:9px 14px;font-size:12.5px" data-i18n="bk.withdraw">－ Retrait</button>
       </div>
     </div>
     <div class="card-body">
       <div class="perf-cards">
-        <div class="perf-box"><div class="pk">Solde actuel</div><div class="pv" id="bkBalance">—</div></div>
-        <div class="perf-box"><div class="pk">Capital déposé (net)</div><div class="pv" id="bkDeposited">—</div></div>
-        <div class="perf-box"><div class="pk">Profit des paris</div><div class="pv" id="bkBetProfit">—</div></div>
-        <div class="perf-box"><div class="pk">Croissance</div><div class="pv" id="bkGrowth">—</div></div>
+        <div class="perf-box"><div class="pk" data-i18n="bk.balance">Solde actuel</div><div class="pv" id="bkBalance">—</div></div>
+        <div class="perf-box"><div class="pk" data-i18n="bk.deposited">Capital déposé (net)</div><div class="pv" id="bkDeposited">—</div></div>
+        <div class="perf-box"><div class="pk" data-i18n="bk.profit">Profit des paris</div><div class="pv" id="bkBetProfit">—</div></div>
+        <div class="perf-box"><div class="pk" data-i18n="bk.growth">Croissance</div><div class="pv" id="bkGrowth">—</div></div>
       </div>
       <div id="bkMovesWrap" style="margin-top:16px">
         <div class="bk-moves-head">
-          <span>Mouvements de caisse</span>
+          <span data-i18n="bk.moves">Mouvements de caisse</span>
           <span id="bkMovesCount" style="color:var(--ink-faint)">—</span>
         </div>
         <div id="bkMoves" class="bk-moves"></div>
@@ -1219,18 +1219,18 @@
   <div class="card hist-card" id="histCard">
     <div class="card-head">
       <div class="title"><span class="num"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg></span>
-        <div><h2 style="display:flex;align-items:center;gap:10px">Historique des paris
+        <div><h2 style="display:flex;align-items:center;gap:10px"><span data-i18n="hist.title">Historique des paris</span>
           <button class="eye-btn on" id="histEye" title="Afficher / masquer" aria-label="Afficher ou masquer l'historique">
             <svg class="eye-open" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             <svg class="eye-off" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
           </button>
-        </h2><span class="sub">Sauvegardé automatiquement · fichier Excel central</span></div></div>
+        </h2><span class="sub" data-i18n="hist.sub">Sauvegardé automatiquement · fichier Excel central</span></div></div>
       <div class="hist-head-actions">
-        <button class="btn ghost" id="exportBtn2" style="padding:9px 16px;font-size:13px">⤓ Excel</button>
+        <button class="btn ghost" id="exportBtn2" style="padding:9px 16px;font-size:13px" data-i18n="hist.excel">⤓ Excel</button>
         <span id="adminHistBtns" style="display:none;gap:10px;align-items:center">
-          <button class="btn ghost" id="backupBtn" style="padding:9px 16px;font-size:13px">⇪ Sauvegarde</button>
-          <button class="btn ghost" id="restoreBtn" style="padding:9px 16px;font-size:13px">⇩ Restaurer</button>
-          <button class="btn ghost" id="clearBtn" style="padding:9px 16px;font-size:13px">Vider</button>
+          <button class="btn ghost" id="backupBtn" style="padding:9px 16px;font-size:13px" data-i18n="hist.backup">⇪ Sauvegarde</button>
+          <button class="btn ghost" id="restoreBtn" style="padding:9px 16px;font-size:13px" data-i18n="hist.restore">⇩ Restaurer</button>
+          <button class="btn ghost" id="clearBtn" style="padding:9px 16px;font-size:13px" data-i18n="hist.clear">Vider</button>
           <input type="file" id="restoreFile" accept=".json,application/json" style="display:none">
         </span>
       </div>
@@ -1238,10 +1238,10 @@
     <div class="card-body">
       <div id="perfPanel" class="perf-panel">
         <div class="perf-cards">
-          <div class="perf-box"><div class="pk">Total misé</div><div class="pv" id="pfStaked">—</div></div>
-          <div class="perf-box"><div class="pk">Profit réalisé</div><div class="pv" id="pfProfit">—</div></div>
-          <div class="perf-box"><div class="pk">En attente</div><div class="pv" id="pfPending">—</div></div>
-          <div class="perf-box"><div class="pk">Taux de réussite</div><div class="pv" id="pfWinrate">—</div></div>
+          <div class="perf-box"><div class="pk" data-i18n="perf.staked">Total misé</div><div class="pv" id="pfStaked">—</div></div>
+          <div class="perf-box"><div class="pk" data-i18n="perf.profit">Profit réalisé</div><div class="pv" id="pfProfit">—</div></div>
+          <div class="perf-box"><div class="pk" data-i18n="perf.pending">En attente</div><div class="pv" id="pfPending">—</div></div>
+          <div class="perf-box"><div class="pk" data-i18n="perf.winrate">Taux de réussite</div><div class="pv" id="pfWinrate">—</div></div>
         </div>
         <div class="perf-chart-wrap">
           <div class="perf-chart-head">
@@ -1303,37 +1303,37 @@
   <div class="card chat-card" id="chatCard">
     <div class="card-head">
       <div class="title"><span class="num"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></span>
-        <div><h2 style="display:flex;align-items:center;gap:10px">Chat communautaire
+        <div><h2 style="display:flex;align-items:center;gap:10px"><span data-i18n="chat.title">Chat communautaire</span>
           <button class="eye-btn on" id="chatEye" title="Afficher / masquer" aria-label="Afficher ou masquer le chat">
             <svg class="eye-open" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             <svg class="eye-off" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
           </button>
-        </h2><span class="sub">Discutez avec les autres parieurs · en direct</span></div></div>
+        </h2><span class="sub" data-i18n="chat.sub">Discutez avec les autres parieurs · en direct</span></div></div>
       <span id="adminChatBtns" style="display:none">
-        <button class="btn ghost" id="chatPoll" style="padding:8px 14px;font-size:12px">📊 Sondage</button>
+        <button class="btn ghost" id="chatPoll" style="padding:8px 14px;font-size:12px" data-i18n="chat.poll">📊 Sondage</button>
         <button class="btn ghost" id="chatRoomLock" style="padding:8px 14px;font-size:12px">🔓 Salon ouvert</button>
-        <button class="btn ghost" id="chatPollArchive" style="padding:8px 14px;font-size:12px">🗂 Résultats</button>
+        <button class="btn ghost" id="chatPollArchive" style="padding:8px 14px;font-size:12px" data-i18n="chat.results">🗂 Résultats</button>
         <button class="btn ghost" id="chatTimerToggle" style="padding:8px 14px;font-size:12px">⏱️ Minuteur : ON</button>
-        <button class="btn ghost" id="chatClear" style="padding:8px 14px;font-size:12px">🧹 Vider le chat</button>
+        <button class="btn ghost" id="chatClear" style="padding:8px 14px;font-size:12px" data-i18n="chat.clear">🧹 Vider le chat</button>
       </span>
     </div>
     <div class="card-body">
       <div class="chat-rules" id="chatRules">
         <button class="cr-toggle" id="chatRulesToggle" aria-expanded="true">
-          <span>📌 Règles du chat</span><span class="cr-chevron">▾</span>
+          <span data-i18n="chat.rules">📌 Règles du chat</span><span class="cr-chevron">▾</span>
         </button>
         <div class="cr-list" id="chatRulesList">
-          <span>✅ Restez courtois et respectueux avec tout le monde.</span>
-          <span>🚫 Pas d'insultes, de spam, ni de publicité.</span>
-          <span>🔗 Les liens ne sont pas autorisés.</span>
-          <span>💸 Ne demandez jamais d'argent et ne partagez pas d'infos bancaires.</span>
-          <span>⚠️ Le chat sert à discuter — vérifiez toujours les cotes vous-même. Toute violation = blocage.</span>
+          <span data-i18n="chat.rule1">✅ Restez courtois et respectueux avec tout le monde.</span>
+          <span data-i18n="chat.rule2">🚫 Pas d'insultes, de spam, ni de publicité.</span>
+          <span data-i18n="chat.rule3">🔗 Les liens ne sont pas autorisés.</span>
+          <span data-i18n="chat.rule4">💸 Ne demandez jamais d'argent et ne partagez pas d'infos bancaires.</span>
+          <span data-i18n="chat.rule5">⚠️ Le chat sert à discuter — vérifiez toujours les cotes vous-même. Toute violation = blocage.</span>
         </div>
       </div>
       <div class="chat-rooms" id="chatRooms">
-        <button class="chat-room-tab on" data-room="general">💬 Général</button>
-        <button class="chat-room-tab" data-room="surebets">🎯 Surebets</button>
-        <button class="chat-room-tab" data-room="debutants">🌱 Débutants</button>
+        <button class="chat-room-tab on" data-room="general" data-i18n="chat.room_general">💬 Général</button>
+        <button class="chat-room-tab" data-room="surebets" data-i18n="chat.room_surebets">🎯 Surebets</button>
+        <button class="chat-room-tab" data-room="debutants" data-i18n="chat.room_beginners">🌱 Débutants</button>
       </div>
       <div id="activePoll" class="active-poll" style="display:none"></div>
       <div id="chatMessages" class="chat-messages"><div class="chat-loading">Chargement…</div></div>
@@ -1350,9 +1350,9 @@
           <input type="text" id="chatInput" placeholder="Écrivez un message…" maxlength="500" autocomplete="off">
           <div id="mentionList" class="mention-list" style="display:none"></div>
         </div>
-        <button class="btn primary" id="chatSend" style="padding:10px 18px">Envoyer</button>
+        <button class="btn primary" id="chatSend" style="padding:10px 18px" data-i18n="chat.send">Envoyer</button>
       </div>
-      <div class="chat-foot">⚠️ Restez courtois. Les messages sont visibles par tous les utilisateurs. L'administrateur peut supprimer tout message.</div>
+      <div class="chat-foot" data-i18n="chat.foot">⚠️ Restez courtois. Les messages sont visibles par tous les utilisateurs. L'administrateur peut supprimer tout message.</div>
     </div>
   </div>
 
@@ -1423,27 +1423,27 @@
 <div id="payModal" class="edit-modal" style="display:none">
   <div class="edit-backdrop" id="payBackdrop"></div>
   <div class="edit-box">
-    <div class="edit-head"><span>🔓 Débloquer les surebets</span><button class="edit-x" id="payClose">✕</button></div>
+    <div class="edit-head"><span data-i18n="pay.title">🔓 Débloquer les surebets</span><button class="edit-x" id="payClose">✕</button></div>
     <div class="edit-body">
       <div class="pay-status" id="payStatus"><span class="ps-ic">🔒</span>
-        <div><div class="ps-k">Votre accès</div><div class="ps-v" id="payStatusV">—</div></div></div>
-      <p class="pay-head-sub">Le panneau <b>Surebets</b> est réservé aux abonnés. Payez par MonCash ou NatCash, envoyez votre référence de transaction, et un administrateur débloque votre accès pour <b id="payDurTxt">7 jours</b>.</p>
+        <div><div class="ps-k" data-i18n="pay.access">Votre accès</div><div class="ps-v" id="payStatusV">—</div></div></div>
+      <p class="pay-head-sub" data-i18n-html="pay.intro">Le panneau <b>Surebets</b> est réservé aux abonnés. Payez par MonCash ou NatCash, envoyez votre référence de transaction, et un administrateur débloque votre accès pour <b id="payDurTxt">7 jours</b>.</p>
       <div class="pay-plan">
         <div><div class="pp-name" id="payPlanName">Accès Surebets</div><div class="pp-sub" id="payPlanSub">7 jours renouvelables</div></div>
         <div class="pp-price" id="payPrice">—</div>
       </div>
-      <div class="pay-chan-label">1 · Payez sur l'un de ces canaux</div>
+      <div class="pay-chan-label" data-i18n="pay.step1">1 · Payez sur l'un de ces canaux</div>
       <div class="pay-chans" id="payChans"></div>
-      <div class="pay-chan-label">2 · Envoyez votre preuve</div>
-      <label class="fld pay-ref"><span class="lab">Canal utilisé</span>
+      <div class="pay-chan-label" data-i18n="pay.step2">2 · Envoyez votre preuve</div>
+      <label class="fld pay-ref"><span class="lab" data-i18n="pay.channel">Canal utilisé</span>
         <select id="payRefChannel"></select></label>
-      <label class="fld pay-ref"><span class="lab">Référence de transaction / téléphone payeur</span>
-        <input type="text" id="payRefInput" placeholder="ex : n° de transaction MonCash ou votre numéro" maxlength="60"></label>
+      <label class="fld pay-ref"><span class="lab" data-i18n="pay.ref">Référence de transaction / téléphone payeur</span>
+        <input type="text" id="payRefInput" placeholder="ex : n° de transaction MonCash ou votre numéro" data-i18n-ph="pay.ref_ph" maxlength="60"></label>
       <div class="pay-note" id="payReqNote"></div>
     </div>
     <div class="edit-foot">
-      <button class="btn ghost" id="payCancel">Fermer</button>
-      <button class="btn primary" id="paySend">J'ai payé — envoyer la demande</button>
+      <button class="btn ghost" id="payCancel" data-i18n="pay.close">Fermer</button>
+      <button class="btn primary" id="paySend" data-i18n="pay.send">J'ai payé — envoyer la demande</button>
     </div>
   </div>
 </div>
@@ -4958,7 +4958,51 @@
       "hdr.guide":"❔ Guide",
       "hdr.stats":"📊 Scores & stats ↗",
       "hdr.publish":"📢 Publier un surebet",
-      "hdr.admin":"🛡️ Admin"
+      "hdr.admin":"🛡️ Admin",
+      "det.title":"Détecteur de cote complémentaire",
+      "det.sub":"Ma cote → cotes qui donnent le surebet",
+      "det.myodd":"Ma cote détectée",
+      "det.threshold":"Seuil surebet min.",
+      "det.cap":"Cote adverse minimale à chercher",
+      "det.th_odd":"Cote adverse","det.th_sure":"Surebet","det.th_roi":"ROI garanti","det.th_status":"Statut",
+      "det.hint":"<b>Lecture :</b> chaque ligne verte est exploitable. Reportez-la dans le calculateur pour connaître vos mises.",
+      "conv.title":"🔁 Convertisseur de cotes (décimale / fractionnaire / américaine)",
+      "conv.dec":"Décimale","conv.frac":"Fractionnaire","conv.us":"Américaine",
+      "conv.note":"Tapez dans un champ, les deux autres se calculent. La cote décimale est celle à utiliser dans le détecteur et le calculateur.",
+      "mc.head":"💰 Ma caisse","mc.balance":"Solde actuel","mc.deposited":"Déposé (net)","mc.profit":"Profit paris",
+      "mc.pending":"En attente","mc.winrate":"Réussite",
+      "mc.hint":"Ajoutez un dépôt dans la section « Caisse » pour suivre votre capital.",
+      "calc.title":"Calculateur & enregistrement","calc.sub":"Mises · bookmaker · date · historique",
+      "calc.nlegs":"Nombre de cotes","calc.legs2":"2 cotes","calc.legs3":"3 cotes",
+      "calc.mode":"Mode de mise","calc.mode_equal":"Profit égal","calc.mode_fixed":"Mise fixe",
+      "calc.amount":"Montant total à investir","calc.fixleg":"Jambe à fixer",
+      "calc.round":"Arrondir les mises","calc.round_none":"Aucun (mise exacte)",
+      "calc.date":"Date du pari","calc.match":"Match","calc.league":"Championnat",
+      "calc.save":"＋ Enregistrer le pari","calc.export":"⤓ Exporter Excel","calc.reset":"↺ Réinitialiser",
+      "bk.title":"Caisse (bankroll)","bk.sub":"Suivi de votre capital de jeu",
+      "bk.deposit":"＋ Dépôt","bk.withdraw":"－ Retrait","bk.balance":"Solde actuel",
+      "bk.deposited":"Capital déposé (net)","bk.profit":"Profit des paris","bk.growth":"Croissance",
+      "bk.moves":"Mouvements de caisse",
+      "hist.title":"Historique des paris","hist.sub":"Sauvegardé automatiquement · fichier Excel central",
+      "hist.excel":"⤓ Excel","hist.backup":"⇪ Sauvegarde","hist.restore":"⇩ Restaurer","hist.clear":"Vider",
+      "perf.staked":"Total misé","perf.profit":"Profit réalisé","perf.pending":"En attente","perf.winrate":"Taux de réussite",
+      "chat.title":"Chat communautaire","chat.sub":"Discutez avec les autres parieurs · en direct",
+      "chat.poll":"📊 Sondage","chat.results":"🗂 Résultats","chat.clear":"🧹 Vider le chat",
+      "chat.rules":"📌 Règles du chat",
+      "chat.rule1":"✅ Restez courtois et respectueux avec tout le monde.",
+      "chat.rule2":"🚫 Pas d'insultes, de spam, ni de publicité.",
+      "chat.rule3":"🔗 Les liens ne sont pas autorisés.",
+      "chat.rule4":"💸 Ne demandez jamais d'argent et ne partagez pas d'infos bancaires.",
+      "chat.rule5":"⚠️ Le chat sert à discuter — vérifiez toujours les cotes vous-même. Toute violation = blocage.",
+      "chat.room_general":"💬 Général","chat.room_surebets":"🎯 Surebets","chat.room_beginners":"🌱 Débutants",
+      "chat.send":"Envoyer",
+      "chat.foot":"⚠️ Restez courtois. Les messages sont visibles par tous les utilisateurs. L'administrateur peut supprimer tout message.",
+      "pay.title":"🔓 Débloquer les surebets","pay.access":"Votre accès",
+      "pay.intro":"Le panneau <b>Surebets</b> est réservé aux abonnés. Payez par MonCash ou NatCash, envoyez votre référence de transaction, et un administrateur débloque votre accès pour <b id=\"payDurTxt\">7 jours</b>.",
+      "pay.step1":"1 · Payez sur l'un de ces canaux","pay.step2":"2 · Envoyez votre preuve",
+      "pay.channel":"Canal utilisé","pay.ref":"Référence de transaction / téléphone payeur",
+      "pay.ref_ph":"ex : n° de transaction MonCash ou votre numéro",
+      "pay.close":"Fermer","pay.send":"J'ai payé — envoyer la demande"
     },
     en: {
       "auth.sub":"Your bets, synced and secure",
@@ -4976,7 +5020,51 @@
       "hdr.guide":"❔ Guide",
       "hdr.stats":"📊 Scores & stats ↗",
       "hdr.publish":"📢 Publish a surebet",
-      "hdr.admin":"🛡️ Admin"
+      "hdr.admin":"🛡️ Admin",
+      "det.title":"Complementary odds detector",
+      "det.sub":"My odds → odds that create the surebet",
+      "det.myodd":"My detected odds",
+      "det.threshold":"Min. surebet threshold",
+      "det.cap":"Minimum opposing odds to look for",
+      "det.th_odd":"Opposing odds","det.th_sure":"Surebet","det.th_roi":"Guaranteed ROI","det.th_status":"Status",
+      "det.hint":"<b>How to read:</b> every green row is usable. Enter it in the calculator to get your stakes.",
+      "conv.title":"🔁 Odds converter (decimal / fractional / American)",
+      "conv.dec":"Decimal","conv.frac":"Fractional","conv.us":"American",
+      "conv.note":"Type in one field, the other two are calculated. Decimal odds are the ones to use in the detector and calculator.",
+      "mc.head":"💰 My bankroll","mc.balance":"Current balance","mc.deposited":"Deposited (net)","mc.profit":"Bet profit",
+      "mc.pending":"Pending","mc.winrate":"Win rate",
+      "mc.hint":"Add a deposit in the “Bankroll” section to track your capital.",
+      "calc.title":"Calculator & saving","calc.sub":"Stakes · bookmaker · date · history",
+      "calc.nlegs":"Number of odds","calc.legs2":"2 odds","calc.legs3":"3 odds",
+      "calc.mode":"Staking mode","calc.mode_equal":"Equal profit","calc.mode_fixed":"Fixed stake",
+      "calc.amount":"Total amount to invest","calc.fixleg":"Leg to fix",
+      "calc.round":"Round the stakes","calc.round_none":"None (exact stake)",
+      "calc.date":"Bet date","calc.match":"Match","calc.league":"League",
+      "calc.save":"＋ Save bet","calc.export":"⤓ Export to Excel","calc.reset":"↺ Reset",
+      "bk.title":"Bankroll","bk.sub":"Track your betting capital",
+      "bk.deposit":"＋ Deposit","bk.withdraw":"－ Withdraw","bk.balance":"Current balance",
+      "bk.deposited":"Deposited capital (net)","bk.profit":"Bet profit","bk.growth":"Growth",
+      "bk.moves":"Bankroll movements",
+      "hist.title":"Bet history","hist.sub":"Saved automatically · central Excel file",
+      "hist.excel":"⤓ Excel","hist.backup":"⇪ Backup","hist.restore":"⇩ Restore","hist.clear":"Clear",
+      "perf.staked":"Total staked","perf.profit":"Realised profit","perf.pending":"Pending","perf.winrate":"Win rate",
+      "chat.title":"Community chat","chat.sub":"Talk with other bettors · live",
+      "chat.poll":"📊 Poll","chat.results":"🗂 Results","chat.clear":"🧹 Clear chat",
+      "chat.rules":"📌 Chat rules",
+      "chat.rule1":"✅ Stay polite and respectful with everyone.",
+      "chat.rule2":"🚫 No insults, spam or advertising.",
+      "chat.rule3":"🔗 Links are not allowed.",
+      "chat.rule4":"💸 Never ask for money and never share banking details.",
+      "chat.rule5":"⚠️ The chat is for discussion — always check the odds yourself. Any violation = ban.",
+      "chat.room_general":"💬 General","chat.room_surebets":"🎯 Surebets","chat.room_beginners":"🌱 Beginners",
+      "chat.send":"Send",
+      "chat.foot":"⚠️ Stay polite. Messages are visible to all users. The administrator can delete any message.",
+      "pay.title":"🔓 Unlock the surebets","pay.access":"Your access",
+      "pay.intro":"The <b>Surebets</b> panel is for subscribers only. Pay with MonCash or NatCash, send your transaction reference, and an administrator unlocks your access for <b id=\"payDurTxt\">7 days</b>.",
+      "pay.step1":"1 · Pay through one of these channels","pay.step2":"2 · Send your proof",
+      "pay.channel":"Channel used","pay.ref":"Transaction reference / payer phone number",
+      "pay.ref_ph":"e.g. MonCash transaction no. or your number",
+      "pay.close":"Close","pay.send":"I have paid — send the request"
     }
   };
   let LANG='fr';
@@ -4984,7 +5072,9 @@
   function t(k){ return (I18N[LANG] && I18N[LANG][k]) || (I18N.fr && I18N.fr[k]) || k; }
   function apply(){
     document.querySelectorAll('[data-i18n]').forEach(function(el){ var v=t(el.getAttribute('data-i18n')); if(v!=null) el.textContent=v; });
+    document.querySelectorAll('[data-i18n-html]').forEach(function(el){ var v=t(el.getAttribute('data-i18n-html')); if(v!=null) el.innerHTML=v; });
     document.querySelectorAll('[data-i18n-ph]').forEach(function(el){ var v=t(el.getAttribute('data-i18n-ph')); if(v!=null) el.setAttribute('placeholder',v); });
+    document.querySelectorAll('[data-i18n-title]').forEach(function(el){ var v=t(el.getAttribute('data-i18n-title')); if(v!=null) el.setAttribute('title',v); });
     document.documentElement.setAttribute('lang', LANG);
     var b=document.getElementById('langBtn'); if(b) b.textContent = LANG==='fr' ? 'EN' : 'FR';
   }
