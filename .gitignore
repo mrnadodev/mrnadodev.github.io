@@ -1,4 +1,27 @@
-
 # Secrets (jamais committer)
 .env
 **/.env
+
+# Base de données locale du scanner (données de travail, pas du code)
+surebet.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Profils de navigateur / automatisation (Playwright)
+.browser-profiles/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Systèmes / éditeurs
+.DS_Store
+Thumbs.db
+*.log
+
+# Vercel
+.vercel

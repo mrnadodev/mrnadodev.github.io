@@ -1,0 +1,10 @@
+# Le site deploye n'est que le front (index.html + assets).
+# Le scanner Python et ses donnees n'ont rien a faire sur le CDN.
+surebet/
+supabase/
+*.sql
+*.db
+.browser-profiles/
+.pytest_cache/
+__pycache__/
+.claude/
