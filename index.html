@@ -3288,8 +3288,17 @@
   }
 
   /* ===== TABLEAU DE BORD ADMIN (page séparée) ===== */
-  function openAdminDash(){ if(!isAdmin(currentUser))return; $('#adminDash').style.display='flex'; adashSection('abo'); loadAboSettings(); loadSponsorsAdmin(); renderCmsEditor(''); }
-  function closeAdminDash(){ $('#adminDash').style.display='none'; }
+  function openAdminDash(){
+    if(!isAdmin(currentUser))return;
+    $('#adminDash').style.display='flex';
+    $('#adminPanel') && ($('#adminPanel').style.display='none');   // masque la bulle flottante
+    $('#adminDrawer') && $('#adminDrawer').classList.remove('open');
+    adashSection('abo'); loadAboSettings(); loadSponsorsAdmin(); renderCmsEditor('');
+  }
+  function closeAdminDash(){
+    $('#adminDash').style.display='none';
+    if(isAdmin(currentUser)) $('#adminPanel') && ($('#adminPanel').style.display='block');
+  }
   function adashSection(sec){
     $$('#adminDash .adash-nav').forEach(b=>b.classList.toggle('on', b.dataset.sec===sec));
     $$('#adminDash .adash-sec').forEach(s=>s.style.display=(s.dataset.sec===sec?'block':'none'));
