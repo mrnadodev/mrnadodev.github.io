@@ -953,6 +953,34 @@
   .cms-f input:focus{outline:none; border-color:var(--mint)}
   .cms-f.en span{color:var(--blue)}
 
+  /* ===== NAVIGATION EN 3 ESPACES ===== */
+  .app-nav{display:flex;gap:8px;margin:0 0 24px;position:sticky;top:0;z-index:55;
+    padding:12px 0;background:linear-gradient(var(--bg) 72%,transparent)}
+  .nav-tab{border:1px solid var(--line);background:var(--panel);color:var(--ink-dim);
+    font-family:var(--sans);font-size:13.5px;font-weight:650;padding:11px 20px;border-radius:12px;
+    cursor:pointer;transition:.15s;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+  .nav-tab:hover{color:var(--ink);transform:translateY(-1px);border-color:var(--mint-dim)}
+  .nav-tab.on{background:var(--mint);color:var(--bg);border-color:var(--mint);
+    box-shadow:0 8px 22px -10px rgba(47,230,168,.55)}
+  .view{display:none}
+  .view.active{display:block;animation:viewIn .28s ease}
+  @keyframes viewIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  /* Barre de navigation du bas (mobile) */
+  .botnav{display:none}
+  @media(max-width:720px){
+    .app-nav{display:none}
+    .botnav{display:grid;grid-template-columns:repeat(3,1fr);position:fixed;left:0;right:0;bottom:0;
+      z-index:80;background:var(--panel);border-top:1px solid var(--line);
+      padding:8px 8px calc(8px + env(safe-area-inset-bottom))}
+    .botnav button{border:none;background:none;color:var(--ink-faint);font-family:var(--sans);
+      font-size:10.5px;font-weight:650;display:flex;flex-direction:column;align-items:center;gap:3px;
+      padding:7px 4px;border-radius:11px;cursor:pointer}
+    .botnav button .bi{font-size:19px;line-height:1}
+    .botnav button.on{color:var(--mint);background:rgba(47,230,168,.12)}
+    body{padding-bottom:76px}
+    .chat-fab{bottom:88px}
+  }
+
   /* ===== MARQUE NADOEDGE ===== */
   /* le conteneur historique du logo devient neutre : le SVG porte l'identité */
   .brand h1 .hlogo{background:none !important;border:none !important;box-shadow:none !important;
@@ -1111,6 +1139,16 @@
     </div>
   </header>
 
+  <!-- ===== NAVIGATION : 3 ESPACES ===== -->
+  <nav class="app-nav" id="appNav">
+    <button class="nav-tab on" data-view="surebets" data-i18n="nav.surebets">🎯 Surebets</button>
+    <button class="nav-tab" data-view="caisse" data-i18n="nav.caisse">💰 Caisse</button>
+    <button class="nav-tab" data-view="chat" data-i18n="nav.chat">💬 Communauté</button>
+  </nav>
+
+  <!-- ═══ ESPACE 1 · SUREBETS ═══ -->
+  <section class="view active" id="v-surebets">
+
   <!-- Carrousel sponsors : rempli par l'app si l'admin a ajouté des sponsors (sinon vide = masqué) -->
   <div id="sponsorZone"></div>
 
@@ -1229,7 +1267,11 @@
     </div>
   </div>
 
-  <!-- HISTORIQUE -->
+  </section>
+
+  <!-- ═══ ESPACE 2 · CAISSE ═══ -->
+  <section class="view" id="v-caisse">
+
   <!-- ===== KÈS / BANKROLL ===== -->
   <div class="card bankroll-card" id="bankrollCard">
     <div class="card-head">
@@ -1340,6 +1382,11 @@
     </div>
   </div>
 
+  </section>
+
+  <!-- ═══ ESPACE 3 · COMMUNAUTÉ ═══ -->
+  <section class="view" id="v-chat">
+
   <!-- ===== CHAT COMMUNAUTAIRE ===== -->
   <div class="card chat-card" id="chatCard">
     <div class="card-head">
@@ -1397,7 +1444,16 @@
     </div>
   </div>
 
+  </section>
+
   <footer>NADOEDGE · Les cotes évoluent vite — vérifiez chez le bookmaker avant de miser · Jouez responsable</footer>
+</div>
+
+<!-- ===== NAVIGATION MOBILE (barre du bas) ===== -->
+<div class="botnav" id="botNav">
+  <button class="on" data-view="surebets"><span class="bi">🎯</span><span data-i18n="nav.m_surebets">Surebets</span></button>
+  <button data-view="caisse"><span class="bi">💰</span><span data-i18n="nav.m_caisse">Caisse</span></button>
+  <button data-view="chat"><span class="bi">💬</span><span data-i18n="nav.m_chat">Communauté</span></button>
 </div>
 
 <div class="toast" id="toast">Pari enregistré ✓</div>
@@ -3474,6 +3530,22 @@
   }
   $$('#adminDash .adash-subtab').forEach(b=>b.addEventListener('click',()=>manageTab(b.dataset.mtab)));
 
+  /* ===== NAVIGATION ENTRE LES 3 ESPACES ===== */
+  let currentView='surebets';
+  function showView(v){
+    currentView=v;
+    $$('.view').forEach(s=>s.classList.toggle('active', s.id==='v-'+v));
+    $$('[data-view]').forEach(b=>b.classList.toggle('on', b.dataset.view===v));
+    try{ localStorage.setItem('nadoedge_view', v); }catch(e){}
+    window.scrollTo({top:0, behavior:'smooth'});
+    // le chat n'est "vu" que dans son espace : on remet le compteur à zéro
+    if(v==='chat'){ chatUnread=0; updateChatFab(); setTimeout(()=>{ const box=$('#chatMessages'); if(box)box.scrollTop=box.scrollHeight; },120); }
+    updateChatFab();
+  }
+  $$('[data-view]').forEach(b=>b.addEventListener('click',()=>showView(b.dataset.view)));
+  // restaure le dernier espace consulté
+  try{ const v=localStorage.getItem('nadoedge_view'); if(v && ['surebets','caisse','chat'].includes(v)) showView(v); }catch(e){}
+
   /* ===== CARROUSEL SPONSORS (côté utilisateur, caché si vide) ===== */
   let spPubList=[], spPubI=0, spPubTimer=null;
   async function loadSponsorsPublic(){
@@ -3576,6 +3648,7 @@
   }
   function goToChat(){
     const card=$('#chatCard'); if(!card)return;
+    if(typeof showView==='function' && currentView!=='chat') showView('chat'); // bascule dans l'espace Communauté
     // si l'œil est fermé, on rouvre le chat
     if(card.classList.contains('hist-collapsed')){
       $('#chatEye').classList.add('on'); card.classList.remove('hist-collapsed');
@@ -5051,6 +5124,8 @@
       "auth.foot":"Connexion chiffrée · chaque compte est privé",
       "brand.tag":"Votre avantage sur chaque pari",
       "brand.kicker":"Arbitrage · Value scanner",
+      "nav.surebets":"🎯 Surebets","nav.caisse":"💰 Caisse","nav.chat":"💬 Communauté",
+      "nav.m_surebets":"Surebets","nav.m_caisse":"Caisse","nav.m_chat":"Communauté",
       "hdr.threshold":"Seuil actif",
       "hdr.saved":"Paris enregistrés",
       "hdr.guide":"❔ Guide",
@@ -5134,6 +5209,8 @@
       "auth.foot":"Encrypted connection · every account is private",
       "brand.tag":"Your edge on every bet",
       "brand.kicker":"Arbitrage · Value scanner",
+      "nav.surebets":"🎯 Surebets","nav.caisse":"💰 Bankroll","nav.chat":"💬 Community",
+      "nav.m_surebets":"Surebets","nav.m_caisse":"Bankroll","nav.m_chat":"Community",
       "hdr.threshold":"Active threshold",
       "hdr.saved":"Saved bets",
       "hdr.guide":"❔ Guide",
