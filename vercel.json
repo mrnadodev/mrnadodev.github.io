@@ -5,14 +5,12 @@
   "outputDirectory": ".",
   "headers": [
     {
-      "comment": "L'app est un fichier unique : on ne la met jamais en cache, sinon les mises a jour n'arrivent pas tout de suite chez les utilisateurs.",
       "source": "/(index.html)?",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
       ]
     },
     {
-      "comment": "En-tetes de securite de base.",
       "source": "/(.*)",
       "headers": [
         { "key": "X-Content-Type-Options", "value": "nosniff" },
