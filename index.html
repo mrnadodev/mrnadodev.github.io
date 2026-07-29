@@ -899,6 +899,18 @@
   .ad-on{font-size:10px; font-weight:700; color:var(--mint); background:rgba(47,230,168,.14); border-radius:999px; padding:2px 8px; margin-left:6px}
   .ad-off{font-size:10px; font-weight:700; color:var(--ink-faint); background:var(--panel-2); border:1px solid var(--line); border-radius:999px; padding:2px 8px; margin-left:6px}
   .ad-sact{display:flex; gap:7px; flex:none}
+  /* Sous-onglets Comptes / Paiements */
+  .adash-subtabs{display:flex; gap:8px; margin-bottom:14px}
+  .adash-subtab{border:1px solid var(--line); background:var(--panel-2); color:var(--ink-dim); border-radius:11px;
+    padding:9px 16px; font-size:13px; font-weight:650; cursor:pointer; transition:.14s; display:inline-flex; align-items:center; gap:8px}
+  .adash-subtab:hover{color:var(--ink); border-color:var(--mint-dim)}
+  .adash-subtab.on{background:var(--mint); color:var(--bg); border-color:var(--mint)}
+  .adash-badge{background:var(--red); color:#fff; border-radius:999px; font-size:10px; font-weight:800; min-width:18px; height:18px; display:inline-grid; place-items:center; padding:0 5px}
+  .adash-subtab.on .adash-badge{background:var(--bg); color:var(--mint)}
+  /* Les listes utilisateurs / paiements dans le dashboard */
+  #adminUsers, #adminPayments{max-width:820px}
+  #adminUsers .user-row, #adminPayments .pay-req{max-width:none}
+  #usersList, #payReqList{max-height:none}
   @media(max-width:700px){ .adash{flex-direction:column} .adash-side{width:auto; flex-direction:row; flex-wrap:wrap; height:auto; gap:6px} .adash-side>div[style]{display:none} .adash-main{padding:20px 16px} }
 
   /* ===== CARROUSEL SPONSORS (utilisateur) ===== */
@@ -1548,12 +1560,28 @@
     <!-- Comptes & paiements -->
     <section class="adash-sec" data-sec="manage" style="display:none">
       <h2>Comptes &amp; paiements</h2>
-      <p class="adash-p">Accréditer les comptes, rôles (publisher / modérateur), autoriser / révoquer un abonnement, valider les paiements.</p>
-      <div class="adash-card" style="display:flex; gap:10px; flex-wrap:wrap">
-        <button class="btn primary" id="adManageUsers">👥 Gérer les comptes</button>
-        <button class="btn" id="adManagePay">💳 Valider les paiements</button>
+      <p class="adash-p">Accréditer les comptes, donner les rôles (publisher / modérateur), autoriser ou révoquer un abonnement, et valider les paiements reçus.</p>
+
+      <div class="adash-subtabs">
+        <button class="adash-subtab on" data-mtab="users">👥 Comptes</button>
+        <button class="adash-subtab" data-mtab="pay">💳 Paiements <span id="payBadge" class="adash-badge" style="display:none">0</span></button>
       </div>
-      <p class="adash-p" style="margin-top:12px">Le chat (verrouiller / effacer / minuteur) et la présence « en ligne » restent dans le panneau flottant. Ils seront intégrés ici à l'étape suivante.</p>
+
+      <div class="adash-card" id="adminUsers">
+        <div class="admin-users-head" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <span id="usersSummary">—</span>
+          <button class="btn ghost" id="usersRefresh" style="padding:6px 12px;font-size:12px">↻ Actualiser</button>
+        </div>
+        <div id="usersList"></div>
+      </div>
+
+      <div class="adash-card" id="adminPayments" style="display:none">
+        <div class="admin-users-head" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <span id="paySummary">—</span>
+          <button class="btn ghost" id="payRefresh" style="padding:6px 12px;font-size:12px">↻ Actualiser</button>
+        </div>
+        <div id="payReqList"></div>
+      </div>
     </section>
   </div>
 </div>
@@ -1686,26 +1714,10 @@
     <div class="admin-drawer-head">
       <div class="admin-tabs">
         <button class="admin-tab on" data-atab="online"><span class="live-dot"></span> En ligne</button>
-        <button class="admin-tab" data-atab="users">Utilisateurs</button>
-        <button class="admin-tab" data-atab="pay">Paiements <span id="payBadge" class="admin-count" style="display:none;position:static;margin-left:2px">0</span></button>
       </div>
       <button class="admin-close" id="adminClose" aria-label="Fermer">✕</button>
     </div>
     <div class="admin-list" id="adminList"></div>
-    <div class="admin-users" id="adminUsers" style="display:none">
-      <div class="admin-users-head">
-        <span id="usersSummary">—</span>
-        <button class="btn ghost" id="usersRefresh" style="padding:5px 11px;font-size:11px">↻ Actualiser</button>
-      </div>
-      <div id="usersList"></div>
-    </div>
-    <div class="admin-users" id="adminPayments" style="display:none">
-      <div class="admin-users-head">
-        <span id="paySummary">—</span>
-        <button class="btn ghost" id="payRefresh" style="padding:5px 11px;font-size:11px">↻ Actualiser</button>
-      </div>
-      <div id="payReqList"></div>
-    </div>
     <div class="admin-foot" id="adminFoot">Vue administrateur · présence en temps réel</div>
   </div>
 </div>
@@ -3281,6 +3293,8 @@
   function adashSection(sec){
     $$('#adminDash .adash-nav').forEach(b=>b.classList.toggle('on', b.dataset.sec===sec));
     $$('#adminDash .adash-sec').forEach(s=>s.style.display=(s.dataset.sec===sec?'block':'none'));
+    if(sec==='manage') manageTab('users');   // charge la liste des comptes
+    if(sec==='spons')  loadSponsorsAdmin();
   }
   $$('#adminDash .adash-nav').forEach(b=>b.addEventListener('click',()=>adashSection(b.dataset.sec)));
   $('#adashClose') && $('#adashClose').addEventListener('click',closeAdminDash);
@@ -3412,9 +3426,15 @@
   $('#adChatResults') && $('#adChatResults').addEventListener('click',()=>relayChat('chatPollArchive'));
   $('#adChatClear')   && $('#adChatClear').addEventListener('click',  ()=>relayChat('chatClear'));
 
-  // Comptes & paiements : ouvre le panneau existant (tout reste accessible)
-  $('#adManageUsers') && $('#adManageUsers').addEventListener('click',()=>{ closeAdminDash(); $('#adminDrawer').classList.add('open'); const t=document.querySelector('.admin-tab[data-atab="users"]'); if(t)t.click(); });
-  $('#adManagePay') && $('#adManagePay').addEventListener('click',()=>{ closeAdminDash(); $('#adminDrawer').classList.add('open'); const t=document.querySelector('.admin-tab[data-atab="pay"]'); if(t)t.click(); });
+  // Comptes & paiements : listes gérées directement dans le tableau de bord
+  function manageTab(tab){
+    $$('#adminDash .adash-subtab').forEach(b=>b.classList.toggle('on', b.dataset.mtab===tab));
+    const users=tab==='users';
+    $('#adminUsers').style.display = users ? '' : 'none';
+    $('#adminPayments').style.display = users ? 'none' : '';
+    if(users) loadUsers(); else loadPayments();
+  }
+  $$('#adminDash .adash-subtab').forEach(b=>b.addEventListener('click',()=>manageTab(b.dataset.mtab)));
 
   /* ===== CARROUSEL SPONSORS (côté utilisateur, caché si vide) ===== */
   let spPubList=[], spPubI=0, spPubTimer=null;
@@ -4737,18 +4757,13 @@
 
   // Onglets du panneau admin (En ligne / Utilisateurs)
   let adminTab='online';
+  // Panneau flottant : ne garde que la présence « en ligne »
+  // (comptes, rôles, abonnements et paiements sont gérés dans le tableau de bord admin)
   $$('.admin-tab').forEach(t=>t.addEventListener('click',()=>{
-    adminTab=t.dataset.atab;
     $$('.admin-tab').forEach(x=>x.classList.toggle('on',x===t));
-    const online=adminTab==='online', users=adminTab==='users', pay=adminTab==='pay';
-    $('#adminList').style.display=online?'':'none';
-    $('#adminUsers').style.display=users?'block':'none';
-    $('#adminPayments').style.display=pay?'block':'none';
-    $('#adminFoot').textContent=online?'Vue administrateur · présence en temps réel'
-      :pay?'Vue administrateur · paiements & abonnements':'Vue administrateur · gestion des accès';
-    if(online) renderPresence(); else if(pay) loadPayments(); else loadUsers();
+    renderPresence();
   }));
-  $('#usersRefresh').addEventListener('click',loadUsers);
+  $('#usersRefresh') && $('#usersRefresh').addEventListener('click',loadUsers);
 
   // Charge la liste des utilisateurs (table profiles)
   async function loadUsers(){
