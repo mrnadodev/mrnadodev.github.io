@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NADOBET — Tableau de bord</title>
+<title>NADOEDGE — Tableau de bord</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -17,7 +17,7 @@
      ║                                                                    ║
      ║  Gardez bien les guillemets "  " autour de chaque valeur.          ║
      ╚══════════════════════════════════════════════════════════════════╝ */
-  window.NADOBET_CONFIG = {
+  window.NADOEDGE_CONFIG = {
 
     SUPABASE_URL: "https://pemcdjrciskqhqfimrxo.supabase.co",
     SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlbWNkanJjaXNrcWhxZmltcnhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3MTQwODIsImV4cCI6MjA5OTI5MDA4Mn0.sK1kWiq3EJwW0SdPSTyclqOFB1BjueOZ4ead7kWYfCA",
@@ -45,13 +45,13 @@
         {
           name: "MonCash",
           number: "+509 0000 0000",     // votre numéro MonCash
-          business: "NADOBET",          // nom ou code du business
+          business: "NADOEDGE",          // nom ou code du business
           qr: ""                         // (optionnel) URL ou data:image de votre QR MonCash
         },
         {
           name: "NatCash",
           number: "+509 0000 0000",     // votre numéro NatCash
-          business: "NADOBET",
+          business: "NADOEDGE",
           qr: ""                         // (optionnel) URL ou data:image de votre QR NatCash
         }
       ]
@@ -952,6 +952,17 @@
   .cms-f input{width:100%; font-size:12.5px; padding:8px 10px; border-radius:8px; border:1px solid var(--line); background:var(--panel); color:var(--ink)}
   .cms-f input:focus{outline:none; border-color:var(--mint)}
   .cms-f.en span{color:var(--blue)}
+
+  /* ===== MARQUE NADOEDGE ===== */
+  /* le conteneur historique du logo devient neutre : le SVG porte l'identité */
+  .brand h1 .hlogo{background:none !important;border:none !important;box-shadow:none !important;
+    width:52px;height:52px;overflow:visible;border-radius:0}
+  .auth-logo.ne-wrap{background:none !important;border:none !important;box-shadow:none !important;overflow:visible}
+  .ne-mark{width:100%;height:100%;display:block;overflow:visible}
+  /* « EDGE » toujours en vert, thème sombre comme thème clair */
+  .brand h1 .edge, .auth-title .edge{color:#3fd46a}
+  :root[data-theme="light"] .brand h1 .edge,
+  :root[data-theme="light"] .auth-title .edge{color:#128235}
 </style>
 </head>
 <body>
@@ -963,23 +974,32 @@
   <div class="auth-card">
     <div class="auth-glow"></div>
     <div class="auth-head">
-      <div class="auth-logo" id="authLogo">
-        <svg class="ball on" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-label="Football">
-          <circle cx="12" cy="12" r="9"/>
-          <path d="M12 7.2l3.2 2.3-1.2 3.7h-4L8.8 9.5 12 7.2z"/>
-          <path d="M12 7.2V3.2M15.2 9.5l3.6-1.4M14 13.2l2.4 3.1M10 13.2l-2.4 3.1M8.8 9.5L5.2 8.1"/>
-        </svg>
-        <svg class="ball" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-label="Basketball">
-          <circle cx="12" cy="12" r="9"/>
-          <path d="M3 12h18M12 3v18"/>
-          <path d="M5.6 5.6c2.4 1.7 3.9 4.3 3.9 7.4M18.4 5.6c-2.4 1.7-3.9 4.3-3.9 7.4M5.6 18.4c2.4-1.7 3.9-4.3 3.9-7.4M18.4 18.4c-2.4-1.7-3.9-4.3-3.9-7.4"/>
-        </svg>
-        <svg class="ball" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-label="Tennis">
-          <circle cx="12" cy="12" r="9"/>
-          <path d="M5.5 5.5c2.7 2 4.4 5.2 4.4 8.8 0 1.3-.2 2.6-.6 3.8M18.5 5.5c-2.7 2-4.4 5.2-4.4 8.8 0 1.3.2 2.6.6 3.8"/>
+      <div class="auth-logo ne-wrap" id="authLogo">
+        <svg class="ne-mark" viewBox="0 0 120 120" role="img" aria-label="NADOEDGE">
+          <defs>
+            <linearGradient id="neSilver2" x1="0.15" y1="0" x2="0.6" y2="1">
+              <stop offset="0" stop-color="#ffffff"/><stop offset=".4" stop-color="#f2f5f4"/>
+              <stop offset=".62" stop-color="#c2cac6"/><stop offset="1" stop-color="#8e9a95"/>
+            </linearGradient>
+            <linearGradient id="neGreen2" x1="0.1" y1="0" x2="0.5" y2="1">
+              <stop offset="0" stop-color="#43c65b"/><stop offset=".55" stop-color="#22a141"/>
+              <stop offset="1" stop-color="#0d7a2c"/>
+            </linearGradient>
+          </defs>
+          <path d="M9.4,48.3 A52,52 0 0 1 111.5,52.8" fill="none" stroke="#101410" stroke-width="12.5" stroke-linecap="round" opacity=".9"/>
+          <path d="M9.4,48.3 A52,52 0 0 1 111.5,52.8" fill="none" stroke="url(#neSilver2)" stroke-width="9" stroke-linecap="round"/>
+          <path d="M8.5,52.8 A52,52 0 1 0 108.9,42.2" fill="none" stroke="#101410" stroke-width="13.5" stroke-linecap="round" opacity=".9"/>
+          <path d="M8.5,52.8 A52,52 0 1 0 108.9,42.2" fill="none" stroke="url(#neGreen2)" stroke-width="10" stroke-linecap="round"/>
+          <path d="M12,88 L24,30 L38,30 L57.7,70 L66,30 L80,30 L68,88 L54,88 L34.3,48 L26,88 Z"
+                fill="url(#neSilver2)" stroke="#101410" stroke-width="2.6" stroke-linejoin="round"/>
+          <g stroke="#101410" stroke-width="2.4" stroke-linejoin="round">
+            <path d="M66,32 L114,32 L106,45 L58,45 Z" fill="url(#neGreen2)"/>
+            <path d="M62,54 L100,54 L92,67 L54,67 Z" fill="url(#neGreen2)"/>
+            <path d="M58,76 L106,76 L98,89 L50,89 Z" fill="url(#neGreen2)"/>
+          </g>
         </svg>
       </div>
-      <div class="auth-title">NADOBET</div>
+      <div class="auth-title">NADO<span class="edge">EDGE</span></div>
       <div class="auth-sub" id="authSub" data-i18n="auth.sub">Vos paris, synchronisés et sécurisés</div>
     </div>
 
@@ -1040,24 +1060,33 @@
 
   <header>
     <div class="brand">
-      <span class="kicker">Arbitrage · Value scanner</span>
+      <span class="kicker" data-i18n="brand.kicker">Arbitrage · Value scanner</span>
       <h1><span class="hlogo" id="dashLogo">
-        <svg class="hball on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-label="Football">
-          <circle cx="12" cy="12" r="9"/>
-          <path d="M12 7.2l3.2 2.3-1.2 3.7h-4L8.8 9.5 12 7.2z"/>
-          <path d="M12 7.2V3.2M15.2 9.5l3.6-1.4M14 13.2l2.4 3.1M10 13.2l-2.4 3.1M8.8 9.5L5.2 8.1"/>
+        <svg class="ne-mark" viewBox="0 0 120 120" role="img" aria-label="NADOEDGE">
+          <defs>
+            <linearGradient id="neSilver" x1="0.15" y1="0" x2="0.6" y2="1">
+              <stop offset="0" stop-color="#ffffff"/><stop offset=".4" stop-color="#f2f5f4"/>
+              <stop offset=".62" stop-color="#c2cac6"/><stop offset="1" stop-color="#8e9a95"/>
+            </linearGradient>
+            <linearGradient id="neGreen" x1="0.1" y1="0" x2="0.5" y2="1">
+              <stop offset="0" stop-color="#43c65b"/><stop offset=".55" stop-color="#22a141"/>
+              <stop offset="1" stop-color="#0d7a2c"/>
+            </linearGradient>
+          </defs>
+          <path d="M9.4,48.3 A52,52 0 0 1 111.5,52.8" fill="none" stroke="#101410" stroke-width="12.5" stroke-linecap="round" opacity=".9"/>
+          <path d="M9.4,48.3 A52,52 0 0 1 111.5,52.8" fill="none" stroke="url(#neSilver)" stroke-width="9" stroke-linecap="round"/>
+          <path d="M8.5,52.8 A52,52 0 1 0 108.9,42.2" fill="none" stroke="#101410" stroke-width="13.5" stroke-linecap="round" opacity=".9"/>
+          <path d="M8.5,52.8 A52,52 0 1 0 108.9,42.2" fill="none" stroke="url(#neGreen)" stroke-width="10" stroke-linecap="round"/>
+          <path d="M12,88 L24,30 L38,30 L57.7,70 L66,30 L80,30 L68,88 L54,88 L34.3,48 L26,88 Z"
+                fill="url(#neSilver)" stroke="#101410" stroke-width="2.6" stroke-linejoin="round"/>
+          <g stroke="#101410" stroke-width="2.4" stroke-linejoin="round">
+            <path d="M66,32 L114,32 L106,45 L58,45 Z" fill="url(#neGreen)"/>
+            <path d="M62,54 L100,54 L92,67 L54,67 Z" fill="url(#neGreen)"/>
+            <path d="M58,76 L106,76 L98,89 L50,89 Z" fill="url(#neGreen)"/>
+          </g>
         </svg>
-        <svg class="hball" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-label="Basketball">
-          <circle cx="12" cy="12" r="9"/>
-          <path d="M3 12h18M12 3v18"/>
-          <path d="M5.6 5.6c2.4 1.7 3.9 4.3 3.9 7.4M18.4 5.6c-2.4 1.7-3.9 4.3-3.9 7.4M5.6 18.4c2.4-1.7 3.9-4.3 3.9-7.4M18.4 18.4c-2.4-1.7-3.9-4.3-3.9-7.4"/>
-        </svg>
-        <svg class="hball" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-label="Tennis">
-          <circle cx="12" cy="12" r="9"/>
-          <path d="M5.5 5.5c2.7 2 4.4 5.2 4.4 8.8 0 1.3-.2 2.6-.6 3.8M18.5 5.5c-2.7 2-4.4 5.2-4.4 8.8 0 1.3.2 2.6.6 3.8"/>
-        </svg>
-      </span>NADOBET</h1>
-      <p>Détectez la cote à associer, calculez vos mises, choisissez le bookmaker et enregistrez chaque pari dans votre historique Excel.</p>
+      </span>NADO<span class="edge">EDGE</span></h1>
+      <p data-i18n="brand.tag">Votre avantage sur chaque pari</p>
     </div>
     <div class="legend">
       <button class="theme-toggle" id="themeToggle" title="Thème clair / sombre" aria-label="Basculer le thème">
@@ -1069,7 +1098,7 @@
       <div class="chip"><span data-i18n="hdr.saved">Paris enregistrés</span> <b id="countChip">0</b></div>
       <span class="chip" id="syncChip" style="display:none">☁️ <b id="syncState">Synchronisé</b></span>
       <button class="sub-chip" id="subChip" style="display:none" title="Abonnement Surebets"><span class="sc-ic">🎯</span><span id="subChipTxt">Surebets</span></button>
-      <a href="https://t.me/nadobet_surebets" target="_blank" rel="noopener" class="btn ghost" id="tgBtn" style="padding:6px 12px;font-size:12px;text-decoration:none" title="Recevoir les alertes surebet sur Telegram">📲 Telegram</a>
+      <a href="https://t.me/NADOEDGE_surebets" target="_blank" rel="noopener" class="btn ghost" id="tgBtn" style="padding:6px 12px;font-size:12px;text-decoration:none" title="Recevoir les alertes surebet sur Telegram">📲 Telegram</a>
       <button class="btn ghost" id="tourBtn" style="padding:6px 12px;font-size:12px" title="Revoir le guide" data-i18n="hdr.guide">❔ Guide</button>
       <a href="https://www.sofascore.com/" target="_blank" rel="noopener" class="btn ghost" id="statsBtn" style="padding:6px 14px;font-size:12px;text-decoration:none" data-i18n="hdr.stats">📊 Scores & stats ↗</a>
       <button class="btn primary" id="publishBtn" style="display:none;padding:6px 14px;font-size:12px" data-i18n="hdr.publish">📢 Publier un surebet</button>
@@ -1368,7 +1397,7 @@
     </div>
   </div>
 
-  <footer>NADOBET · Les cotes évoluent vite — vérifiez chez le bookmaker avant de miser · Jouez responsable</footer>
+  <footer>NADOEDGE · Les cotes évoluent vite — vérifiez chez le bookmaker avant de miser · Jouez responsable</footer>
 </div>
 
 <div class="toast" id="toast">Pari enregistré ✓</div>
@@ -1594,7 +1623,7 @@
       <svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="var(--mint)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
     </div>
     <div class="ts-title" style="font-size:20px">Email confirmé ✓</div>
-    <div class="ts-desc" style="margin:10px 0 20px">Votre adresse a bien été vérifiée. Vous pouvez maintenant vous connecter à votre compte NADOBET.</div>
+    <div class="ts-desc" style="margin:10px 0 20px">Votre adresse a bien été vérifiée. Vous pouvez maintenant vous connecter à votre compte NADOEDGE.</div>
     <button class="btn primary" id="confirmLoginBtn" style="width:100%;justify-content:center;padding:12px">Se connecter</button>
   </div>
 </div>
@@ -1735,7 +1764,7 @@
 
   /* ===== SUPABASE ===== */
   let sb=null, currentUser=null, presenceChannel=null;
-  const cfg=window.NADOBET_CONFIG||{};
+  const cfg=window.NADOEDGE_CONFIG||{};
   const configured = cfg.SUPABASE_URL && cfg.SUPABASE_ANON_KEY
     && !cfg.SUPABASE_URL.includes('VOTRE') && !cfg.SUPABASE_ANON_KEY.includes('VOTRE');
   const adminEmail = (cfg.ADMIN_EMAIL||'').trim().toLowerCase();
@@ -2591,7 +2620,7 @@
     const ws=XLSX.utils.json_to_sheet(rows);
     const wb=XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb,ws,'Historique');
-    XLSX.writeFile(wb,'NADOBET_historique_paris.xlsx');
+    XLSX.writeFile(wb,'NADOEDGE_historique_paris.xlsx');
     showToast('Fichier Excel exporté ✓');
   }
 
@@ -2616,7 +2645,7 @@
     const url=URL.createObjectURL(blob);
     const a=document.createElement('a');
     const stamp=new Date().toISOString().slice(0,10);
-    a.href=url;a.download='NADOBET_sauvegarde_'+stamp+'.json';
+    a.href=url;a.download='NADOEDGE_sauvegarde_'+stamp+'.json';
     document.body.appendChild(a);a.click();a.remove();
     URL.revokeObjectURL(url);
     showToast('Sauvegarde téléchargée ✓');
@@ -2654,7 +2683,7 @@
     const on=!t.classList.contains('on');
     t.classList.toggle('on',on);
     card.classList.toggle('hist-collapsed',!on);
-    try{localStorage.setItem('nadobet_hist_visible',on?'1':'0');}catch(e){}
+    try{localStorage.setItem('NADOEDGE_hist_visible',on?'1':'0');}catch(e){}
   }
 
   /* ---- EVENTS ---- */
@@ -2698,13 +2727,13 @@
 
   // Alias affiché selon le rôle (confidentialité). Admin voit les vrais noms.
   function roleAlias(role){
-    if(role==='admin')return 'NADOBET';
+    if(role==='admin')return 'NADOEDGE';
     if(role==='publisher')return 'Publisher';
     if(role==='moderator')return 'Moderator';
     return null;
   }
   // Mots réservés interdits dans un nom d'utilisateur (protection anti-usurpation)
-  const RESERVED_USERNAMES=['nado','nadobet','nadobets','admin','administrateur','administrator',
+  const RESERVED_USERNAMES=['nado','NADOEDGE','NADOEDGEs','admin','administrateur','administrator',
     'moderateur','moderator','modo','mod','publisher','publicateur','publisher','officiel','official',
     'surebet','surebets','support','staff','system','systeme','root','owner','proprietaire'];
   // Valide un nom d'utilisateur. Retourne un message d'erreur, ou '' si OK.
@@ -2799,7 +2828,7 @@
     // Remplace les écouteurs en clonant le bouton
     const fresh=back.cloneNode(true); back.parentNode.replaceChild(fresh,back);
     if(kind==='approved'){
-      fresh.textContent='Entrer dans NADOBET →';
+      fresh.textContent='Entrer dans NADOEDGE →';
       fresh.className='btn primary';
       fresh.style.cssText='width:100%;justify-content:center;margin-top:14px';
       fresh.addEventListener('click',async()=>{
@@ -2888,11 +2917,11 @@
   /* ===== TOUR GUIDÉ ===== */
   const TOUR_SLIDES=[
     { art:`<svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="54" cy="54" r="34" stroke="var(--mint)" stroke-width="5"/><line x1="78" y1="78" x2="100" y2="100" stroke="var(--mint)" stroke-width="6" stroke-linecap="round"/><path d="M42 54h24M54 42v24" stroke="var(--gold)" stroke-width="4" stroke-linecap="round"/></svg>`,
-      title:'Bienvenue sur NADOBET 👋', desc:'Votre outil pour détecter et calculer les surebets (paris sûrs). Voici un tour rapide des fonctions principales.' },
+      title:'Bienvenue sur NADOEDGE 👋', desc:'Votre outil pour détecter et calculer les surebets (paris sûrs). Voici un tour rapide des fonctions principales.' },
     { art:`<svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="52" cy="52" r="30" stroke="var(--mint)" stroke-width="5"/><line x1="74" y1="74" x2="96" y2="96" stroke="var(--mint)" stroke-width="6" stroke-linecap="round"/><text x="52" y="60" font-size="26" fill="var(--gold)" text-anchor="middle" font-family="monospace" font-weight="bold">%</text></svg>`,
       title:'1 · Détecteur', desc:'Entrez la cote que vous avez repérée, et le détecteur vous dit quelle cote adverse chercher pour garantir un profit.' },
     { art:`<svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="34" y="20" width="52" height="80" rx="8" stroke="var(--mint)" stroke-width="5"/><rect x="44" y="30" width="32" height="16" rx="3" fill="var(--gold)"/><circle cx="48" cy="60" r="4" fill="var(--mint)"/><circle cx="60" cy="60" r="4" fill="var(--mint)"/><circle cx="72" cy="60" r="4" fill="var(--mint)"/><circle cx="48" cy="74" r="4" fill="var(--mint)"/><circle cx="60" cy="74" r="4" fill="var(--mint)"/><circle cx="72" cy="74" r="4" fill="var(--mint)"/></svg>`,
-      title:'2 · Calculateur', desc:'Entrez vos cotes et votre montant : NADOBET calcule les mises exactes pour chaque bookmaker et votre profit garanti. Vous pouvez arrondir les mises.' },
+      title:'2 · Calculateur', desc:'Entrez vos cotes et votre montant : NADOEDGE calcule les mises exactes pour chaque bookmaker et votre profit garanti. Vous pouvez arrondir les mises.' },
     { art:`<svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="24" y="40" width="72" height="48" rx="8" stroke="var(--gold)" stroke-width="5"/><path d="M24 54h72" stroke="var(--gold)" stroke-width="5"/><circle cx="80" cy="66" r="6" fill="var(--mint)"/><path d="M40 34l24-10 24 10" stroke="var(--mint)" stroke-width="4" stroke-linecap="round"/></svg>`,
       title:'3 · Caisse (bankroll)', desc:'Suivez votre capital : dépôts, retraits, solde et croissance. Vous voyez toujours combien vous avez et votre performance.' },
     { art:`<svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M28 40h64M28 56h64M28 72h44" stroke="var(--mint)" stroke-width="5" stroke-linecap="round"/><circle cx="94" cy="80" r="16" stroke="var(--gold)" stroke-width="4"/><path d="M94 72v8l5 5" stroke="var(--gold)" stroke-width="4" stroke-linecap="round"/></svg>`,
@@ -2901,14 +2930,14 @@
       title:'5 · Chat & alertes', desc:'Discutez avec les autres parieurs en direct. Quand un surebet est publié, une alerte apparaît — cliquez pour voir les détails et les charger dans le calculateur.' },
     { art:`<svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="60" cy="60" r="42" fill="rgba(47,230,168,.08)" stroke="var(--mint)" stroke-width="4"/><path d="M38 60l40-15-13 40-9-13-10 8 1-12z" fill="var(--mint)"/><path d="M56 68l22-23-30 18" stroke="var(--bg)" stroke-width="1.5"/></svg>`,
       title:'📢 Abonnez-vous à Telegram !', desc:'<b>Important :</b> pour recevoir une notification sur votre téléphone dès qu\'un surebet est détecté (même dashboard fermé), abonnez-vous à notre canal Telegram. Les détails restent visibles uniquement ici, sur votre dashboard.',
-      cta:{ label:'📲 Rejoindre @nadobet_surebets', url:'https://t.me/nadobet_surebets' } },
+      cta:{ label:'📲 Rejoindre @NADOEDGE_surebets', url:'https://t.me/NADOEDGE_surebets' } },
     { art:`<svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="60" cy="60" r="40" stroke="var(--mint)" stroke-width="5"/><path d="M42 60l12 12 24-26" stroke="var(--gold)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
-      title:'C\u2019est parti ! 🎯', desc:'Vous êtes prêt à utiliser NADOBET. Vérifiez toujours les cotes chez le bookmaker avant de miser. Bonne chance !' }
+      title:'C\u2019est parti ! 🎯', desc:'Vous êtes prêt à utiliser NADOEDGE. Vérifiez toujours les cotes chez le bookmaker avant de miser. Bonne chance !' }
   ];
   let tourIdx=0;
   // Traduction avec repli : si la clé n'existe pas, on garde le texte d'origine
   function tOr(key, fallback){
-    const T=window.NADOBET_I18N; if(!T) return fallback;
+    const T=window.NADOEDGE_I18N; if(!T) return fallback;
     const v=T.t(key); return (v && v!==key) ? v : fallback;
   }
   function renderTourSlide(){
@@ -2939,7 +2968,7 @@
   $('#tourPrev').addEventListener('click',()=>{ if(tourIdx>0){ tourIdx--; renderTourSlide(); } });
   $('#tourSkip').addEventListener('click',endTour);
   // Bouton pour rouvrir le tour manuellement (optionnel via logo)
-  window.NADOBET_showTour=startTour;
+  window.NADOEDGE_showTour=startTour;
   $('#tourBtn') && $('#tourBtn').addEventListener('click',startTour);
 
   /* ===== CHOIX USERNAME (comptes existants) ===== */
@@ -3006,7 +3035,7 @@
   /* ===== PRÉSENCE (qui est en ligne) ===== */
   function startPresence(user){
     if(!sb||presenceChannel)return;
-    presenceChannel = sb.channel('nadobet_presence', { config:{ presence:{ key:user.id } } });
+    presenceChannel = sb.channel('NADOEDGE_presence', { config:{ presence:{ key:user.id } } });
     presenceChannel
       .on('presence',{event:'sync'},()=>{ if(isAdmin(currentUser)) renderPresence(); })
       .subscribe(async status=>{
@@ -3033,7 +3062,7 @@
     // 1) charge les surebets encore valides (pour ceux qui arrivent après la publication)
     loadActiveSignals();
     // 2) écoute les nouvelles publications en temps réel
-    signalsChannel = sb.channel('nadobet_signals')
+    signalsChannel = sb.channel('NADOEDGE_signals')
       .on('postgres_changes',{event:'INSERT',schema:'public',table:'signals'},payload=>{
         const s=payload.new;
         if(s && new Date(s.expires_at).getTime()>Date.now()){
@@ -3369,8 +3398,8 @@
   async function loadSiteContent(){
     if(!sb) return;
     // le moteur i18n est initialisé dans le dernier bloc <script> : on l'attend au besoin
-    for(let i=0;i<20 && !window.NADOBET_I18N;i++){ await new Promise(r=>setTimeout(r,50)); }
-    if(!window.NADOBET_I18N) return;
+    for(let i=0;i<20 && !window.NADOEDGE_I18N;i++){ await new Promise(r=>setTimeout(r,50)); }
+    if(!window.NADOEDGE_I18N) return;
     try{
       const {data,error}=await sb.from('site_content').select('key,value');
       if(error) throw error;
@@ -3380,12 +3409,12 @@
         const lang=r.key.slice(0,i), k=r.key.slice(i+1);
         if(over[lang]) over[lang][k]=r.value;
       });
-      window.NADOBET_I18N.merge(over);
+      window.NADOEDGE_I18N.merge(over);
     }catch(e){ /* table absente : textes par défaut */ }
   }
   function renderCmsEditor(filter){
-    const box=$('#cmsList'); if(!box||!window.NADOBET_I18N) return;
-    const I=window.NADOBET_I18N;
+    const box=$('#cmsList'); if(!box||!window.NADOEDGE_I18N) return;
+    const I=window.NADOEDGE_I18N;
     const q=(filter||'').toLowerCase().trim();
     const ks=I.keys().filter(k=>{
       if(!q) return true;
@@ -3550,7 +3579,7 @@
     // si l'œil est fermé, on rouvre le chat
     if(card.classList.contains('hist-collapsed')){
       $('#chatEye').classList.add('on'); card.classList.remove('hist-collapsed');
-      try{localStorage.setItem('nadobet_chat_visible','1');}catch(e){}
+      try{localStorage.setItem('NADOEDGE_chat_visible','1');}catch(e){}
     }
     chatUnread=0; updateChatFab();
     card.scrollIntoView({behavior:'smooth',block:'start'});
@@ -3564,7 +3593,7 @@
     startSettingsPoll();
     cleanupOldMessages(); // efface les messages de plus de 7 jours
     await loadChatMessages();
-    chatChannel=sb.channel('nadobet_chat')
+    chatChannel=sb.channel('NADOEDGE_chat')
       .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages'},payload=>{
         const m=payload.new;
         // celui qui vient d'envoyer n'écrit plus
@@ -4064,7 +4093,7 @@
   async function startPolls(){
     if(!sb||pollChannel)return;
     await loadActivePoll();
-    pollChannel=sb.channel('nadobet_polls')
+    pollChannel=sb.channel('NADOEDGE_polls')
       .on('postgres_changes',{event:'*',schema:'public',table:'polls'},()=>{ loadActivePoll(); })
       .on('postgres_changes',{event:'*',schema:'public',table:'poll_votes'},()=>{ if(activePoll) loadPollVotes(activePoll.id); })
       .subscribe();
@@ -4277,7 +4306,7 @@
   $('#chatRulesToggle') && $('#chatRulesToggle').addEventListener('click',()=>{
     const box=$('#chatRules'); const collapsed=box.classList.toggle('collapsed');
     $('#chatRulesToggle').setAttribute('aria-expanded', collapsed?'false':'true');
-    try{localStorage.setItem('nadobet_chat_rules', collapsed?'0':'1');}catch(e){}
+    try{localStorage.setItem('NADOEDGE_chat_rules', collapsed?'0':'1');}catch(e){}
   });
   // Quand le chat devient visible en défilant, on efface le compteur
   window.addEventListener('scroll',()=>{
@@ -4292,7 +4321,7 @@
     const on=!eye.classList.contains('on');
     eye.classList.toggle('on',on);
     card.classList.toggle('hist-collapsed',!on);
-    try{localStorage.setItem('nadobet_chat_visible',on?'1':'0');}catch(e){}
+    try{localStorage.setItem('NADOEDGE_chat_visible',on?'1':'0');}catch(e){}
   });
 
   async function loadActiveSignals(){
@@ -4938,22 +4967,22 @@
   }
   (function(){
     let saved='dark';
-    try{ saved=localStorage.getItem('nadobet_theme')||'dark'; }catch(e){}
+    try{ saved=localStorage.getItem('NADOEDGE_theme')||'dark'; }catch(e){}
     applyTheme(saved);
     const btn=$('#themeToggle');
     if(btn) btn.addEventListener('click',()=>{
       const isLight=document.documentElement.getAttribute('data-theme')==='light';
       const next=isLight?'dark':'light';
       applyTheme(next);
-      try{localStorage.setItem('nadobet_theme',next);}catch(e){}
+      try{localStorage.setItem('NADOEDGE_theme',next);}catch(e){}
     });
   })();
 
-  try{if(localStorage.getItem('nadobet_hist_visible')==='0'){
+  try{if(localStorage.getItem('NADOEDGE_hist_visible')==='0'){
     $('#histEye').classList.remove('on');
     $('#histCard').classList.add('hist-collapsed');
   }}catch(e){}
-  try{if(localStorage.getItem('nadobet_chat_visible')==='0'){
+  try{if(localStorage.getItem('NADOEDGE_chat_visible')==='0'){
     $('#chatEye').classList.remove('on');
     $('#chatCard').classList.add('hist-collapsed');
   }}catch(e){}
@@ -5020,6 +5049,8 @@
       "auth.submit_login":"Se connecter",
       "auth.submit_signup":"S'inscrire",
       "auth.foot":"Connexion chiffrée · chaque compte est privé",
+      "brand.tag":"Votre avantage sur chaque pari",
+      "brand.kicker":"Arbitrage · Value scanner",
       "hdr.threshold":"Seuil actif",
       "hdr.saved":"Paris enregistrés",
       "hdr.guide":"❔ Guide",
@@ -5072,12 +5103,12 @@
       "pay.close":"Fermer","pay.send":"J'ai payé — envoyer la demande",
       "tour.skip":"Passer ✕","tour.dontshow":"Ne plus afficher","tour.prev":"Précédent",
       "tour.next":"Suivant","tour.finish":"Terminer",
-      "tour.s1_title":"Bienvenue sur NADOBET 👋",
+      "tour.s1_title":"Bienvenue sur NADOEDGE 👋",
       "tour.s1_desc":"Votre outil pour détecter et calculer les surebets (paris sûrs). Voici un tour rapide des fonctions principales.",
       "tour.s2_title":"1 · Détecteur",
       "tour.s2_desc":"Entrez la cote que vous avez repérée, et le détecteur vous dit quelle cote adverse chercher pour garantir un profit.",
       "tour.s3_title":"2 · Calculateur",
-      "tour.s3_desc":"Entrez vos cotes et votre montant : NADOBET calcule les mises exactes pour chaque bookmaker et votre profit garanti. Vous pouvez arrondir les mises.",
+      "tour.s3_desc":"Entrez vos cotes et votre montant : NADOEDGE calcule les mises exactes pour chaque bookmaker et votre profit garanti. Vous pouvez arrondir les mises.",
       "tour.s4_title":"3 · Caisse (bankroll)",
       "tour.s4_desc":"Suivez votre capital : dépôts, retraits, solde et croissance. Vous voyez toujours combien vous avez et votre performance.",
       "tour.s5_title":"4 · Historique",
@@ -5086,9 +5117,9 @@
       "tour.s6_desc":"Discutez avec les autres parieurs en direct. Quand un surebet est publié, une alerte apparaît — cliquez pour voir les détails et les charger dans le calculateur.",
       "tour.s7_title":"📢 Abonnez-vous à Telegram !",
       "tour.s7_desc":"<b>Important :</b> pour recevoir une notification sur votre téléphone dès qu'un surebet est détecté (même dashboard fermé), abonnez-vous à notre canal Telegram. Les détails restent visibles uniquement ici, sur votre dashboard.",
-      "tour.s7_cta":"📲 Rejoindre @nadobet_surebets",
+      "tour.s7_cta":"📲 Rejoindre @NADOEDGE_surebets",
       "tour.s8_title":"C'est parti ! 🎯",
-      "tour.s8_desc":"Vous êtes prêt à utiliser NADOBET. Vérifiez toujours les cotes chez le bookmaker avant de miser. Bonne chance !"
+      "tour.s8_desc":"Vous êtes prêt à utiliser NADOEDGE. Vérifiez toujours les cotes chez le bookmaker avant de miser. Bonne chance !"
     },
     en: {
       "auth.sub":"Your bets, synced and secure",
@@ -5101,6 +5132,8 @@
       "auth.submit_login":"Sign in",
       "auth.submit_signup":"Sign up",
       "auth.foot":"Encrypted connection · every account is private",
+      "brand.tag":"Your edge on every bet",
+      "brand.kicker":"Arbitrage · Value scanner",
       "hdr.threshold":"Active threshold",
       "hdr.saved":"Saved bets",
       "hdr.guide":"❔ Guide",
@@ -5153,12 +5186,12 @@
       "pay.close":"Close","pay.send":"I have paid — send the request",
       "tour.skip":"Skip ✕","tour.dontshow":"Don't show again","tour.prev":"Previous",
       "tour.next":"Next","tour.finish":"Finish",
-      "tour.s1_title":"Welcome to NADOBET 👋",
+      "tour.s1_title":"Welcome to NADOEDGE 👋",
       "tour.s1_desc":"Your tool to detect and calculate surebets (guaranteed bets). Here is a quick tour of the main features.",
       "tour.s2_title":"1 · Detector",
       "tour.s2_desc":"Enter the odds you spotted, and the detector tells you which opposing odds to look for to guarantee a profit.",
       "tour.s3_title":"2 · Calculator",
-      "tour.s3_desc":"Enter your odds and your amount: NADOBET computes the exact stake for each bookmaker and your guaranteed profit. You can round the stakes.",
+      "tour.s3_desc":"Enter your odds and your amount: NADOEDGE computes the exact stake for each bookmaker and your guaranteed profit. You can round the stakes.",
       "tour.s4_title":"3 · Bankroll",
       "tour.s4_desc":"Track your capital: deposits, withdrawals, balance and growth. You always see how much you have and how you perform.",
       "tour.s5_title":"4 · History",
@@ -5167,13 +5200,13 @@
       "tour.s6_desc":"Talk with other bettors live. When a surebet is published, an alert appears — click it to see the details and load them into the calculator.",
       "tour.s7_title":"📢 Subscribe on Telegram!",
       "tour.s7_desc":"<b>Important:</b> to get a notification on your phone as soon as a surebet is detected (even with the dashboard closed), subscribe to our Telegram channel. The details stay visible only here, on your dashboard.",
-      "tour.s7_cta":"📲 Join @nadobet_surebets",
+      "tour.s7_cta":"📲 Join @NADOEDGE_surebets",
       "tour.s8_title":"You're all set! 🎯",
-      "tour.s8_desc":"You are ready to use NADOBET. Always check the odds at the bookmaker before staking. Good luck!"
+      "tour.s8_desc":"You are ready to use NADOEDGE. Always check the odds at the bookmaker before staking. Good luck!"
     }
   };
   let LANG='fr';
-  try{ LANG = localStorage.getItem('nadobet_lang') || 'fr'; }catch(e){}
+  try{ LANG = localStorage.getItem('NADOEDGE_lang') || 'fr'; }catch(e){}
   function t(k){ return (I18N[LANG] && I18N[LANG][k]) || (I18N.fr && I18N.fr[k]) || k; }
   function apply(){
     document.querySelectorAll('[data-i18n]').forEach(function(el){ var v=t(el.getAttribute('data-i18n')); if(v!=null) el.textContent=v; });
@@ -5183,7 +5216,7 @@
     document.documentElement.setAttribute('lang', LANG);
     var b=document.getElementById('langBtn'); if(b) b.textContent = LANG==='fr' ? 'EN' : 'FR';
   }
-  function setLang(l){ LANG=l; try{ localStorage.setItem('nadobet_lang', l); }catch(e){} apply(); }
+  function setLang(l){ LANG=l; try{ localStorage.setItem('NADOEDGE_lang', l); }catch(e){} apply(); }
   function raw(k, lang){ return (I18N[lang]||{})[k]; }
   function keys(){ return Object.keys(I18N.fr||{}); }
   // Fusionne les overrides du CMS admin : { fr:{cle:texte}, en:{...} } puis ré-applique
@@ -5196,7 +5229,7 @@
     apply();
   }
   // Exposé pour le reste de l'app (traductions dynamiques, CMS, ré-application après rendu)
-  window.NADOBET_I18N = { t:t, apply:apply, setLang:setLang, raw:raw, keys:keys, merge:merge, get lang(){ return LANG; } };
+  window.NADOEDGE_I18N = { t:t, apply:apply, setLang:setLang, raw:raw, keys:keys, merge:merge, get lang(){ return LANG; } };
   var btn=document.getElementById('langBtn');
   if(btn) btn.addEventListener('click', function(){ setLang(LANG==='fr'?'en':'fr'); });
   apply();
