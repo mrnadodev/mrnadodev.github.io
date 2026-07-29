@@ -928,6 +928,18 @@
   .chatpop .cw{font-weight:700; font-size:12.5px} .chatpop .cm{font-size:12px; color:var(--ink-dim); margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:230px}
   .chatpop .cx{position:absolute; top:7px; right:9px; border:none; background:none; color:var(--ink-faint); font-size:13px; cursor:pointer}
   .chatpop .cx:hover{color:var(--ink)}
+
+  /* ===== MINI-CMS (édition des textes) ===== */
+  .cms-list{max-height:52vh; overflow:auto; display:flex; flex-direction:column; gap:12px}
+  .cms-row{border:1px solid var(--line); border-radius:11px; padding:11px 12px; background:var(--panel-2)}
+  .cms-key{font-family:var(--mono); font-size:10px; color:var(--ink-faint); letter-spacing:.06em; margin-bottom:7px}
+  .cms-fields{display:grid; grid-template-columns:1fr 1fr; gap:9px}
+  @media(max-width:640px){ .cms-fields{grid-template-columns:1fr} }
+  .cms-f{display:flex; flex-direction:column; gap:4px}
+  .cms-f span{font-size:9.5px; font-weight:700; letter-spacing:.09em; color:var(--mint); text-transform:uppercase}
+  .cms-f input{width:100%; font-size:12.5px; padding:8px 10px; border-radius:8px; border:1px solid var(--line); background:var(--panel); color:var(--ink)}
+  .cms-f input:focus{outline:none; border-color:var(--mint)}
+  .cms-f.en span{color:var(--blue)}
 </style>
 </head>
 <body>
@@ -1442,6 +1454,7 @@
     <div class="adash-brand">🛡️ <span>Admin</span></div>
     <button class="adash-nav on" data-sec="abo">💳 Abonnement</button>
     <button class="adash-nav" data-sec="spons">📣 Sponsors &amp; pub</button>
+    <button class="adash-nav" data-sec="texts">📝 Textes (FR/EN)</button>
     <button class="adash-nav" data-sec="appear">🎨 Apparence</button>
     <button class="adash-nav" data-sec="manage">👥 Comptes &amp; paiements</button>
     <div style="flex:1"></div>
@@ -1481,6 +1494,20 @@
       </div>
       <div class="adash-lab" style="margin-top:18px">Sponsors actuels</div>
       <div id="adSponsorList"></div>
+    </section>
+
+    <!-- Textes (mini-CMS bilingue) -->
+    <section class="adash-sec" data-sec="texts" style="display:none">
+      <h2>Textes du site</h2>
+      <p class="adash-p">Modifiez les textes en <b>français</b> et en <b>anglais</b>. Laissez vide pour garder le texte d'origine. Les changements s'appliquent à tous les utilisateurs.</p>
+      <div class="adash-card" style="max-width:820px">
+        <input type="text" id="cmsSearch" placeholder="Rechercher un texte…" style="width:100%;margin-bottom:14px">
+        <div id="cmsList" class="cms-list"></div>
+        <div style="margin-top:14px;display:flex;gap:10px;align-items:center">
+          <button class="btn primary" id="cmsSave">Enregistrer les textes</button>
+          <button class="btn" id="cmsReset">↺ Tout réinitialiser</button>
+        </div>
+      </div>
     </section>
 
     <!-- Apparence -->
@@ -2806,6 +2833,7 @@
     $('#publishBtn').style.display = canPublish() ? 'inline-flex' : 'none';
     $('#adminBtn') && ($('#adminBtn').style.display = isAdmin(user) ? 'inline-flex' : 'none');
     await loadAppSettings();          // prix / durée / police dynamiques
+    loadSiteContent();                // textes personnalisés par l'admin (FR/EN)
     loadSponsorsPublic();             // carrousel sponsors (caché si vide)
     renderSubChip(); startSubTimer();
     await loadHistory();
@@ -3217,7 +3245,7 @@
   }
 
   /* ===== TABLEAU DE BORD ADMIN (page séparée) ===== */
-  function openAdminDash(){ if(!isAdmin(currentUser))return; $('#adminDash').style.display='flex'; adashSection('abo'); loadAboSettings(); loadSponsorsAdmin(); }
+  function openAdminDash(){ if(!isAdmin(currentUser))return; $('#adminDash').style.display='flex'; adashSection('abo'); loadAboSettings(); loadSponsorsAdmin(); renderCmsEditor(''); }
   function closeAdminDash(){ $('#adminDash').style.display='none'; }
   function adashSection(sec){
     $$('#adminDash .adash-nav').forEach(b=>b.classList.toggle('on', b.dataset.sec===sec));
@@ -3281,6 +3309,65 @@
   async function toggleSponsor(id,active){ try{ await sb.from('sponsors').update({active}).eq('id',id); loadSponsorsAdmin(); loadSponsorsPublic(); }catch(e){ showToast('Action impossible',true); } }
   async function delSponsor(id){ try{ await sb.from('sponsors').delete().eq('id',id); showToast('Sponsor supprimé'); loadSponsorsAdmin(); loadSponsorsPublic(); }catch(e){ showToast('Action impossible',true); } }
   $('#spAdd') && $('#spAdd').addEventListener('click',addSponsor);
+
+  /* ===== MINI-CMS : textes du site (FR/EN) ===== */
+  // Stockage : site_content.key = "fr:cle" / "en:cle", value = texte
+  async function loadSiteContent(){
+    if(!sb) return;
+    // le moteur i18n est initialisé dans le dernier bloc <script> : on l'attend au besoin
+    for(let i=0;i<20 && !window.NADOBET_I18N;i++){ await new Promise(r=>setTimeout(r,50)); }
+    if(!window.NADOBET_I18N) return;
+    try{
+      const {data,error}=await sb.from('site_content').select('key,value');
+      if(error) throw error;
+      const over={fr:{},en:{}};
+      (data||[]).forEach(r=>{
+        const i=(r.key||'').indexOf(':'); if(i<1) return;
+        const lang=r.key.slice(0,i), k=r.key.slice(i+1);
+        if(over[lang]) over[lang][k]=r.value;
+      });
+      window.NADOBET_I18N.merge(over);
+    }catch(e){ /* table absente : textes par défaut */ }
+  }
+  function renderCmsEditor(filter){
+    const box=$('#cmsList'); if(!box||!window.NADOBET_I18N) return;
+    const I=window.NADOBET_I18N;
+    const q=(filter||'').toLowerCase().trim();
+    const ks=I.keys().filter(k=>{
+      if(!q) return true;
+      const fr=(I.raw(k,'fr')||'').toLowerCase(), en=(I.raw(k,'en')||'').toLowerCase();
+      return k.toLowerCase().includes(q) || fr.includes(q) || en.includes(q);
+    });
+    if(!ks.length){ box.innerHTML='<div class="ad-empty">Aucun texte trouvé.</div>'; return; }
+    box.innerHTML=ks.map(k=>`<div class="cms-row">
+      <div class="cms-key">${escapeHTML(k)}</div>
+      <div class="cms-fields">
+        <label class="cms-f"><span>Français</span><input type="text" data-cms="fr:${escapeHTML(k)}" value="${escapeHTML(I.raw(k,'fr')||'')}"></label>
+        <label class="cms-f en"><span>English</span><input type="text" data-cms="en:${escapeHTML(k)}" value="${escapeHTML(I.raw(k,'en')||'')}"></label>
+      </div></div>`).join('');
+  }
+  async function saveCms(){
+    if(!sb||!isAdmin(currentUser))return;
+    const btn=$('#cmsSave'); btn.disabled=true; btn.textContent='Enregistrement…';
+    try{
+      const rows=$$('#cmsList [data-cms]').map(i=>({key:i.dataset.cms, value:i.value.trim()})).filter(r=>r.value!=='');
+      if(rows.length){ const {error}=await sb.from('site_content').upsert(rows); if(error) throw error; }
+      await loadSiteContent();
+      showToast('Textes enregistrés ✓');
+    }catch(e){ console.error(e); showToast('Échec (droits admin ?)',true); }
+    finally{ btn.disabled=false; btn.textContent='Enregistrer les textes'; }
+  }
+  async function resetCms(){
+    if(!sb||!isAdmin(currentUser))return;
+    try{
+      await sb.from('site_content').delete().neq('key','');
+      showToast('Textes réinitialisés — rechargez la page');
+      renderCmsEditor($('#cmsSearch').value);
+    }catch(e){ showToast('Action impossible',true); }
+  }
+  $('#cmsSave') && $('#cmsSave').addEventListener('click',saveCms);
+  $('#cmsReset') && $('#cmsReset').addEventListener('click',resetCms);
+  $('#cmsSearch') && $('#cmsSearch').addEventListener('input',e=>renderCmsEditor(e.target.value));
 
   // Comptes & paiements : ouvre le panneau existant (tout reste accessible)
   $('#adManageUsers') && $('#adManageUsers').addEventListener('click',()=>{ closeAdminDash(); $('#adminDrawer').classList.add('open'); const t=document.querySelector('.admin-tab[data-atab="users"]'); if(t)t.click(); });
@@ -4902,8 +4989,19 @@
     var b=document.getElementById('langBtn'); if(b) b.textContent = LANG==='fr' ? 'EN' : 'FR';
   }
   function setLang(l){ LANG=l; try{ localStorage.setItem('nadobet_lang', l); }catch(e){} apply(); }
-  // Exposé pour le reste de l'app (traductions dynamiques + ré-application après rendu)
-  window.NADOBET_I18N = { t:t, apply:apply, setLang:setLang, get lang(){ return LANG; } };
+  function raw(k, lang){ return (I18N[lang]||{})[k]; }
+  function keys(){ return Object.keys(I18N.fr||{}); }
+  // Fusionne les overrides du CMS admin : { fr:{cle:texte}, en:{...} } puis ré-applique
+  function merge(obj){
+    if(!obj) return;
+    ['fr','en'].forEach(function(l){
+      if(obj[l]){ I18N[l]=I18N[l]||{};
+        for(var k in obj[l]){ if(obj[l][k]!=null && obj[l][k]!=='') I18N[l][k]=obj[l][k]; } }
+    });
+    apply();
+  }
+  // Exposé pour le reste de l'app (traductions dynamiques, CMS, ré-application après rendu)
+  window.NADOBET_I18N = { t:t, apply:apply, setLang:setLang, raw:raw, keys:keys, merge:merge, get lang(){ return LANG; } };
   var btn=document.getElementById('langBtn');
   if(btn) btn.addEventListener('click', function(){ setLang(LANG==='fr'?'en':'fr'); });
   apply();
