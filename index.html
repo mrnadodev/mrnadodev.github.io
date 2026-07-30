@@ -1050,6 +1050,88 @@
   details.more[open]>summary::before{transform:rotate(90deg)}
   details.more>summary:hover{color:var(--mint)}
 
+  /* ===== SELECTEUR DEROULANT DES SUREBETS ===== */
+  .sb-select{position:relative;margin-bottom:16px}
+  .sb-current{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;
+    background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:13px 15px;
+    text-align:left;cursor:pointer;transition:.15s;font-family:var(--sans)}
+  .sb-current:hover{border-color:var(--mint-dim)}
+  .sb-current .sc-l{display:flex;flex-direction:column;gap:3px;min-width:0}
+  .sb-current .sc-c{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint)}
+  .sb-current .sc-m{font-weight:700;font-size:14px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sb-current .sc-r{display:flex;align-items:center;gap:11px;flex:none}
+  .sc-t,.so-t{font-family:var(--mono);font-size:12px;color:var(--gold);font-weight:700}
+  .sc-caret{color:var(--ink-faint);font-size:11px;transition:transform .18s}
+  .sb-select.open .sc-caret{transform:rotate(180deg)}
+  .so-roi{font-family:var(--mono);font-weight:700;font-size:12px;color:var(--bg);
+    background:linear-gradient(150deg,var(--mint),#3ff0b4);padding:4px 8px;border-radius:7px}
+  .sb-options{position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:40;background:var(--panel);
+    border:1px solid var(--line);border-radius:12px;box-shadow:0 24px 60px -18px rgba(0,0,0,.55);
+    padding:6px;display:none;max-height:320px;overflow:auto}
+  .sb-select.open .sb-options{display:block}
+  .sb-opt{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;
+    border-radius:9px;cursor:pointer;transition:.12s}
+  .sb-opt:hover{background:var(--panel-2)}
+  .sb-opt.sel{background:rgba(47,230,168,.10)}
+  .sb-opt .so-i{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .sb-opt .so-c{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .sb-opt .so-m{font-weight:600;font-size:13px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sb-opt .so-r{display:flex;align-items:center;gap:10px;flex:none}
+
+  /* ===== TICKET DU SUREBET ===== */
+  .ticket{position:relative;background:var(--panel);border:1px solid rgba(47,230,168,.28);
+    border-radius:14px;box-shadow:0 0 0 4px rgba(47,230,168,.06);transition:transform .18s}
+  .ticket:hover{transform:translateY(-2px)}
+  .ticket.used{opacity:.65}
+  .ticket::before,.ticket::after{content:"";position:absolute;top:62px;width:18px;height:18px;
+    border-radius:50%;background:var(--bg);border:1px solid var(--line)}
+  .ticket::before{left:-10px} .ticket::after{right:-10px}
+  .tk-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px 14px}
+  .tk-title{font-weight:700;font-size:15px;color:var(--ink)}
+  .tk-cat{display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--ink-faint);margin-bottom:4px;font-weight:600}
+  .tk-roi{font-family:var(--mono);font-weight:700;font-size:17px;color:var(--bg);white-space:nowrap;
+    background:linear-gradient(150deg,var(--mint),#3ff0b4);padding:8px 13px;border-radius:10px}
+  .tk-roi small{display:block;font-size:9px;text-align:right;opacity:.75;letter-spacing:.08em;margin-top:1px}
+  .tk-legs{border-top:1px dashed var(--line);border-bottom:1px dashed var(--line);padding:4px 20px}
+  .tk-leg{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 0;
+    border-bottom:1px solid var(--line-soft)}
+  .tk-leg:last-child{border-bottom:none}
+  .tk-pick{font-size:13.5px;font-weight:600;color:var(--ink)}
+  .tk-bk{font-family:var(--mono);font-size:10.5px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.08em;margin-top:3px}
+  .tk-odd{font-family:var(--mono);font-weight:700;font-size:15px;color:var(--ink);background:var(--panel-2);
+    border:1px solid var(--line);border-radius:8px;padding:6px 11px;min-width:62px;text-align:center}
+  .tk-none{color:var(--ink-faint);font-size:12px;display:block;padding:12px 0}
+  .tk-note{font-size:12px;color:var(--gold);padding:12px 20px 0}
+  .tk-foot{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 20px 16px}
+  .tk-exp{display:flex;flex-direction:column;gap:6px;flex:1}
+  .tk-exp-r{font-size:11px;color:var(--ink-dim)}
+  .tk-exp-r b{font-family:var(--mono);font-size:13px;color:var(--gold)}
+  .tk-track{height:5px;border-radius:999px;background:var(--panel-2);overflow:hidden}
+  .tk-track i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--gold),var(--red));transition:width 1s linear}
+  .tk-use{white-space:nowrap}
+
+  /* ===== SORTIE DU CALCULATEUR (comme la maquette) ===== */
+  .calc-grid{display:grid;grid-template-columns:1fr auto auto;gap:9px 14px;align-items:center;
+    font-size:12.5px;margin-top:16px}
+  .calc-grid .h{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-faint);font-weight:600}
+  .calc-grid .h.r{text-align:right}
+  .calc-grid .bkn{font-weight:600;color:var(--ink)}
+  .calc-grid .bkn small{color:var(--ink-faint);font-weight:400}
+  .calc-grid .cot{font-family:var(--mono);text-align:right;color:var(--ink)}
+  .calc-grid .stk{font-family:var(--mono);font-weight:700;text-align:right;color:var(--mint)}
+  .calc-out{margin-top:14px;padding:14px 16px;border-radius:12px;display:flex;align-items:center;
+    justify-content:space-between;gap:12px;background:rgba(47,230,168,.08);
+    border:1px solid rgba(47,230,168,.25)}
+  .calc-out.lose{background:rgba(255,93,108,.07);border-color:rgba(255,93,108,.25)}
+  .calc-out .co-k{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-dim);font-weight:600}
+  .calc-out .co-k small{display:block;text-transform:none;letter-spacing:0;color:var(--ink-faint);
+    font-size:11px;font-weight:400;margin-top:3px}
+  .calc-out .co-v{font-family:var(--mono);font-size:24px;font-weight:700;color:var(--mint);white-space:nowrap}
+  .calc-out.lose .co-v{color:var(--red)}
+  .issue-blk{margin-bottom:14px}
+  details.more.top{margin:0 0 16px;border-top:none;border-bottom:1px solid var(--line-soft);padding:0 0 12px}
+
   /* ===== PANNEAU SUREBETS DANS LA PAGE ===== */
   .sb-panel{position:relative;margin-bottom:6px}
   .sb-empty{background:var(--panel);border:1px dashed var(--line);border-radius:14px;padding:26px 20px;
@@ -1253,15 +1335,7 @@
       <div class="card">
         <div class="card-h"><h3 data-i18n="calc.title">🧮 Calculateur de mises</h3><span class="tagm" id="calcModeTag" data-i18n="calc.mode_equal">Profit égal</span></div>
         <div class="card-b">
-          <!-- Cote + bookmaker par issue -->
-          <div id="issueBlocks"></div>
-
-          <label class="fld" style="margin:14px 0 0"><span class="lab" id="amtLab" data-i18n="calc.amount">Montant total (HTG)</span>
-            <input type="number" id="amount" value="100" step="1" min="0"></label>
-
-          <div id="calcOut"></div>
-
-          <details class="more">
+          <details class="more top">
             <summary data-i18n="calc.more">Options avancées</summary>
             <div class="row r2" style="margin:12px 0 14px">
               <div><span class="lab" data-i18n="calc.nlegs">Nombre de cotes</span>
@@ -1290,6 +1364,14 @@
             </div>
             <label class="fld" style="margin:0"><span class="lab" data-i18n="calc.date">Date du pari</span><input type="date" id="betDate"></label>
           </details>
+
+          <!-- Cote + bookmaker par issue -->
+          <div id="issueBlocks"></div>
+
+          <label class="fld" style="margin:14px 0 0"><span class="lab" id="amtLab" data-i18n="calc.amount">Montant total (HTG)</span>
+            <input type="number" id="amount" value="100" step="1" min="0"></label>
+
+          <div id="calcOut"></div>
 
           <div class="actions">
             <button class="btn primary" id="saveBtn" data-i18n="calc.save">＋ Enregistrer</button>
@@ -2126,8 +2208,8 @@
   function buildIssueBlocks(){
     const n=legs;let html='';
     for(let i=0;i<n;i++){
-      html+=`<div style="margin-bottom:14px">
-        <span class="lab">Cote #${i+1}</span>
+      html+=`<div class="issue-blk">
+        <span class="lab" data-oddlab="${i}">${tOr('calc.leg','Cote')} ${i+1}</span>
         <div class="bkline">
           <input type="number" class="calcOdd" data-i="${i}" value="2.10" step="0.01" min="1.01" placeholder="Cote">
           <select class="calcBk" data-i="${i}">${bkOptions}</select>
@@ -2137,7 +2219,15 @@
     // default distinct bookmakers
     $$('.calcBk').forEach((s,i)=>{s.selectedIndex=Math.min(i,BOOKMAKERS.length-1);});
     $$('.calcOdd').forEach(el=>el.addEventListener('input',renderCalc));
-    $$('.calcBk').forEach(el=>el.addEventListener('change',renderCalc));
+    $$('.calcBk').forEach(el=>el.addEventListener('change',()=>{ syncOddLabels(); renderCalc(); }));
+    syncOddLabels();
+  }
+  // Le libellé reprend le bookmaker choisi : « Cote 1 · 1xBet »
+  function syncOddLabels(){
+    $$('.calcBk').forEach((sel,i)=>{
+      const lab=document.querySelector('[data-oddlab="'+i+'"]');
+      if(lab) lab.textContent=tOr('calc.leg','Cote')+' '+(i+1)+' · '+sel.value;
+    });
   }
 
   function syncCalcUI(){
@@ -2207,44 +2297,24 @@
     const profit=guaranteedReturn-total;const roi=total>0?profit/total*100:0;
     const labels=['1','2','3'];const fi=mode==='fixed'?Math.min(parseInt($('#fixedLeg').value),legs-1):-1;
     const bks=getBks();
-    const stakeHTML=stakes.map((s,i)=>`<div class="stake ${i===fi?'fixed':''}">
-      <div class="leg">${labels[i]}</div>
-      <div class="meta"><span class="odd">Cote ${odds[i].toFixed(2)} · ${bks[i]}${i===fi?' · fixée':''}</span>
-      <span class="ret">Retour si gagne : ${money(returns[i])}</span></div>
-      <div class="amt">${money(s)}<small>à miser</small></div></div>`).join('');
     const win=isSure&&profit>0;
-    // Checklist de vérification (anti "arb muri" : cotes qui bougent avant de miser)
-    let checklist='';
-    if(win){
-      const items=odds.map((o,i)=>`<li><label><input type="checkbox" class="chk-leg"> <span>Cote <b>${o.toFixed(2)}</b> chez <b>${bks[i]}</b> toujours disponible — miser <b>${money(stakes[i])}</b></span></label></li>`).join('');
-      checklist=`<div class="verify-box" id="verifyBox">
-        <div class="vb-head">⚠️ Avant de miser — vérifiez que rien n'a bougé</div>
-        <ul class="vb-list">${items}</ul>
-        <div class="vb-foot" id="vbFoot">Cochez chaque ligne après avoir confirmé la cote chez le bookmaker. Les cotes peuvent changer en quelques secondes.</div>
-      </div>`;
-    }
-    $('#calcOut').innerHTML=`<div class="verdict ${win?'win':'lose'}">
-      <div><div class="vlab">${win?'Profit garanti':'Pas de surebet'}</div>
-      <div class="vval">${profit>=0?'+':''}${money(profit)}</div></div>
-      <div class="vside"><span class="s">ROI <span>·</span> ${roi>=0?'+':''}${roi.toFixed(2)}%</span>
-      <span class="s">Σ(1/cote) <span>·</span> ${S.toFixed(4)}</span></div></div>
-      <div class="stake-list">${stakeHTML}</div>
-      <div class="summ"><div class="box"><div class="k">Total à investir</div><div class="v gold">${money(total)}</div></div>
-      <div class="box"><div class="k">Retour garanti</div><div class="v mint">${money(guaranteedReturn)}</div></div></div>
-      ${rounded&&win?'<div class="hint" style="color:var(--ink-dim)">Mises arrondies au multiple de '+step+' HTG. Le profit affiché est le profit réel après arrondi.</div>':''}
-      ${checklist}
-      ${win?'':'<div class="hint">Σ des probabilités implicites ≥ 100% : aucune mise ne garantit un gain. Cherchez une cote adverse plus élevée.</div>'}`;
-    // interaction checklist
-    if(win){
-      const boxes=$$('#verifyBox .chk-leg');
-      const upd=()=>{
-        const done=boxes.filter(b=>b.checked).length;
-        const foot=$('#vbFoot');
-        if(done===boxes.length){ foot.innerHTML='✅ Tout est vérifié — vous pouvez placer vos mises en toute sécurité.'; foot.style.color='var(--mint)'; $('#verifyBox').classList.add('vb-ok'); }
-        else { foot.innerHTML='Cochez chaque ligne après avoir confirmé la cote chez le bookmaker. Les cotes peuvent changer en quelques secondes.'; foot.style.color=''; $('#verifyBox').classList.remove('vb-ok'); }
-      };
-      boxes.forEach(b=>b.addEventListener('change',upd));
-    }
+    // Tableau des mises + bloc profit, presentation de la maquette
+    const rowsHTML=stakes.map((s,i)=>`
+      <span class="bkn">${tOr('calc.leg','Cote')} ${labels[i]}${i===fi?' <small>· fixée</small>':''} <small>· ${escapeHTML(bks[i])}</small></span>
+      <span class="cot">${odds[i].toFixed(2)}</span>
+      <span class="stk">${money(s)}</span>`).join('');
+    $('#calcOut').innerHTML=`
+      <div class="calc-grid">
+        <span class="h">${tOr('calc.th_issue','Issue')}</span><span class="h r">${tOr('calc.th_odd','Cote')}</span><span class="h r">${tOr('calc.th_stake','Mise')}</span>
+        ${rowsHTML}
+      </div>
+      <div class="calc-out ${win?'':'lose'}">
+        <div class="co-k">${win?tOr('calc.guaranteed','Profit garanti'):tOr('calc.nosure','Pas de surebet')}
+          <small>${tOr('calc.on','sur')} ${money(total)} HTG · ROI ${roi>=0?'+':''}${roi.toFixed(2)}%</small></div>
+        <div class="co-v">${profit>=0?'+':''}${money(profit)}</div>
+      </div>
+      ${rounded&&win?'<div class="note">'+tOr('calc.rounded','Mises arrondies au multiple de')+' '+step+' HTG — le profit affiché tient compte de l\'arrondi.</div>':''}
+      ${win?'':'<div class="note">'+tOr('calc.nosure_hint','La somme des probabilités implicites dépasse 100 % : aucune mise ne garantit un gain. Cherchez une cote adverse plus élevée.')+'</div>'}`;
     lastCalc={odds,bks,stakes,returns,total,guaranteedReturn,profit,roi,S};
     $('#saveBtn').disabled=false;
   }
@@ -3187,6 +3257,17 @@
 
   /* ===== SUREBETS EN DIRECT (signals) ===== */
   let signalsChannel=null, activeSignals=[], signalsSeen={}, signalsUsed={}, signalSweepTimer=null;
+  let sbSel=0;            // surebet choisi dans le selecteur du panneau
+  // fermeture du menu deroulant au clic exterieur
+  document.addEventListener('click',e=>{ if(!e.target.closest('#sbSelect')){ const b=$('#sbSelect'); if(b) b.classList.remove('open'); } });
+  // minuteries vivantes (selecteur + ticket), sans re-rendre tout le panneau
+  setInterval(()=>{
+    if(!activeSignals.length) return;
+    const cur=activeSignals[sbSel]; if(!cur) return;
+    const t1=document.querySelector('#sbCurrent .sc-t'); if(t1) t1.textContent=sigLeft(cur);
+    const t2=document.querySelector('#sbTicket [data-sbtimer]'); if(t2) t2.textContent=sigLeft(cur);
+    document.querySelectorAll('#sbOptions .so-t').forEach((el,i)=>{ if(activeSignals[i]) el.textContent=sigLeft(activeSignals[i]); });
+  },1000);
 
   function startSignals(user){
     if(!sb||signalsChannel)return;
@@ -4583,26 +4664,67 @@
         escapeHTML(tOr('sb.empty','Aucun surebet actif pour le moment. Vous serez alerté dès qu\'un signal est publié.'))+'</div>';
       return;
     }
-    panel.innerHTML=activeSignals.map(s=>{
-      let legs=[];
-      try{ legs=Array.isArray(s.legs)?s.legs:JSON.parse(s.legs||'[]'); }catch(e){ legs=[]; }
-      const legsHtml=legs.map(l=>`<div class="sig-leg"><span>${escapeHTML(l.match||l.pick||'—')} <span class="sl-bk">· ${escapeHTML(l.bk||'')}</span></span><span class="sl-odd">${escapeHTML(String(l.odd||''))}</span></div>`).join('');
-      const mins=Math.max(0,Math.round((new Date(s.expires_at).getTime()-Date.now())/60000));
-      const canUse=legs.filter(l=>parseFloat(l.odd)>1).length>=2;
-      const used=signalsUsed[s.id];
-      const btn = canUse
-        ? `<button class="btn ${used?'ghost':'primary'} sigp-use" data-puse="${s.id}" style="width:100%;justify-content:center;margin-top:12px;font-size:13px">${used?'✓ Déjà utilisé — recharger':'↧ Utiliser dans le calculateur'}</button>`
-        : '';
-      return `<div class="sig-card${used?' sig-done':''}">
-        <div class="sig-top"><span class="sig-title">${used?'✓ ':''}${escapeHTML(s.title||'Surebet')}</span>
-          ${s.roi?`<span class="sig-roi">+${Number(s.roi).toFixed(2)}%</span>`:''}</div>
-        <div class="sig-legs">${legsHtml||'<span style="color:var(--ink-faint);font-size:12px">Détails dans la note.</span>'}</div>
-        ${s.note?`<div class="sig-note">📝 ${escapeHTML(s.note)}</div>`:''}
-        <div class="sig-meta">Expire dans ~${mins} min</div>
-        ${btn}
-      </div>`;
-    }).join('');
-    $$('#sbPanel .sigp-use').forEach(b=>b.addEventListener('click',()=>useSignalInCalc(b.dataset.puse)));
+    // l'index selectionne reste valide meme si des surebets expirent
+    if(sbSel>=activeSignals.length) sbSel=0;
+    const cur=activeSignals[sbSel];
+    const opts=activeSignals.map((s,i)=>`
+      <div class="sb-opt${i===sbSel?' sel':''}" data-sbi="${i}" role="option" aria-selected="${i===sbSel}">
+        <span class="so-i"><span class="so-c">${escapeHTML(sigCat(s))}</span><span class="so-m">${escapeHTML(sigName(s))}</span></span>
+        <span class="so-r">${sigRoi(s)}<span class="so-t">${sigLeft(s)}</span></span>
+      </div>`).join('');
+    panel.innerHTML=`
+      <div class="sb-select" id="sbSelect">
+        <button class="sb-current" id="sbCurrent" aria-haspopup="listbox" aria-expanded="false">
+          <span class="sc-l"><span class="sc-c">${escapeHTML(sigCat(cur))}</span><span class="sc-m">${escapeHTML(sigName(cur))}</span></span>
+          <span class="sc-r">${sigRoi(cur)}<span class="sc-t">${sigLeft(cur)}</span><span class="sc-caret">▾</span></span>
+        </button>
+        <div class="sb-options" id="sbOptions" role="listbox">${opts}</div>
+      </div>
+      <div id="sbTicket"></div>`;
+    renderSbTicket();
+    const selBox=$('#sbSelect'), curBtn=$('#sbCurrent');
+    curBtn.addEventListener('click',e=>{ e.stopPropagation(); selBox.classList.toggle('open');
+      curBtn.setAttribute('aria-expanded', selBox.classList.contains('open')?'true':'false'); });
+    $$('#sbOptions .sb-opt').forEach(o=>o.addEventListener('click',()=>{ sbSel=+o.dataset.sbi; renderSignalPanel(); }));
+  }
+  // Helpers d'affichage d'un signal
+  function sigLegs(s){ try{ return Array.isArray(s.legs)?s.legs:JSON.parse(s.legs||'[]'); }catch(e){ return []; } }
+  function sigName(s){ return s.title||'Surebet'; }
+  function sigCat(s){ const l=sigLegs(s); return (l[0]&&l[0].bk) ? l.map(x=>x.bk).filter(Boolean).join(' · ') : (tOr('sb.signal','Signal')); }
+  function sigRoi(s){ return s.roi ? `<span class="so-roi">+${Number(s.roi).toFixed(2)}%</span>` : ''; }
+  function sigLeft(s){
+    const ms=new Date(s.expires_at).getTime()-Date.now();
+    const m=Math.max(0,Math.floor(ms/60000)), sec=Math.max(0,Math.floor((ms%60000)/1000));
+    return String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0');
+  }
+  // Ticket du surebet selectionne
+  function renderSbTicket(){
+    const host=$('#sbTicket'); if(!host) return;
+    const s=activeSignals[sbSel]; if(!s){ host.innerHTML=''; return; }
+    const legs=sigLegs(s);
+    const legsHtml=legs.map(l=>`<div class="tk-leg">
+        <div><div class="tk-pick">${escapeHTML(l.match||l.pick||'—')}</div><div class="tk-bk">${escapeHTML(l.bk||'')}</div></div>
+        <span class="tk-odd">${escapeHTML(String(l.odd||''))}</span></div>`).join('');
+    const canUse=legs.filter(l=>parseFloat(l.odd)>1).length>=2;
+    const used=signalsUsed[s.id];
+    const total=Math.max(1,(new Date(s.expires_at).getTime()-(new Date(s.created_at||Date.now()).getTime())));
+    const left=Math.max(0,new Date(s.expires_at).getTime()-Date.now());
+    const pct=Math.max(3,Math.min(100,left/total*100));
+    host.innerHTML=`<article class="ticket${used?' used':''}">
+      <div class="tk-head">
+        <div class="tk-title"><span class="tk-cat">${escapeHTML(sigCat(s))}</span>${escapeHTML(sigName(s))}</div>
+        ${s.roi?`<div class="tk-roi">+${Number(s.roi).toFixed(2)} %<small>${tOr('sb.roi_lab','ROI GARANTI')}</small></div>`:''}
+      </div>
+      <div class="tk-legs">${legsHtml||'<span class="tk-none">Détails dans la note.</span>'}</div>
+      ${s.note?`<div class="tk-note">📝 ${escapeHTML(s.note)}</div>`:''}
+      <div class="tk-foot">
+        <div class="tk-exp"><div class="tk-exp-r">${tOr('sb.expires','expire dans')} <b data-sbtimer>${sigLeft(s)}</b></div>
+          <div class="tk-track"><i style="width:${pct}%"></i></div></div>
+        ${canUse?`<button class="btn ${used?'ghost':'primary'} tk-use" data-puse="${s.id}">${used?tOr('sb.reload','✓ Recharger'):tOr('sb.load','Charger ↧')}</button>`:''}
+      </div>
+    </article>`;
+    const b=host.querySelector('.tk-use');
+    if(b) b.addEventListener('click',()=>useSignalInCalc(b.dataset.puse));
   }
 
   /* Bandeau de confiance : signaux actifs, meilleur ROI, état de l'accès */
@@ -5290,7 +5412,13 @@
       "det.cap":"cote adverse minimale à chercher",
       "det.more":"Voir toutes les cotes adverses",
       "conv.tag":"déc · frac · US",
-      "calc.more":"Options avancées",
+      "calc.more":"Options avancées","calc.leg":"Cote",
+      "calc.th_issue":"Issue","calc.th_odd":"Cote","calc.th_stake":"Mise",
+      "calc.guaranteed":"Profit garanti","calc.nosure":"Pas de surebet","calc.on":"sur",
+      "calc.rounded":"Mises arrondies au multiple de",
+      "calc.nosure_hint":"La somme des probabilités implicites dépasse 100 % : aucune mise ne garantit un gain. Cherchez une cote adverse plus élevée.",
+      "sb.signal":"Signal","sb.roi_lab":"ROI GARANTI","sb.expires":"expire dans",
+      "sb.load":"Charger ↧","sb.reload":"✓ Recharger",
       "det.th_odd":"Cote adverse","det.th_sure":"Surebet","det.th_roi":"ROI garanti","det.th_status":"Statut",
       "det.hint":"<b>Lecture :</b> chaque ligne verte est exploitable. Reportez-la dans le calculateur pour connaître vos mises.",
       "conv.title":"🔁 Convertisseur de cotes",
@@ -5384,7 +5512,13 @@
       "det.cap":"minimum opposing odds to look for",
       "det.more":"Show all opposing odds",
       "conv.tag":"dec · frac · US",
-      "calc.more":"Advanced options",
+      "calc.more":"Advanced options","calc.leg":"Odds",
+      "calc.th_issue":"Outcome","calc.th_odd":"Odds","calc.th_stake":"Stake",
+      "calc.guaranteed":"Guaranteed profit","calc.nosure":"Not a surebet","calc.on":"on",
+      "calc.rounded":"Stakes rounded to the nearest",
+      "calc.nosure_hint":"The implied probabilities add up to more than 100% : no stake can guarantee a win. Look for higher opposing odds.",
+      "sb.signal":"Signal","sb.roi_lab":"GUARANTEED ROI","sb.expires":"expires in",
+      "sb.load":"Load ↧","sb.reload":"✓ Reload",
       "det.th_odd":"Opposing odds","det.th_sure":"Surebet","det.th_roi":"Guaranteed ROI","det.th_status":"Status",
       "det.hint":"<b>How to read:</b> every green row is usable. Enter it in the calculator to get your stakes.",
       "conv.title":"🔁 Odds converter",
