@@ -1025,8 +1025,30 @@
   .sb-grid{display:grid;grid-template-columns:1.35fr 1fr;gap:22px;align-items:start;margin-bottom:6px}
   .sb-grid > .card{margin:0}
   @media(max-width:900px){ .sb-grid{grid-template-columns:1fr} }
-  /* sous « Outils » il ne reste que le detecteur : il occupe toute la largeur */
-  #v-surebets .cols{grid-template-columns:1fr}
+  /* sous « Outils » : detecteur + convertisseur cote a cote */
+  @media(max-width:900px){ #v-surebets .cols{grid-template-columns:1fr} }
+
+  /* ===== CARTES OUTILS (presentation de la maquette) ===== */
+  .card-h{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:15px 18px;border-bottom:1px solid var(--line)}
+  .card-h h3{font-size:14px;font-weight:700;letter-spacing:-.01em;margin:0}
+  .card-h .tagm{font-family:var(--mono);font-size:10px;color:var(--ink-faint);
+    text-transform:uppercase;letter-spacing:.1em;white-space:nowrap}
+  .card-b{padding:18px}
+  .card-b .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .card-b .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+  @media(max-width:520px){ .card-b .row3{grid-template-columns:1fr} }
+  .card-b .note{font-size:12px;color:var(--ink-dim);line-height:1.55;margin-top:14px}
+  .card-b .note b{color:var(--ink)}
+  .card-b .det-hero{margin:16px 0 0}
+  /* repli des options avancees : la carte reste aussi simple que la maquette */
+  details.more{margin-top:16px;border-top:1px solid var(--line-soft);padding-top:12px}
+  details.more>summary{cursor:pointer;font-size:12px;font-weight:600;color:var(--ink-dim);
+    list-style:none;display:flex;align-items:center;gap:7px;padding:4px 0}
+  details.more>summary::-webkit-details-marker{display:none}
+  details.more>summary::before{content:'▸';color:var(--mint);transition:transform .18s;display:inline-block}
+  details.more[open]>summary::before{transform:rotate(90deg)}
+  details.more>summary:hover{color:var(--mint)}
 
   /* ===== PANNEAU SUREBETS DANS LA PAGE ===== */
   .sb-panel{position:relative;margin-bottom:6px}
@@ -1227,57 +1249,52 @@
     <span class="eb-live"><span class="eb-dot"></span> <span data-i18n="sb.realtime">temps réel</span></span></div>
   <div class="sb-grid">
     <div id="sbPanel" class="sb-panel"></div>
-      <!-- CALCULATEUR -->
+      <!-- CALCULATEUR DE MISES -->
       <div class="card">
-        <div class="card-head">
-          <div class="title"><span class="num"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="8" y2="10"/><line x1="12" y1="10" x2="12" y2="10"/><line x1="16" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="18"/><line x1="8" y1="18" x2="12" y2="18"/></svg></span>
-            <div><h2 data-i18n="calc.title">Calculateur & enregistrement</h2>
-            <span class="sub" data-i18n="calc.sub">Mises · bookmaker · date · historique</span></div>
-          </div>
-        </div>
-        <div class="card-body">
-          <div class="row r2" style="margin-bottom:18px">
-            <div><span class="lab" data-i18n="calc.nlegs">Nombre de cotes</span>
-              <div class="seg" id="segLegs"><button data-legs="2" class="on" data-i18n="calc.legs2">2 cotes</button><button data-legs="3" data-i18n="calc.legs3">3 cotes</button></div></div>
-            <div><span class="lab" data-i18n="calc.mode">Mode de mise</span>
-              <div class="seg" id="segMode"><button data-mode="equal" class="on" data-i18n="calc.mode_equal">Profit égal</button><button data-mode="fixed" data-i18n="calc.mode_fixed">Mise fixe</button></div></div>
-          </div>
-  
-          <div class="row r2" id="amountRow" style="margin-bottom:16px">
-            <label class="fld" style="margin:0"><span class="lab" id="amtLab" data-i18n="calc.amount">Montant total à investir</span>
-              <input type="number" id="amount" value="100" step="1" min="0"></label>
-            <label class="fld" style="margin:0" id="fixedLegWrap"><span class="lab" data-i18n="calc.fixleg">Jambe à fixer</span>
-              <select id="fixedLeg"><option value="0">Cote #1</option><option value="1">Cote #2</option><option value="2">Cote #3</option></select></label>
-          </div>
-  
-          <label class="fld" style="margin-bottom:16px"><span class="lab" data-i18n="calc.round">Arrondir les mises</span>
-            <select id="roundStep">
-              <option value="0" data-i18n="calc.round_none">Aucun (mise exacte)</option>
-              <option value="1">À 1 HTG</option>
-              <option value="5">À 5 HTG</option>
-              <option value="10">À 10 HTG</option>
-              <option value="25">À 25 HTG</option>
-              <option value="50">À 50 HTG</option>
-            </select></label>
-  
-          <label class="fld"><span class="lab" data-i18n="calc.date">Date du pari</span><input type="date" id="betDate"></label>
-  
-          <div class="row r2" style="margin-bottom:16px">
-            <label class="fld" style="margin:0"><span class="lab" data-i18n="calc.match">Match</span>
-              <input type="text" id="match1" placeholder="ex : PSG vs Marseille"></label>
-            <label class="fld" style="margin:0"><span class="lab" data-i18n="calc.league">Championnat</span>
-              <input type="text" id="match2" placeholder="ex : Ligue 1"></label>
-          </div>
-  
+        <div class="card-h"><h3 data-i18n="calc.title">🧮 Calculateur de mises</h3><span class="tagm" id="calcModeTag" data-i18n="calc.mode_equal">Profit égal</span></div>
+        <div class="card-b">
           <!-- Cote + bookmaker par issue -->
           <div id="issueBlocks"></div>
-  
+
+          <label class="fld" style="margin:14px 0 0"><span class="lab" id="amtLab" data-i18n="calc.amount">Montant total (HTG)</span>
+            <input type="number" id="amount" value="100" step="1" min="0"></label>
+
           <div id="calcOut"></div>
-  
+
+          <details class="more">
+            <summary data-i18n="calc.more">Options avancées</summary>
+            <div class="row r2" style="margin:12px 0 14px">
+              <div><span class="lab" data-i18n="calc.nlegs">Nombre de cotes</span>
+                <div class="seg" id="segLegs"><button data-legs="2" class="on" data-i18n="calc.legs2">2 cotes</button><button data-legs="3" data-i18n="calc.legs3">3 cotes</button></div></div>
+              <div><span class="lab" data-i18n="calc.mode">Mode de mise</span>
+                <div class="seg" id="segMode"><button data-mode="equal" class="on" data-i18n="calc.mode_equal">Profit égal</button><button data-mode="fixed" data-i18n="calc.mode_fixed">Mise fixe</button></div></div>
+            </div>
+            <div class="row r2" id="amountRow" style="margin-bottom:14px">
+              <label class="fld" style="margin:0" id="fixedLegWrap"><span class="lab" data-i18n="calc.fixleg">Jambe à fixer</span>
+                <select id="fixedLeg"><option value="0">Cote #1</option><option value="1">Cote #2</option><option value="2">Cote #3</option></select></label>
+              <label class="fld" style="margin:0"><span class="lab" data-i18n="calc.round">Arrondir les mises</span>
+                <select id="roundStep">
+                  <option value="0" data-i18n="calc.round_none">Aucun (mise exacte)</option>
+                  <option value="1">À 1 HTG</option>
+                  <option value="5">À 5 HTG</option>
+                  <option value="10">À 10 HTG</option>
+                  <option value="25">À 25 HTG</option>
+                  <option value="50">À 50 HTG</option>
+                </select></label>
+            </div>
+            <div class="row r2" style="margin-bottom:14px">
+              <label class="fld" style="margin:0"><span class="lab" data-i18n="calc.match">Match</span>
+                <input type="text" id="match1" placeholder="ex : PSG vs Marseille"></label>
+              <label class="fld" style="margin:0"><span class="lab" data-i18n="calc.league">Championnat</span>
+                <input type="text" id="match2" placeholder="ex : Ligue 1"></label>
+            </div>
+            <label class="fld" style="margin:0"><span class="lab" data-i18n="calc.date">Date du pari</span><input type="date" id="betDate"></label>
+          </details>
+
           <div class="actions">
-            <button class="btn primary" id="saveBtn" data-i18n="calc.save">＋ Enregistrer le pari</button>
-            <button class="btn ghost" id="exportBtn" data-i18n="calc.export">⤓ Exporter Excel</button>
-            <button class="btn ghost" id="resetBtn" data-i18n="calc.reset">↺ Réinitialiser</button>
+            <button class="btn primary" id="saveBtn" data-i18n="calc.save">＋ Enregistrer</button>
+            <button class="btn ghost" id="exportBtn" data-i18n="calc.export">⤓ Exporter</button>
+            <button class="btn ghost" id="resetBtn" data-i18n="calc.reset">↺</button>
           </div>
         </div>
       </div>
@@ -1287,46 +1304,39 @@
 
   <div class="cols">
 
-    <!-- DÉTECTEUR -->
+    <!-- DÉTECTEUR DE COTE -->
     <div class="card">
-      <div class="card-head">
-        <div class="title"><span class="num"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg></span>
-          <div><h2 data-i18n="det.title">Détecteur de cote complémentaire</h2>
-          <span class="sub" data-i18n="det.sub">Ma cote → cotes qui donnent le surebet</span></div>
-        </div>
-      </div>
-      <div class="card-body">
-        <details class="odds-conv" id="oddsConv">
-          <summary data-i18n="conv.title">🔁 Convertisseur de cotes (décimale / fractionnaire / américaine)</summary>
-          <div class="oc-body">
-            <div class="oc-grid">
-              <label class="fld" style="margin:0"><span class="lab" data-i18n="conv.dec">Décimale</span>
-                <input type="text" id="ocDec" placeholder="ex : 2.50" inputmode="decimal"></label>
-              <label class="fld" style="margin:0"><span class="lab" data-i18n="conv.frac">Fractionnaire</span>
-                <input type="text" id="ocFrac" placeholder="ex : 3/2"></label>
-              <label class="fld" style="margin:0"><span class="lab" data-i18n="conv.us">Américaine</span>
-                <input type="text" id="ocAmer" placeholder="ex : +150"></label>
-            </div>
-            <div class="oc-note" id="ocNote" data-i18n="conv.note">Tapez dans un champ, les deux autres se calculent. La cote décimale est celle à utiliser dans le détecteur et le calculateur.</div>
-          </div>
-        </details>
-
-        <div class="row r2" style="margin-bottom:16px">
-          <label class="fld" style="margin:0"><span class="lab" data-i18n="det.myodd">Ma cote détectée</span>
+      <div class="card-h"><h3 data-i18n="det.title">🧭 Détecteur de cote</h3><span class="tagm" data-i18n="det.sub">cote → cote adverse</span></div>
+      <div class="card-b">
+        <div class="row2">
+          <label class="fld" style="margin:0"><span class="lab" data-i18n="det.myodd">Votre cote</span>
             <input type="number" id="detOdd" value="2.00" step="0.01" min="1.01"></label>
-          <label class="fld" style="margin:0"><span class="lab" data-i18n="det.threshold">Seuil surebet min.</span>
-            <div style="display:flex;gap:8px;align-items:center">
-              <input type="number" id="detThr" value="4" step="0.5" min="0" style="text-align:right">
-              <span style="font-family:var(--mono);color:var(--ink-dim);font-size:16px">%</span></div></label>
+          <label class="fld" style="margin:0"><span class="lab" data-i18n="det.threshold">Seuil surebet %</span>
+            <input type="number" id="detThr" value="4" step="0.5" min="0"></label>
         </div>
-        <div class="thr-note">Avec une cote de <b id="echoOdd">2.00</b>, il faut une cote adverse ≥ <b id="minOdd">—</b> pour <b id="echoThr">4%</b> de profit.</div>
-        <div class="det-hero"><div class="big" id="minOddBig">—</div><div class="cap" data-i18n="det.cap">Cote adverse minimale à chercher</div></div>
-        <table><thead><tr><th data-i18n="det.th_odd">Cote adverse</th><th data-i18n="det.th_sure">Surebet</th><th data-i18n="det.th_roi">ROI garanti</th><th data-i18n="det.th_status">Statut</th></tr></thead>
-          <tbody id="detTable"></tbody></table>
-        <div class="hint" data-i18n-html="det.hint"><b>Lecture :</b> chaque ligne verte est exploitable. Reportez-la dans le calculateur pour connaître vos mises.</div>
+        <div class="det-hero"><div class="big" id="minOddBig">—</div><div class="cap" data-i18n="det.cap">cote adverse minimale à chercher</div></div>
+        <div class="note">Avec une cote de <b id="echoOdd">2.00</b>, cherchez une cote adverse <b id="minOdd">—</b> pour garantir <b id="echoThr">4%</b> de profit.</div>
+        <details class="more">
+          <summary data-i18n="det.more">Voir toutes les cotes adverses</summary>
+          <table><thead><tr><th data-i18n="det.th_odd">Cote adverse</th><th data-i18n="det.th_sure">Surebet</th><th data-i18n="det.th_roi">ROI garanti</th><th data-i18n="det.th_status">Statut</th></tr></thead>
+            <tbody id="detTable"></tbody></table>
+        </details>
+      </div>
+    </div>
 
-        <!-- La mini-caisse a ete retiree : le capital a son propre espace « Caisse » -->
-
+    <!-- CONVERTISSEUR DE COTES -->
+    <div class="card">
+      <div class="card-h"><h3 data-i18n="conv.title">🔁 Convertisseur de cotes</h3><span class="tagm" data-i18n="conv.tag">déc · frac · US</span></div>
+      <div class="card-b">
+        <div class="row3">
+          <label class="fld" style="margin:0"><span class="lab" data-i18n="conv.dec">Décimale</span>
+            <input type="text" id="ocDec" placeholder="ex : 2.50" inputmode="decimal"></label>
+          <label class="fld" style="margin:0"><span class="lab" data-i18n="conv.frac">Fractionnaire</span>
+            <input type="text" id="ocFrac" placeholder="ex : 3/2"></label>
+          <label class="fld" style="margin:0"><span class="lab" data-i18n="conv.us">Américaine</span>
+            <input type="text" id="ocAmer" placeholder="ex : +150"></label>
+        </div>
+        <div class="note" id="ocNote" data-i18n="conv.note">Tapez dans un champ, les deux autres se calculent. La cote décimale est celle à utiliser dans le détecteur et le calculateur.</div>
       </div>
     </div>
 
@@ -5273,26 +5283,29 @@
       "hdr.stats":"📊 Scores & stats ↗",
       "hdr.publish":"📢 Publier un surebet",
       "hdr.admin":"🛡️ Admin","hdr.logout":"↩ Déconnexion",
-      "det.title":"Détecteur de cote complémentaire",
-      "det.sub":"Ma cote → cotes qui donnent le surebet",
-      "det.myodd":"Ma cote détectée",
-      "det.threshold":"Seuil surebet min.",
-      "det.cap":"Cote adverse minimale à chercher",
+      "det.title":"🧭 Détecteur de cote",
+      "det.sub":"cote → cote adverse",
+      "det.myodd":"Votre cote",
+      "det.threshold":"Seuil surebet %",
+      "det.cap":"cote adverse minimale à chercher",
+      "det.more":"Voir toutes les cotes adverses",
+      "conv.tag":"déc · frac · US",
+      "calc.more":"Options avancées",
       "det.th_odd":"Cote adverse","det.th_sure":"Surebet","det.th_roi":"ROI garanti","det.th_status":"Statut",
       "det.hint":"<b>Lecture :</b> chaque ligne verte est exploitable. Reportez-la dans le calculateur pour connaître vos mises.",
-      "conv.title":"🔁 Convertisseur de cotes (décimale / fractionnaire / américaine)",
+      "conv.title":"🔁 Convertisseur de cotes",
       "conv.dec":"Décimale","conv.frac":"Fractionnaire","conv.us":"Américaine",
       "conv.note":"Tapez dans un champ, les deux autres se calculent. La cote décimale est celle à utiliser dans le détecteur et le calculateur.",
       "mc.head":"💰 Ma caisse","mc.balance":"Solde actuel","mc.deposited":"Déposé (net)","mc.profit":"Profit paris",
       "mc.pending":"En attente","mc.winrate":"Réussite",
       "mc.hint":"Ajoutez un dépôt dans la section « Caisse » pour suivre votre capital.",
-      "calc.title":"Calculateur & enregistrement","calc.sub":"Mises · bookmaker · date · historique",
+      "calc.title":"🧮 Calculateur de mises","calc.sub":"Mises · bookmaker · date · historique",
       "calc.nlegs":"Nombre de cotes","calc.legs2":"2 cotes","calc.legs3":"3 cotes",
       "calc.mode":"Mode de mise","calc.mode_equal":"Profit égal","calc.mode_fixed":"Mise fixe",
-      "calc.amount":"Montant total à investir","calc.fixleg":"Jambe à fixer",
+      "calc.amount":"Montant total (HTG)","calc.fixleg":"Jambe à fixer",
       "calc.round":"Arrondir les mises","calc.round_none":"Aucun (mise exacte)",
       "calc.date":"Date du pari","calc.match":"Match","calc.league":"Championnat",
-      "calc.save":"＋ Enregistrer le pari","calc.export":"⤓ Exporter Excel","calc.reset":"↺ Réinitialiser",
+      "calc.save":"＋ Enregistrer","calc.export":"⤓ Exporter","calc.reset":"↺",
       "bk.title":"Caisse (bankroll)","bk.sub":"Suivi de votre capital de jeu",
       "bk.deposit":"＋ Dépôt","bk.withdraw":"－ Retrait","bk.balance":"Solde actuel",
       "bk.deposited":"Capital déposé (net)","bk.profit":"Profit des paris","bk.growth":"Croissance",
@@ -5364,26 +5377,29 @@
       "hdr.stats":"📊 Scores & stats ↗",
       "hdr.publish":"📢 Publish a surebet",
       "hdr.admin":"🛡️ Admin","hdr.logout":"↩ Sign out",
-      "det.title":"Complementary odds detector",
-      "det.sub":"My odds → odds that create the surebet",
-      "det.myodd":"My detected odds",
-      "det.threshold":"Min. surebet threshold",
-      "det.cap":"Minimum opposing odds to look for",
+      "det.title":"🧭 Odds detector",
+      "det.sub":"odds → opposing odds",
+      "det.myodd":"Your odds",
+      "det.threshold":"Surebet threshold %",
+      "det.cap":"minimum opposing odds to look for",
+      "det.more":"Show all opposing odds",
+      "conv.tag":"dec · frac · US",
+      "calc.more":"Advanced options",
       "det.th_odd":"Opposing odds","det.th_sure":"Surebet","det.th_roi":"Guaranteed ROI","det.th_status":"Status",
       "det.hint":"<b>How to read:</b> every green row is usable. Enter it in the calculator to get your stakes.",
-      "conv.title":"🔁 Odds converter (decimal / fractional / American)",
+      "conv.title":"🔁 Odds converter",
       "conv.dec":"Decimal","conv.frac":"Fractional","conv.us":"American",
       "conv.note":"Type in one field, the other two are calculated. Decimal odds are the ones to use in the detector and calculator.",
       "mc.head":"💰 My bankroll","mc.balance":"Current balance","mc.deposited":"Deposited (net)","mc.profit":"Bet profit",
       "mc.pending":"Pending","mc.winrate":"Win rate",
       "mc.hint":"Add a deposit in the “Bankroll” section to track your capital.",
-      "calc.title":"Calculator & saving","calc.sub":"Stakes · bookmaker · date · history",
+      "calc.title":"🧮 Stake calculator","calc.sub":"Stakes · bookmaker · date · history",
       "calc.nlegs":"Number of odds","calc.legs2":"2 odds","calc.legs3":"3 odds",
       "calc.mode":"Staking mode","calc.mode_equal":"Equal profit","calc.mode_fixed":"Fixed stake",
-      "calc.amount":"Total amount to invest","calc.fixleg":"Leg to fix",
+      "calc.amount":"Total amount (HTG)","calc.fixleg":"Leg to fix",
       "calc.round":"Round the stakes","calc.round_none":"None (exact stake)",
       "calc.date":"Bet date","calc.match":"Match","calc.league":"League",
-      "calc.save":"＋ Save bet","calc.export":"⤓ Export to Excel","calc.reset":"↺ Reset",
+      "calc.save":"＋ Save","calc.export":"⤓ Export","calc.reset":"↺",
       "bk.title":"Bankroll","bk.sub":"Track your betting capital",
       "bk.deposit":"＋ Deposit","bk.withdraw":"－ Withdraw","bk.balance":"Current balance",
       "bk.deposited":"Deposited capital (net)","bk.profit":"Bet profit","bk.growth":"Growth",
