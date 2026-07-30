@@ -1054,9 +1054,22 @@
   details.more[open]>summary::before{transform:rotate(90deg)}
   details.more>summary:hover{color:var(--mint)}
 
-  /* ===== ESPACE COMMUNAUTE : chat + classement ===== */
-  .g-comm{display:grid;grid-template-columns:1.5fr 1fr;gap:20px;align-items:start}
+  /* ===== INTRO D'ESPACE (titre + description) ===== */
+  .view-intro{margin:0 2px 20px}
+  .view-intro h2{font-size:22px;font-weight:750;letter-spacing:-.025em;line-height:1.15}
+  .view-intro p{font-size:13.5px;color:var(--ink-dim);margin-top:5px;max-width:62ch;line-height:1.5}
+
+  /* ===== ESPACE COMMUNAUTE : chat + classement, memes hauteurs ===== */
+  .g-comm{display:grid;grid-template-columns:1.5fr 1fr;gap:20px;align-items:stretch}
   @media(max-width:900px){ .g-comm{grid-template-columns:1fr} }
+  /* les deux cartes occupent la meme hauteur, le contenu defile a l'interieur */
+  .g-comm > .card{display:flex;flex-direction:column;min-height:0;
+    max-height:calc(100vh - 250px);margin:0}
+  .g-comm > .card > .card-body{flex:1;display:flex;flex-direction:column;min-height:0}
+  /* la zone de messages prend la place restante au lieu d'une hauteur fixe */
+  #chatCard .chat-messages{height:auto;flex:1;min-height:140px}
+  .g-comm > .card > .lb-list{flex:1;overflow:auto;min-height:0}
+  @media(max-width:900px){ .g-comm > .card{max-height:none} #chatCard .chat-messages{height:340px;flex:none} }
   .eyebrow .eb-meta{font-family:var(--mono);font-size:10.5px;color:var(--ink-faint);white-space:nowrap}
   .lb-list{padding:8px 8px 12px}
   .lb-row{display:flex;align-items:center;gap:11px;padding:11px 8px;border-radius:10px}
@@ -1363,6 +1376,11 @@
   <!-- ═══ ESPACE 1 · SUREBETS ═══ -->
   <section class="view active" id="v-surebets">
 
+  <div class="view-intro">
+    <h2 data-i18n="sb.title">Surebets en direct</h2>
+    <p data-i18n="sb.intro">Choisissez un signal, chargez-le dans le calculateur, placez vos mises. Le profit est garanti quel que soit le résultat.</p>
+  </div>
+
   <!-- Carrousel sponsors : rempli par l'app si l'admin a ajouté des sponsors (sinon vide = masqué) -->
   <div id="sponsorZone"></div>
 
@@ -1475,6 +1493,11 @@
 
   <!-- ═══ ESPACE 2 · CAISSE ═══ -->
   <section class="view" id="v-caisse">
+
+  <div class="view-intro">
+    <h2 data-i18n="cs.title">Ma caisse</h2>
+    <p data-i18n="cs.intro">Votre capital, vos dépôts et retraits, et l'historique de tous vos paris.</p>
+  </div>
 
   <!-- ===== KÈS / BANKROLL ===== -->
   <div class="card bankroll-card" id="bankrollCard">
@@ -1590,6 +1613,11 @@
 
   <!-- ═══ ESPACE 3 · COMMUNAUTÉ ═══ -->
   <section class="view" id="v-chat">
+
+  <div class="view-intro">
+    <h2 data-i18n="cm.title">Communauté</h2>
+    <p data-i18n="cm.intro">Échangez en direct avec les autres parieurs. Les surebets officiels sont archivés dans le salon dédié.</p>
+  </div>
 
   <div class="eyebrow"><span class="eb-lb" data-i18n="cm.section">Salon communautaire</span><span class="eb-rule"></span>
     <span class="eb-meta" id="cmOnline">—</span></div>
@@ -5538,6 +5566,12 @@
       "sb.removed":"Surebet retiré de votre liste",
       "sb.warn_title":"Les cotes bougent vite",
       "sb.warn_desc":"Vérifiez chaque cote chez le bookmaker juste avant de miser : quelques secondes suffisent pour qu'elle change et que le profit garanti disparaisse. Placez la mise la plus incertaine en premier.",
+      "sb.title":"Surebets en direct",
+      "sb.intro":"Choisissez un signal, chargez-le dans le calculateur, placez vos mises. Le profit est garanti quel que soit le résultat.",
+      "cs.title":"Ma caisse",
+      "cs.intro":"Votre capital, vos dépôts et retraits, et l'historique de tous vos paris.",
+      "cm.title":"Communauté",
+      "cm.intro":"Échangez en direct avec les autres parieurs. Les surebets officiels sont archivés dans le salon dédié.",
       "cm.section":"Salon communautaire","cm.online":"en ligne",
       "lb.title":"🏆 Classement","lb.tag":"profit · 7 j","lb.you":"vous",
       "lb.empty":"Aucun résultat sur les 7 derniers jours.","lb.soon":"Classement bientôt disponible.",
@@ -5645,6 +5679,12 @@
       "sb.removed":"Surebet removed from your list",
       "sb.warn_title":"Odds move fast",
       "sb.warn_desc":"Check every price at the bookmaker right before staking: a few seconds are enough for it to change and for the guaranteed profit to vanish. Place the least reliable leg first.",
+      "sb.title":"Live surebets",
+      "sb.intro":"Pick a signal, load it into the calculator, place your stakes. The profit is guaranteed whatever the result.",
+      "cs.title":"My bankroll",
+      "cs.intro":"Your capital, your deposits and withdrawals, and the history of all your bets.",
+      "cm.title":"Community",
+      "cm.intro":"Talk live with other bettors. Official surebets are archived in the dedicated room.",
       "cm.section":"Community room","cm.online":"online",
       "lb.title":"🏆 Leaderboard","lb.tag":"profit · 7 d","lb.you":"you",
       "lb.empty":"No results over the last 7 days.","lb.soon":"Leaderboard coming soon.",
