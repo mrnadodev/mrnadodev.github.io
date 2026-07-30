@@ -1096,6 +1096,27 @@
   .card-h .hbtns{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
   .card-h .hbtns .btn{padding:7px 12px;font-size:12px}
 
+  /* ===== HISTORIQUE : ligne condensee + detail depliable ===== */
+  .row-exp{border:none;background:none;color:var(--ink-faint);cursor:pointer;font-size:12px;
+    padding:2px 4px;border-radius:5px;transition:.14s;line-height:1}
+  .row-exp:hover{color:var(--mint);background:var(--panel-2)}
+  .h-detail > td{background:var(--panel-2);padding:0 !important}
+  .hd-wrap{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;padding:14px 16px}
+  @media(max-width:640px){ .hd-wrap{grid-template-columns:1fr} }
+  .hd-lab,.hd-leg{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center}
+  .hd-lab{font-size:9.5px;text-transform:uppercase;letter-spacing:.09em;color:var(--ink-faint);
+    font-weight:700;padding-bottom:6px;border-bottom:1px solid var(--line)}
+  .hd-lab span:not(:first-child),.hd-leg .hd-od,.hd-leg .hd-st{text-align:right}
+  .hd-leg{padding:7px 0;font-size:12.5px;border-bottom:1px solid var(--line-soft)}
+  .hd-leg:last-child{border-bottom:none}
+  .hd-bk{font-weight:600;color:var(--ink)}
+  .hd-od{font-family:var(--mono);color:var(--ink)}
+  .hd-st{font-family:var(--mono);font-weight:700;color:var(--mint)}
+  .hd-sum{display:flex;flex-direction:column;gap:8px}
+  .hd-sum > div{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12.5px}
+  .hd-sum .k{color:var(--ink-faint)}
+  .hd-sum .v{font-family:var(--mono);font-weight:700;color:var(--ink)}
+
   /* ===== INTRO D'ESPACE (titre + description) ===== */
   .view-intro{margin:0 2px 20px}
   .view-intro h2{font-size:22px;font-weight:750;letter-spacing:-.025em;line-height:1.15}
@@ -1651,9 +1672,12 @@
         <div id="histLoader" class="hist-loader" style="display:none"></div>
         <div class="hist-wrap list-scroll">
           <table class="hist-table"><thead><tr>
-            <th>Date</th><th>Matchs</th><th>Cotes</th><th>Mode</th>
-            <th>Cotes</th><th>Bookmakers</th><th>Mises</th>
-            <th>Total</th><th>Retour</th><th>Profit</th><th>ROI</th><th>Statut</th>
+            <th style="width:26px"></th>
+            <th data-i18n="hist.th_date">Date</th>
+            <th data-i18n="hist.th_match">Match</th>
+            <th data-i18n="hist.th_profit">Profit</th>
+            <th data-i18n="hist.th_roi">ROI</th>
+            <th data-i18n="hist.th_status">Statut</th>
           </tr></thead><tbody id="histBody"></tbody></table>
           <div class="hist-empty" id="histEmpty">Aucun pari enregistré pour l'instant.</div>
         </div>
@@ -2528,19 +2552,17 @@
     note.innerHTML=isFiltered?`<b>${filtered.length}</b> pari(s) affiché(s) sur ${history.length} · <span style="color:var(--ink-dim)">filtre actif</span>`:'';
 
     if(history.length && !filtered.length){
-      body.innerHTML='<tr><td colspan="13" style="text-align:center;color:var(--ink-faint);padding:22px;font-family:var(--mono)">Aucun pari ne correspond au filtre.</td></tr>';
+      body.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--ink-faint);padding:22px;font-family:var(--mono)">Aucun pari ne correspond au filtre.</td></tr>';
     }
 
     filtered.slice().reverse().forEach(h=>{
       const st=h.status||'pending';
+      // ── Ligne principale : seulement l'essentiel (date, match, profit, ROI, statut)
       const tr=document.createElement('tr');
-      tr.innerHTML=`<td>${h.date}</td>
+      tr.className='h-row';
+      tr.innerHTML=`<td class="h-toggle"><button class="row-exp" data-exp="${h.id}" aria-expanded="false" title="${tOr('hist.detail','Voir le détail')}">▸</button></td>
+        <td>${h.date}</td>
         <td>${[h.match1,h.match2].filter(Boolean).join(' · ')||'<span style="color:var(--ink-faint)">—</span>'}${h.note?` <span class="note-dot" title="${h.note.replace(/"/g,'&quot;')}">📝</span>`:''}</td>
-        <td>${h.legs}</td><td><span class="tag">${h.mode}</span></td>
-        <td>${h.odds.map(o=>o.toFixed(2)).join(' / ')}</td>
-        <td>${h.bks.join(' · ')}</td>
-        <td>${h.stakes.map(s=>money(s)).join(' / ')}</td>
-        <td>${money(h.total)}</td><td>${money(h.guaranteedReturn)}</td>
         <td class="${h.profit>=0?'pos':'neg'}">${h.profit>=0?'+':''}${money(h.profit)}</td>
         <td class="${h.roi>=0?'pos':'neg'}">${h.roi>=0?'+':''}${h.roi.toFixed(2)}%</td>
         <td style="white-space:nowrap">
@@ -2553,7 +2575,35 @@
           <button class="del-btn" data-del="${h.id}" title="Supprimer">✕</button>
         </td>`;
       body.appendChild(tr);
+      // ── Ligne de detail, repliee : tout le reste reste accessible
+      const dt=document.createElement('tr');
+      dt.className='h-detail'; dt.dataset.detail=h.id; dt.style.display='none';
+      const legsHtml=h.odds.map((o,i)=>`<div class="hd-leg">
+          <span class="hd-bk">${escapeHTML(h.bks[i]||'—')}</span>
+          <span class="hd-od">${o.toFixed(2)}</span>
+          <span class="hd-st">${money(h.stakes[i]||0)}</span></div>`).join('');
+      dt.innerHTML=`<td colspan="6"><div class="hd-wrap">
+          <div class="hd-legs"><div class="hd-lab">
+            <span>${tOr('hist.d_bk','Bookmaker')}</span><span>${tOr('hist.d_odd','Cote')}</span><span>${tOr('hist.d_stake','Mise')}</span>
+          </div>${legsHtml}</div>
+          <div class="hd-sum">
+            <div><span class="k">${tOr('hist.d_legs','Issues')}</span><span class="v">${h.legs}</span></div>
+            <div><span class="k">${tOr('hist.d_mode','Mode')}</span><span class="v">${escapeHTML(String(h.mode||''))}</span></div>
+            <div><span class="k">${tOr('hist.d_total','Total misé')}</span><span class="v">${money(h.total)}</span></div>
+            <div><span class="k">${tOr('hist.d_return','Retour garanti')}</span><span class="v">${money(h.guaranteedReturn)}</span></div>
+          </div>
+        </div></td>`;
+      body.appendChild(dt);
     });
+    // ── Ouvrir / fermer le detail d'une ligne
+    $$('#histBody .row-exp').forEach(b=>b.addEventListener('click',()=>{
+      const row=document.querySelector('#histBody [data-detail="'+b.dataset.exp+'"]');
+      if(!row) return;
+      const open=row.style.display==='none';
+      row.style.display= open ? '' : 'none';
+      b.textContent= open ? '▾' : '▸';
+      b.setAttribute('aria-expanded', open?'true':'false');
+    }));
     $$('.stat-sel').forEach(sel=>sel.addEventListener('change',e=>{
       const id=e.target.dataset.id;const rec=history.find(x=>x.id===id);
       if(rec){rec.status=e.target.value;renderHistory();dbUpdateStatus(id,e.target.value);}
@@ -2822,18 +2872,26 @@
     const fmt = v => isPct ? ((v>=0?'+':'')+v.toFixed(2)+'%') : ((v>=0?'+':'')+money(v)+' HTG');
     const fmtAxis = v => isPct ? (Math.round(v)+'%') : ((v>=0?'+':'')+Math.round(v));
 
-    const W=680, H=200, padL=isPct?46:64, padR=16, padT=16, padB=28;
+    const W=680, H=210, padL=isPct?46:64, padR=18, padT=16, padB=34;
     const n=pts.length;
     const ys=pts.map(val).concat([0]);
     let minY=Math.min(...ys), maxY=Math.max(...ys);
     if(minY===maxY){minY-=1;maxY+=1;}
     const spanY=maxY-minY||1;
-    const px=i=> n===1 ? (padL+(W-padL-padR)/2) : padL + (W-padL-padR)*i/(n-1);
+
+    // ── Axe X au TEMPS REEL (et non par numero de pari) : deux paris le meme
+    //    jour ne s'etalent plus comme deux paris a un mois d'ecart.
+    const ts=p=>{ const d=new Date(p.date||''); return isNaN(d)?0:d.getTime(); };
+    const t0=ts(pts[0]), t1=ts(pts[n-1]);
+    const spanT=(t1-t0);
+    const useTime = spanT>0;                       // repli sur l'index si tout est le meme jour
+    const frac=(p,i)=> n===1 ? .5 : (useTime ? (ts(p)-t0)/spanT : i/(n-1));
+    const px=(p,i)=> padL + (W-padL-padR)*frac(p,i);
     const py=v=> padT + (H-padT-padB)*(1-(v-minY)/spanY);
     const zeroY=py(0);
 
-    const line=pts.map((p,i)=>(i?'L':'M')+px(i).toFixed(1)+' '+py(val(p)).toFixed(1)).join(' ');
-    const area=line+' L'+px(n-1).toFixed(1)+' '+zeroY.toFixed(1)+' L'+px(0).toFixed(1)+' '+zeroY.toFixed(1)+' Z';
+    const line=pts.map((p,i)=>(i?'L':'M')+px(p,i).toFixed(1)+' '+py(val(p)).toFixed(1)).join(' ');
+    const area=line+' L'+px(pts[n-1],n-1).toFixed(1)+' '+zeroY.toFixed(1)+' L'+px(pts[0],0).toFixed(1)+' '+zeroY.toFixed(1)+' Z';
 
     const ticks=[maxY,(maxY+minY)/2,minY];
     const grid=ticks.map(t=>{
@@ -2842,16 +2900,38 @@
         <text x="${padL-8}" y="${(+y+4)}" text-anchor="end" font-family="var(--mono)" font-size="10" fill="var(--ink-faint)">${fmtAxis(t)}</text>`;
     }).join('');
 
-    const dots=pts.map((p,i)=>`<circle cx="${px(i).toFixed(1)}" cy="${py(val(p)).toFixed(1)}" r="3"
+    // ── Etiquettes de dates sous l'axe (l'espace etait reserve mais inutilise)
+    const dLab=ms=>{ const d=new Date(ms);
+      return isNaN(d)?'' : d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'}); };
+    let xLabels='';
+    if(useTime){
+      const k=Math.min(5,Math.max(2,n));
+      for(let j=0;j<k;j++){
+        const f=j/(k-1);
+        const x=padL+(W-padL-padR)*f;
+        const anchor = j===0?'start' : (j===k-1?'end':'middle');
+        xLabels+=`<text x="${x.toFixed(1)}" y="${H-10}" text-anchor="${anchor}" font-family="var(--mono)" font-size="10" fill="var(--ink-faint)">${dLab(t0+spanT*f)}</text>`;
+      }
+    }else{
+      xLabels=`<text x="${padL}" y="${H-10}" text-anchor="start" font-family="var(--mono)" font-size="10" fill="var(--ink-faint)">${dLab(t0)}</text>`;
+    }
+
+    const dots=pts.map((p,i)=>`<circle cx="${px(p,i).toFixed(1)}" cy="${py(val(p)).toFixed(1)}" r="3"
       fill="${val(p)>=0?'var(--mint)':'var(--red)'}"><title>${p.date} · ${fmt(val(p))}</title></circle>`).join('');
 
     const lastPos=val(pts[n-1])>=0;
+    const col=lastPos?'var(--mint)':'var(--red)';
+    const lx=px(pts[n-1],n-1).toFixed(1), ly=py(val(pts[n-1])).toFixed(1);
+    // ── Dernier point mis en avant : la valeur actuelle saute aux yeux
+    const lastMark=`<circle cx="${lx}" cy="${ly}" r="9" fill="${col}" opacity=".18"/>
+      <circle cx="${lx}" cy="${ly}" r="4.5" fill="${col}" stroke="var(--panel)" stroke-width="1.5"/>`;
+
     el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Évolution du profit cumulé (${isPct?'pourcentage':'HTG'})">
       ${grid}
       <line x1="${padL}" y1="${zeroY.toFixed(1)}" x2="${W-padR}" y2="${zeroY.toFixed(1)}" stroke="var(--ink-faint)" stroke-width="1" stroke-dasharray="3 3"/>
       <path d="${area}" fill="${lastPos?'rgba(47,230,168,.12)':'rgba(255,93,108,.10)'}"/>
-      <path d="${line}" fill="none" stroke="${lastPos?'var(--mint)':'var(--red)'}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-      ${dots}
+      <path d="${line}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      ${dots}${lastMark}${xLabels}
     </svg>`;
   }
 
@@ -5646,6 +5726,9 @@
       "bk.moves":"Derniers mouvements","bk.moves_title":"💰 Mouvements",
       "cs.section":"Mouvements & historique",
       "hist.title2":"🧾 Mes paris","hist.stats":"Statistiques & filtres","hist.total":"au total",
+      "hist.th_date":"Date","hist.th_match":"Match","hist.th_profit":"Profit","hist.th_roi":"ROI","hist.th_status":"Statut",
+      "hist.detail":"Voir le détail","hist.d_bk":"Bookmaker","hist.d_odd":"Cote","hist.d_stake":"Mise",
+      "hist.d_legs":"Issues","hist.d_mode":"Mode","hist.d_total":"Total misé","hist.d_return":"Retour garanti",
       "hist.title":"Historique des paris","hist.sub":"Sauvegardé automatiquement · fichier Excel central",
       "hist.excel":"⤓ Excel","hist.backup":"⇪ Sauvegarde","hist.restore":"⇩ Restaurer","hist.clear":"Vider",
       "perf.staked":"Total misé","perf.profit":"Profit réalisé","perf.pending":"En attente","perf.winrate":"Taux de réussite",
@@ -5764,6 +5847,9 @@
       "bk.moves":"Latest movements","bk.moves_title":"💰 Movements",
       "cs.section":"Movements & history",
       "hist.title2":"🧾 My bets","hist.stats":"Stats & filters","hist.total":"in total",
+      "hist.th_date":"Date","hist.th_match":"Match","hist.th_profit":"Profit","hist.th_roi":"ROI","hist.th_status":"Status",
+      "hist.detail":"Show details","hist.d_bk":"Bookmaker","hist.d_odd":"Odds","hist.d_stake":"Stake",
+      "hist.d_legs":"Legs","hist.d_mode":"Mode","hist.d_total":"Total staked","hist.d_return":"Guaranteed return",
       "hist.title":"Bet history","hist.sub":"Saved automatically · central Excel file",
       "hist.excel":"⤓ Excel","hist.backup":"⇪ Backup","hist.restore":"⇩ Restore","hist.clear":"Clear",
       "perf.staked":"Total staked","perf.profit":"Realised profit","perf.pending":"Pending","perf.winrate":"Win rate",
