@@ -954,8 +954,8 @@
   .cms-f.en span{color:var(--blue)}
 
   /* ===== NAVIGATION EN 3 ESPACES ===== */
-  .app-nav{display:flex;gap:8px;margin:0 0 24px;position:sticky;top:0;z-index:55;
-    padding:12px 0;background:linear-gradient(var(--bg) 72%,transparent)}
+  /* non collant : le header de l'app est deja sticky en z-index 70, la nav passerait dessous */
+  .app-nav{display:flex;gap:8px;margin:-8px 0 24px;padding:0;flex-wrap:wrap}
   .nav-tab{border:1px solid var(--line);background:var(--panel);color:var(--ink-dim);
     font-family:var(--sans);font-size:13.5px;font-weight:650;padding:11px 20px;border-radius:12px;
     cursor:pointer;transition:.15s;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
@@ -1003,6 +1003,13 @@
     display:inline-flex;gap:6px;align-items:center;white-space:nowrap}
   .eyebrow .eb-dot{width:6px;height:6px;border-radius:50%;background:var(--mint);display:inline-block;
     animation:pulse 2s infinite}
+
+  /* ===== DISPOSITION : signaux a gauche, calculateur a droite ===== */
+  .sb-grid{display:grid;grid-template-columns:1.35fr 1fr;gap:22px;align-items:start;margin-bottom:6px}
+  .sb-grid > .card{margin:0}
+  @media(max-width:900px){ .sb-grid{grid-template-columns:1fr} }
+  /* sous « Outils » il ne reste que le detecteur : il occupe toute la largeur */
+  #v-surebets .cols{grid-template-columns:1fr}
 
   /* ===== PANNEAU SUREBETS DANS LA PAGE ===== */
   .sb-panel{position:relative;margin-bottom:6px}
@@ -1198,7 +1205,63 @@
   <!-- Surebets en direct, affichés dans la page -->
   <div class="eyebrow"><span class="eb-lb" data-i18n="sb.section">Signaux en direct</span><span class="eb-rule"></span>
     <span class="eb-live"><span class="eb-dot"></span> <span data-i18n="sb.realtime">temps réel</span></span></div>
-  <div id="sbPanel" class="sb-panel"></div>
+  <div class="sb-grid">
+    <div id="sbPanel" class="sb-panel"></div>
+      <!-- CALCULATEUR -->
+      <div class="card">
+        <div class="card-head">
+          <div class="title"><span class="num"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="8" y2="10"/><line x1="12" y1="10" x2="12" y2="10"/><line x1="16" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="18"/><line x1="8" y1="18" x2="12" y2="18"/></svg></span>
+            <div><h2 data-i18n="calc.title">Calculateur & enregistrement</h2>
+            <span class="sub" data-i18n="calc.sub">Mises · bookmaker · date · historique</span></div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="row r2" style="margin-bottom:18px">
+            <div><span class="lab" data-i18n="calc.nlegs">Nombre de cotes</span>
+              <div class="seg" id="segLegs"><button data-legs="2" class="on" data-i18n="calc.legs2">2 cotes</button><button data-legs="3" data-i18n="calc.legs3">3 cotes</button></div></div>
+            <div><span class="lab" data-i18n="calc.mode">Mode de mise</span>
+              <div class="seg" id="segMode"><button data-mode="equal" class="on" data-i18n="calc.mode_equal">Profit égal</button><button data-mode="fixed" data-i18n="calc.mode_fixed">Mise fixe</button></div></div>
+          </div>
+  
+          <div class="row r2" id="amountRow" style="margin-bottom:16px">
+            <label class="fld" style="margin:0"><span class="lab" id="amtLab" data-i18n="calc.amount">Montant total à investir</span>
+              <input type="number" id="amount" value="100" step="1" min="0"></label>
+            <label class="fld" style="margin:0" id="fixedLegWrap"><span class="lab" data-i18n="calc.fixleg">Jambe à fixer</span>
+              <select id="fixedLeg"><option value="0">Cote #1</option><option value="1">Cote #2</option><option value="2">Cote #3</option></select></label>
+          </div>
+  
+          <label class="fld" style="margin-bottom:16px"><span class="lab" data-i18n="calc.round">Arrondir les mises</span>
+            <select id="roundStep">
+              <option value="0" data-i18n="calc.round_none">Aucun (mise exacte)</option>
+              <option value="1">À 1 HTG</option>
+              <option value="5">À 5 HTG</option>
+              <option value="10">À 10 HTG</option>
+              <option value="25">À 25 HTG</option>
+              <option value="50">À 50 HTG</option>
+            </select></label>
+  
+          <label class="fld"><span class="lab" data-i18n="calc.date">Date du pari</span><input type="date" id="betDate"></label>
+  
+          <div class="row r2" style="margin-bottom:16px">
+            <label class="fld" style="margin:0"><span class="lab" data-i18n="calc.match">Match</span>
+              <input type="text" id="match1" placeholder="ex : PSG vs Marseille"></label>
+            <label class="fld" style="margin:0"><span class="lab" data-i18n="calc.league">Championnat</span>
+              <input type="text" id="match2" placeholder="ex : Ligue 1"></label>
+          </div>
+  
+          <!-- Cote + bookmaker par issue -->
+          <div id="issueBlocks"></div>
+  
+          <div id="calcOut"></div>
+  
+          <div class="actions">
+            <button class="btn primary" id="saveBtn" data-i18n="calc.save">＋ Enregistrer le pari</button>
+            <button class="btn ghost" id="exportBtn" data-i18n="calc.export">⤓ Exporter Excel</button>
+            <button class="btn ghost" id="resetBtn" data-i18n="calc.reset">↺ Réinitialiser</button>
+          </div>
+        </div>
+      </div>
+  </div>
 
   <div class="eyebrow"><span class="eb-lb" data-i18n="sb.tools">Outils</span><span class="eb-rule"></span></div>
 
@@ -1261,60 +1324,6 @@
       </div>
     </div>
 
-    <!-- CALCULATEUR -->
-    <div class="card">
-      <div class="card-head">
-        <div class="title"><span class="num"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="8" y2="10"/><line x1="12" y1="10" x2="12" y2="10"/><line x1="16" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="18"/><line x1="8" y1="18" x2="12" y2="18"/></svg></span>
-          <div><h2 data-i18n="calc.title">Calculateur & enregistrement</h2>
-          <span class="sub" data-i18n="calc.sub">Mises · bookmaker · date · historique</span></div>
-        </div>
-      </div>
-      <div class="card-body">
-        <div class="row r2" style="margin-bottom:18px">
-          <div><span class="lab" data-i18n="calc.nlegs">Nombre de cotes</span>
-            <div class="seg" id="segLegs"><button data-legs="2" class="on" data-i18n="calc.legs2">2 cotes</button><button data-legs="3" data-i18n="calc.legs3">3 cotes</button></div></div>
-          <div><span class="lab" data-i18n="calc.mode">Mode de mise</span>
-            <div class="seg" id="segMode"><button data-mode="equal" class="on" data-i18n="calc.mode_equal">Profit égal</button><button data-mode="fixed" data-i18n="calc.mode_fixed">Mise fixe</button></div></div>
-        </div>
-
-        <div class="row r2" id="amountRow" style="margin-bottom:16px">
-          <label class="fld" style="margin:0"><span class="lab" id="amtLab" data-i18n="calc.amount">Montant total à investir</span>
-            <input type="number" id="amount" value="100" step="1" min="0"></label>
-          <label class="fld" style="margin:0" id="fixedLegWrap"><span class="lab" data-i18n="calc.fixleg">Jambe à fixer</span>
-            <select id="fixedLeg"><option value="0">Cote #1</option><option value="1">Cote #2</option><option value="2">Cote #3</option></select></label>
-        </div>
-
-        <label class="fld" style="margin-bottom:16px"><span class="lab" data-i18n="calc.round">Arrondir les mises</span>
-          <select id="roundStep">
-            <option value="0" data-i18n="calc.round_none">Aucun (mise exacte)</option>
-            <option value="1">À 1 HTG</option>
-            <option value="5">À 5 HTG</option>
-            <option value="10">À 10 HTG</option>
-            <option value="25">À 25 HTG</option>
-            <option value="50">À 50 HTG</option>
-          </select></label>
-
-        <label class="fld"><span class="lab" data-i18n="calc.date">Date du pari</span><input type="date" id="betDate"></label>
-
-        <div class="row r2" style="margin-bottom:16px">
-          <label class="fld" style="margin:0"><span class="lab" data-i18n="calc.match">Match</span>
-            <input type="text" id="match1" placeholder="ex : PSG vs Marseille"></label>
-          <label class="fld" style="margin:0"><span class="lab" data-i18n="calc.league">Championnat</span>
-            <input type="text" id="match2" placeholder="ex : Ligue 1"></label>
-        </div>
-
-        <!-- Cote + bookmaker par issue -->
-        <div id="issueBlocks"></div>
-
-        <div id="calcOut"></div>
-
-        <div class="actions">
-          <button class="btn primary" id="saveBtn" data-i18n="calc.save">＋ Enregistrer le pari</button>
-          <button class="btn ghost" id="exportBtn" data-i18n="calc.export">⤓ Exporter Excel</button>
-          <button class="btn ghost" id="resetBtn" data-i18n="calc.reset">↺ Réinitialiser</button>
-        </div>
-      </div>
-    </div>
   </div>
 
   </section>
