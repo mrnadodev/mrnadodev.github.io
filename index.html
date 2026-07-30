@@ -981,6 +981,23 @@
     .chat-fab{bottom:88px}
   }
 
+  /* ===== EN-TÊTE ÉPURÉ (comme la maquette) ===== */
+  .live-pill{display:inline-flex;align-items:center;gap:7px}
+  .live-pill .lp-dot{width:8px;height:8px;border-radius:50%;background:var(--mint);
+    display:inline-block;animation:pulse 2s infinite;flex:none}
+  /* Menu du compte : regroupe Publier / Admin / Guide / Telegram / Stats / Déconnexion */
+  .user-menu{position:relative;display:inline-block}
+  .um-drop{position:absolute;right:0;top:calc(100% + 8px);min-width:220px;z-index:120;
+    background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:6px;
+    box-shadow:0 24px 60px -18px rgba(0,0,0,.55);display:none;flex-direction:column;gap:2px}
+  .user-menu.open .um-drop{display:flex}
+  .um-item{display:flex;align-items:center;gap:9px;width:100%;text-align:left;border:none;background:none;
+    color:var(--ink);font-family:var(--sans);font-size:13px;font-weight:600;padding:10px 12px;
+    border-radius:9px;cursor:pointer;text-decoration:none;white-space:nowrap;transition:.13s}
+  .um-item:hover{background:var(--panel-2);color:var(--mint)}
+  .um-item.danger{color:var(--ink-dim)} .um-item.danger:hover{color:var(--red);background:rgba(255,93,108,.08)}
+  .um-sep{height:1px;background:var(--line);margin:5px 4px}
+
   /* ===== BANDEAU DE CONFIANCE ===== */
   .trust{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:6px}
   .tchip{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);
@@ -1131,7 +1148,6 @@
 
   <header>
     <div class="brand">
-      <span class="kicker" data-i18n="brand.kicker">Arbitrage · Value scanner</span>
       <h1><span class="hlogo" id="dashLogo">
         <svg class="ne-mark" viewBox="0 0 120 120" role="img" aria-label="NADOEDGE">
           <defs>
@@ -1165,19 +1181,23 @@
         <svg class="ic-moon" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
       </button>
       <button class="icon-chip" id="langBtn" title="English / Français" aria-label="Changer de langue" style="font-family:var(--mono);font-weight:700;font-size:12px">EN</button>
-      <div class="chip"><span data-i18n="hdr.threshold">Seuil actif</span> <b id="thrChip">4%</b></div>
-      <div class="chip"><span data-i18n="hdr.saved">Paris enregistrés</span> <b id="countChip">0</b></div>
-      <span class="chip" id="syncChip" style="display:none">☁️ <b id="syncState">Synchronisé</b></span>
+      <span class="chip live-pill" id="syncChip" style="display:none"><span class="lp-dot"></span> <b id="syncState">Synchronisé</b></span>
       <button class="sub-chip" id="subChip" style="display:none" title="Abonnement Surebets"><span class="sc-ic">🎯</span><span id="subChipTxt">Surebets</span></button>
-      <a href="https://t.me/NADOEDGE_surebets" target="_blank" rel="noopener" class="btn ghost" id="tgBtn" style="padding:6px 12px;font-size:12px;text-decoration:none" title="Recevoir les alertes surebet sur Telegram">📲 Telegram</a>
-      <button class="btn ghost" id="tourBtn" style="padding:6px 12px;font-size:12px" title="Revoir le guide" data-i18n="hdr.guide">❔ Guide</button>
-      <a href="https://www.sofascore.com/" target="_blank" rel="noopener" class="btn ghost" id="statsBtn" style="padding:6px 14px;font-size:12px;text-decoration:none" data-i18n="hdr.stats">📊 Scores & stats ↗</a>
-      <button class="btn primary" id="publishBtn" style="display:none;padding:6px 14px;font-size:12px" data-i18n="hdr.publish">📢 Publier un surebet</button>
-      <button class="btn ghost" id="adminBtn" style="display:none;padding:6px 14px;font-size:12px" title="Tableau de bord admin" data-i18n="hdr.admin">🛡️ Admin</button>
-      <button class="icon-chip" id="userChip" style="display:none" title="—" aria-label="Compte connecté"><span id="userInitial">?</span></button>
-      <button class="icon-chip logout" id="logoutBtn" style="display:none" title="Déconnexion" aria-label="Déconnexion">
-        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-      </button>
+
+      <!-- Menu du compte : regroupe les actions secondaires (comme la maquette) -->
+      <div class="user-menu" id="userMenu">
+        <button class="icon-chip" id="userChip" style="display:none" title="—" aria-label="Menu du compte"><span id="userInitial">?</span></button>
+        <div class="um-drop" id="umDrop">
+          <button class="um-item" id="publishBtn" style="display:none" data-i18n="hdr.publish">📢 Publier un surebet</button>
+          <button class="um-item" id="adminBtn" style="display:none" data-i18n="hdr.admin">🛡️ Admin</button>
+          <div class="um-sep"></div>
+          <button class="um-item" id="tourBtn" data-i18n="hdr.guide">❔ Guide</button>
+          <a class="um-item" href="https://t.me/NADOEDGE_surebets" target="_blank" rel="noopener" id="tgBtn">📲 Telegram</a>
+          <a class="um-item" href="https://www.sofascore.com/" target="_blank" rel="noopener" id="statsBtn" data-i18n="hdr.stats">📊 Scores & stats ↗</a>
+          <div class="um-sep"></div>
+          <button class="um-item danger" id="logoutBtn" data-i18n="hdr.logout">↩ Déconnexion</button>
+        </div>
+      </div>
       <span id="userEmail" style="display:none"></span>
     </div>
   </header>
@@ -1305,22 +1325,8 @@
           <tbody id="detTable"></tbody></table>
         <div class="hint" data-i18n-html="det.hint"><b>Lecture :</b> chaque ligne verte est exploitable. Reportez-la dans le calculateur pour connaître vos mises.</div>
 
-        <div class="mini-caisse" id="miniCaisse">
-          <div class="mc-head" data-i18n="mc.head">💰 Ma caisse</div>
-          <div class="mc-balance">
-            <span class="mc-k" data-i18n="mc.balance">Solde actuel</span>
-            <span class="mc-v" id="mcBalance">—</span>
-          </div>
-          <div class="mc-row">
-            <div class="mc-cell"><span class="mc-ck" data-i18n="mc.deposited">Déposé (net)</span><span class="mc-cv" id="mcDeposited">—</span></div>
-            <div class="mc-cell"><span class="mc-ck" data-i18n="mc.profit">Profit paris</span><span class="mc-cv" id="mcProfit">—</span></div>
-          </div>
-          <div class="mc-row">
-            <div class="mc-cell"><span class="mc-ck" data-i18n="mc.pending">En attente</span><span class="mc-cv" id="mcPending">—</span></div>
-            <div class="mc-cell"><span class="mc-ck" data-i18n="mc.winrate">Réussite</span><span class="mc-cv" id="mcWinrate">—</span></div>
-          </div>
-          <div class="mc-hint" id="mcHint" data-i18n="mc.hint">Ajoutez un dépôt dans la section « Caisse » pour suivre votre capital.</div>
-        </div>
+        <!-- La mini-caisse a ete retiree : le capital a son propre espace « Caisse » -->
+
       </div>
     </div>
 
@@ -1915,9 +1921,10 @@
 
   // États : 'ok' (synchronisé), 'busy' (chargement/envoi), 'offline', 'error'
   function setSync(state, kind){
-    const c=$('#syncChip'); if(!currentUser){c.style.display='none';return;}
+    const c=$('#syncChip'); if(!c) return;
+    if(!currentUser){c.style.display='none';return;}
     c.style.display='';
-    $('#syncState').textContent=state;
+    const s=$('#syncState'); if(s) s.textContent=state;
     c.classList.remove('sync-ok','sync-busy','sync-offline','sync-error');
     c.classList.add('sync-'+(kind||'ok'));
   }
@@ -2066,7 +2073,8 @@
   function roiFor(a,b){const S=1/a+1/b;return (1-S)/S*100;}
   function renderDetector(){
     const a=parseFloat($('#detOdd').value)||0, thr=parseFloat($('#detThr').value)||0;
-    $('#echoOdd').textContent=a.toFixed(2);$('#echoThr').textContent=thr+'%';$('#thrChip').textContent=thr+'%';
+    $('#echoOdd').textContent=a.toFixed(2);$('#echoThr').textContent=thr+'%';
+    $('#thrChip') && ($('#thrChip').textContent=thr+'%');
     const minB=minComplementOdd(a,thr);
     const disp=(minB===Infinity||minB<=1)?'impossible':minB.toFixed(2);
     $('#minOdd').textContent=disp==='impossible'?'—':disp;
@@ -2290,7 +2298,7 @@
   function renderHistory(){
     if(loadFailed){ return; }
     clearHistLoader();
-    $('#countChip').textContent=history.length;
+    $('#countChip') && ($('#countChip').textContent=history.length);
     refreshBookmakerFilter();
     const body=$('#histBody');body.innerHTML='';
     const filtered=applyFilters(history);
@@ -2832,7 +2840,7 @@
   function clearAuthError(){$('#authError').style.display='none';$('#authOk').style.display='none';}
 
   function showGate(){$('#authGate').classList.remove('hidden');
-    $('#userChip').style.display='none';$('#logoutBtn').style.display='none';$('#syncChip').style.display='none';}
+    ['#userChip','#logoutBtn','#syncChip','#userMenuBtn'].forEach(s=>{ const e=$(s); if(e) e.style.display='none'; });}
   // Vérifie le statut du compte (approuvé / en attente / bloqué)
   let currentRole='user'; // 'user' | 'publisher' (admin géré séparément)
   let tourSeen=false;
@@ -3589,6 +3597,16 @@
     if(users) loadUsers(); else loadPayments();
   }
   $$('#adminDash .adash-subtab').forEach(b=>b.addEventListener('click',()=>manageTab(b.dataset.mtab)));
+
+  /* ===== MENU DU COMPTE (en-tête) ===== */
+  (function(){
+    const menu=$('#userMenu'), btn=$('#userChip');
+    if(!menu||!btn) return;
+    btn.addEventListener('click',e=>{ e.stopPropagation(); menu.classList.toggle('open'); });
+    document.addEventListener('click',e=>{ if(!e.target.closest('#userMenu')) menu.classList.remove('open'); });
+    // fermer le menu apres avoir choisi une action
+    $$('#umDrop .um-item').forEach(i=>i.addEventListener('click',()=>menu.classList.remove('open')));
+  })();
 
   /* ===== NAVIGATION ENTRE LES 3 ESPACES ===== */
   let currentView='surebets';
@@ -5254,7 +5272,7 @@
       "hdr.guide":"❔ Guide",
       "hdr.stats":"📊 Scores & stats ↗",
       "hdr.publish":"📢 Publier un surebet",
-      "hdr.admin":"🛡️ Admin",
+      "hdr.admin":"🛡️ Admin","hdr.logout":"↩ Déconnexion",
       "det.title":"Détecteur de cote complémentaire",
       "det.sub":"Ma cote → cotes qui donnent le surebet",
       "det.myodd":"Ma cote détectée",
@@ -5345,7 +5363,7 @@
       "hdr.guide":"❔ Guide",
       "hdr.stats":"📊 Scores & stats ↗",
       "hdr.publish":"📢 Publish a surebet",
-      "hdr.admin":"🛡️ Admin",
+      "hdr.admin":"🛡️ Admin","hdr.logout":"↩ Sign out",
       "det.title":"Complementary odds detector",
       "det.sub":"My odds → odds that create the surebet",
       "det.myodd":"My detected odds",
