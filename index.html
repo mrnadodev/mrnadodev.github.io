@@ -1157,18 +1157,22 @@
   .issue-blk .calcOdd,.issue-blk .calcBk{width:100%}
   details.more.top{margin:0 0 16px;border-top:none;border-bottom:1px solid var(--line-soft);padding:0 0 12px}
 
-  /* ===== AVERTISSEMENT COTES (remplit la hauteur restante) ===== */
-  .sb-warn{margin-top:auto;display:flex;gap:12px;align-items:flex-start;
+  /* ===== AVERTISSEMENT COTES (dans le ticket, remplit la hauteur restante) ===== */
+  .sb-warn{margin:16px 20px 0;display:flex;gap:12px;align-items:flex-start;
     background:rgba(245,197,66,.07);border:1px solid rgba(245,197,66,.28);
-    border-radius:14px;padding:14px 16px}
+    border-radius:12px;padding:13px 15px}
   .sb-warn .sw-ic{font-size:18px;flex:none;line-height:1.3}
   .sb-warn .sw-t{font-size:13px;font-weight:700;color:var(--gold)}
   .sb-warn .sw-d{font-size:12px;color:var(--ink-dim);line-height:1.55;margin-top:3px}
 
   /* ===== PANNEAU SUREBETS DANS LA PAGE ===== */
-  /* colonne en hauteur pleine : l'avertissement se cale en bas, plus de vide */
+  /* colonne en hauteur pleine : le ticket s'etire pour occuper tout l'espace */
   .sb-panel{position:relative;margin-bottom:6px;display:flex;flex-direction:column;height:100%;gap:16px}
   .sb-panel > .sb-select{margin-bottom:0}
+  #sbTicket{flex:1;display:flex}
+  #sbTicket > .ticket{flex:1;display:flex;flex-direction:column}
+  /* le pied du ticket (minuterie + bouton) reste colle en bas */
+  #sbTicket > .ticket > .tk-foot{margin-top:auto}
   .sb-empty{background:var(--panel);border:1px dashed var(--line);border-radius:14px;padding:26px 20px;
     text-align:center;color:var(--ink-dim);font-size:13px}
   .sb-empty .se-ic{font-size:28px;display:block;margin-bottom:8px;opacity:.65}
@@ -4763,12 +4767,7 @@
         </button>
         <div class="sb-options" id="sbOptions" role="listbox">${opts}</div>
       </div>
-      <div id="sbTicket"></div>
-      <div class="sb-warn">
-        <span class="sw-ic">⚠️</span>
-        <div><div class="sw-t">${escapeHTML(tOr('sb.warn_title','Les cotes bougent vite'))}</div>
-          <div class="sw-d">${escapeHTML(tOr('sb.warn_desc','Vérifiez chaque cote chez le bookmaker juste avant de miser : quelques secondes suffisent pour qu\'elle change et que le profit garanti disparaisse. Placez la mise la plus incertaine en premier.'))}</div></div>
-      </div>`;
+      <div id="sbTicket"></div>`;
     renderSbTicket();
     const selBox=$('#sbSelect'), curBtn=$('#sbCurrent');
     curBtn.addEventListener('click',e=>{ e.stopPropagation(); selBox.classList.toggle('open');
@@ -4805,6 +4804,11 @@
       </div>
       <div class="tk-legs">${legsHtml||'<span class="tk-none">Détails dans la note.</span>'}</div>
       ${s.note?`<div class="tk-note">📝 ${escapeHTML(s.note)}</div>`:''}
+      <div class="sb-warn">
+        <span class="sw-ic">⚠️</span>
+        <div><div class="sw-t">${escapeHTML(tOr('sb.warn_title','Les cotes bougent vite'))}</div>
+          <div class="sw-d">${escapeHTML(tOr('sb.warn_desc','Vérifiez chaque cote chez le bookmaker juste avant de miser : quelques secondes suffisent pour qu\'elle change et que le profit garanti disparaisse. Placez la mise la plus incertaine en premier.'))}</div></div>
+      </div>
       <div class="tk-foot">
         <div class="tk-exp"><div class="tk-exp-r">${tOr('sb.expires','expire dans')} <b data-sbtimer>${sigLeft(s)}</b></div>
           <div class="tk-track"><i style="width:${pct}%"></i></div></div>
