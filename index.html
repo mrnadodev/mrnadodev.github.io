@@ -1068,6 +1068,11 @@
   .lb-nm{flex:1;font-size:13px;font-weight:600;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .lb-p{font-family:var(--mono);font-weight:700;color:var(--mint);font-size:13px;flex:none}
   .lb-empty{font-size:12.5px;color:var(--ink-dim);padding:18px;text-align:center}
+  /* en-tete du chat : salons a gauche, salon courant a droite (maquette) */
+  #chatCard .card-h .chat-rooms{margin:0;border:none;padding:0}
+  #chatCard .card-body{padding-top:14px}
+  #chatRules .cr-list{display:flex;flex-direction:column;gap:7px;margin-top:10px;
+    font-size:12px;color:var(--ink-dim);line-height:1.5}
 
   /* ===== SELECTEUR DEROULANT DES SUREBETS ===== */
   .sb-select{position:relative;margin-bottom:16px}
@@ -1128,7 +1133,10 @@
   .tk-exp-r b{font-family:var(--mono);font-size:13px;color:var(--gold)}
   .tk-track{height:5px;border-radius:999px;background:var(--panel-2);overflow:hidden}
   .tk-track i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--gold),var(--red));transition:width 1s linear}
-  .tk-use{white-space:nowrap}
+  .tk-btns{display:flex;gap:8px;flex:none}
+  .tk-use,.tk-drop{white-space:nowrap}
+  .tk-drop{color:var(--ink-dim)}
+  .tk-drop:hover{border-color:var(--red);color:var(--red)}
 
   /* ===== SORTIE DU CALCULATEUR (comme la maquette) ===== */
   .calc-grid{display:grid;grid-template-columns:1fr auto auto;gap:9px 14px;align-items:center;
@@ -1589,27 +1597,28 @@
   <div class="g-comm">
   <!-- ===== CHAT COMMUNAUTAIRE ===== -->
   <div class="card chat-card" id="chatCard">
-    <div class="card-head">
-      <div class="title"><span class="num"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></span>
-        <div><h2 style="display:flex;align-items:center;gap:10px"><span data-i18n="chat.title">Chat communautaire</span>
-          <button class="eye-btn on" id="chatEye" title="Afficher / masquer" aria-label="Afficher ou masquer le chat">
-            <svg class="eye-open" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            <svg class="eye-off" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-          </button>
-        </h2><span class="sub" data-i18n="chat.sub">Discutez avec les autres parieurs · en direct</span></div></div>
+    <div class="card-h">
+      <div class="chat-rooms" id="chatRooms">
+        <button class="chat-room-tab on" data-room="general" data-i18n="chat.room_general">💬 Général</button>
+        <button class="chat-room-tab" data-room="surebets" data-i18n="chat.room_surebets">🎯 Surebets</button>
+      </div>
+      <span class="tagm" id="chatRoomTag">Général</span>
+      <!-- Contrôles de modération : pilotés depuis le tableau de bord admin -->
       <span id="adminChatBtns" style="display:none">
-        <button class="btn ghost" id="chatPoll" style="padding:8px 14px;font-size:12px" data-i18n="chat.poll">📊 Sondage</button>
-        <button class="btn ghost" id="chatRoomLock" style="padding:8px 14px;font-size:12px">🔓 Salon ouvert</button>
-        <button class="btn ghost" id="chatPollArchive" style="padding:8px 14px;font-size:12px" data-i18n="chat.results">🗂 Résultats</button>
-        <button class="btn ghost" id="chatTimerToggle" style="padding:8px 14px;font-size:12px">⏱️ Minuteur : ON</button>
-        <button class="btn ghost" id="chatClear" style="padding:8px 14px;font-size:12px" data-i18n="chat.clear">🧹 Vider le chat</button>
+        <button class="btn ghost" id="chatPoll" data-i18n="chat.poll">📊 Sondage</button>
+        <button class="btn ghost" id="chatRoomLock">🔓 Salon ouvert</button>
+        <button class="btn ghost" id="chatPollArchive" data-i18n="chat.results">🗂 Résultats</button>
+        <button class="btn ghost" id="chatTimerToggle">⏱️ Minuteur : ON</button>
+        <button class="btn ghost" id="chatClear" data-i18n="chat.clear">🧹 Vider le chat</button>
       </span>
+      <button class="eye-btn on" id="chatEye" style="display:none" aria-label="Afficher ou masquer le chat">
+        <svg class="eye-open" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        <svg class="eye-off" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+      </button>
     </div>
     <div class="card-body">
-      <div class="chat-rules" id="chatRules">
-        <button class="cr-toggle" id="chatRulesToggle" aria-expanded="true">
-          <span data-i18n="chat.rules">📌 Règles du chat</span><span class="cr-chevron">▾</span>
-        </button>
+      <details class="more" id="chatRules">
+        <summary data-i18n="chat.rules">📌 Règles du chat</summary>
         <div class="cr-list" id="chatRulesList">
           <span data-i18n="chat.rule1">✅ Restez courtois et respectueux avec tout le monde.</span>
           <span data-i18n="chat.rule2">🚫 Pas d'insultes, de spam, ni de publicité.</span>
@@ -1617,11 +1626,7 @@
           <span data-i18n="chat.rule4">💸 Ne demandez jamais d'argent et ne partagez pas d'infos bancaires.</span>
           <span data-i18n="chat.rule5">⚠️ Le chat sert à discuter — vérifiez toujours les cotes vous-même. Toute violation = blocage.</span>
         </div>
-      </div>
-      <div class="chat-rooms" id="chatRooms">
-        <button class="chat-room-tab on" data-room="general" data-i18n="chat.room_general">💬 Général</button>
-        <button class="chat-room-tab" data-room="surebets" data-i18n="chat.room_surebets">🎯 Surebets</button>
-      </div>
+      </details>
       <div id="activePoll" class="active-poll" style="display:none"></div>
       <div id="chatMessages" class="chat-messages"><div class="chat-loading">Chargement…</div></div>
       <div id="chatReplyBar" class="chat-reply-bar" style="display:none">
@@ -3148,7 +3153,9 @@
     $('#userChip').title=(currentUsername?currentUsername+' · ':'')+user.email;
     $('#logoutBtn').style.display='';
     $('#adminHistBtns').style.display = isAdmin(user) ? 'inline-flex' : 'none';
-    $('#adminChatBtns').style.display = isAdmin(user) ? 'inline-flex' : 'none';
+    // Les contrôles de modération restent dans le DOM (pilotés depuis le tableau
+    // de bord admin) mais ne s'affichent plus dans l'en-tête du chat.
+    $('#adminChatBtns') && ($('#adminChatBtns').style.display='none');
     $('#publishBtn').style.display = canPublish() ? 'inline-flex' : 'none';
     $('#adminBtn') && ($('#adminBtn').style.display = isAdmin(user) ? 'inline-flex' : 'none');
     await loadAppSettings();          // prix / durée / police dynamiques
@@ -4624,6 +4631,7 @@
     $$('#chatRooms .chat-room-tab').forEach(t=>t.classList.toggle('on',t===tab));
     tab.classList.remove('has-new');
     currentRoom=tab.dataset.room;
+    const tg=$('#chatRoomTag'); if(tg) tg.textContent = currentRoom==='surebets' ? 'Surebets' : 'Général';
     typingUsers={}; renderTyping();
     renderChat(true);
     renderActivePoll();
@@ -4631,12 +4639,12 @@
     updateRoomLockBtn();
     hideMentionList();
   }));
-  // Règles du chat : replier/déplier
-  $('#chatRulesToggle') && $('#chatRulesToggle').addEventListener('click',()=>{
-    const box=$('#chatRules'); const collapsed=box.classList.toggle('collapsed');
-    $('#chatRulesToggle').setAttribute('aria-expanded', collapsed?'false':'true');
-    try{localStorage.setItem('NADOEDGE_chat_rules', collapsed?'0':'1');}catch(e){}
-  });
+  // Règles du chat : repli natif <details>, on mémorise l'état d'ouverture
+  (function(){
+    const box=$('#chatRules'); if(!box) return;
+    try{ if(localStorage.getItem('NADOEDGE_chat_rules')==='1') box.open=true; }catch(e){}
+    box.addEventListener('toggle',()=>{ try{ localStorage.setItem('NADOEDGE_chat_rules', box.open?'1':'0'); }catch(e){} });
+  })();
   // Quand le chat devient visible en défilant, on efface le compteur
   window.addEventListener('scroll',()=>{
     if(chatInView() && chatUnread>0){ chatUnread=0; }
@@ -4784,6 +4792,16 @@
     const m=Math.max(0,Math.floor(ms/60000)), sec=Math.max(0,Math.floor((ms%60000)/1000));
     return String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0');
   }
+  // Retire un surebet de MA liste (masquage local, ne supprime rien pour les autres)
+  function dismissSignal(id){
+    const i=activeSignals.findIndex(x=>x.id===id);
+    if(i<0) return;
+    activeSignals.splice(i,1);
+    signalsSeen[id]=true; signalsUsed[id]=true;   // ne le fait pas reapparaitre en alerte
+    if(sbSel>=activeSignals.length) sbSel=Math.max(0,activeSignals.length-1);
+    updateSignalPopup();
+    showToast(tOr('sb.removed','Surebet retiré de votre liste'));
+  }
   // Ticket du surebet selectionne
   function renderSbTicket(){
     const host=$('#sbTicket'); if(!host) return;
@@ -4812,11 +4830,16 @@
       <div class="tk-foot">
         <div class="tk-exp"><div class="tk-exp-r">${tOr('sb.expires','expire dans')} <b data-sbtimer>${sigLeft(s)}</b></div>
           <div class="tk-track"><i style="width:${pct}%"></i></div></div>
-        ${canUse?`<button class="btn ${used?'ghost':'primary'} tk-use" data-puse="${s.id}">${used?tOr('sb.reload','✓ Recharger'):tOr('sb.load','Charger ↧')}</button>`:''}
+        <div class="tk-btns">
+          ${canUse?`<button class="btn ${used?'ghost':'primary'} tk-use" data-puse="${s.id}">${used?tOr('sb.reload','✓ Recharger'):tOr('sb.load','Charger ↧')}</button>`:''}
+          <button class="btn ghost tk-drop" data-pdrop="${s.id}" title="${escapeHTML(tOr('sb.remove_t','Retirer ce surebet de ma liste'))}">${tOr('sb.remove','Retirer')}</button>
+        </div>
       </div>
     </article>`;
     const b=host.querySelector('.tk-use');
     if(b) b.addEventListener('click',()=>useSignalInCalc(b.dataset.puse));
+    const d=host.querySelector('.tk-drop');
+    if(d) d.addEventListener('click',()=>dismissSignal(d.dataset.pdrop));
   }
 
   /* Bandeau de confiance : signaux actifs, meilleur ROI, état de l'accès */
@@ -5511,6 +5534,8 @@
       "calc.nosure_hint":"La somme des probabilités implicites dépasse 100 % : aucune mise ne garantit un gain. Cherchez une cote adverse plus élevée.",
       "sb.signal":"Signal","sb.roi_lab":"ROI GARANTI","sb.expires":"expire dans",
       "sb.load":"Charger ↧","sb.reload":"✓ Recharger",
+      "sb.remove":"Retirer","sb.remove_t":"Retirer ce surebet de ma liste",
+      "sb.removed":"Surebet retiré de votre liste",
       "sb.warn_title":"Les cotes bougent vite",
       "sb.warn_desc":"Vérifiez chaque cote chez le bookmaker juste avant de miser : quelques secondes suffisent pour qu'elle change et que le profit garanti disparaisse. Placez la mise la plus incertaine en premier.",
       "cm.section":"Salon communautaire","cm.online":"en ligne",
@@ -5616,6 +5641,8 @@
       "calc.nosure_hint":"The implied probabilities add up to more than 100% : no stake can guarantee a win. Look for higher opposing odds.",
       "sb.signal":"Signal","sb.roi_lab":"GUARANTEED ROI","sb.expires":"expires in",
       "sb.load":"Load ↧","sb.reload":"✓ Reload",
+      "sb.remove":"Remove","sb.remove_t":"Remove this surebet from my list",
+      "sb.removed":"Surebet removed from your list",
       "sb.warn_title":"Odds move fast",
       "sb.warn_desc":"Check every price at the bookmaker right before staking: a few seconds are enough for it to change and for the guaranteed profit to vanish. Place the least reliable leg first.",
       "cm.section":"Community room","cm.online":"online",
