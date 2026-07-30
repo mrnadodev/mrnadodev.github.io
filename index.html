@@ -938,6 +938,10 @@
   @keyframes cpop{from{opacity:0; transform:translateY(12px)}to{opacity:1; transform:none}}
   .chatpop .cav{width:34px;height:34px;border-radius:10px;flex:none;display:grid;place-items:center;font-size:12px;font-weight:700;background:var(--panel-2);color:var(--ink)}
   .chatpop .cw{font-weight:700; font-size:12.5px} .chatpop .cm{font-size:12px; color:var(--ink-dim); margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:230px}
+  .chatpop .cw .cr{color:var(--ink-faint);font-weight:600}
+  .chatpop .cbadge{position:absolute;top:-7px;left:-7px;background:var(--mint);color:var(--bg);
+    font-size:10px;font-weight:800;border-radius:999px;min-width:19px;height:19px;
+    display:grid;place-items:center;padding:0 5px;box-shadow:0 3px 8px -2px rgba(0,0,0,.4)}
   .chatpop .cx{position:absolute; top:7px; right:9px; border:none; background:none; color:var(--ink-faint); font-size:13px; cursor:pointer}
   .chatpop .cx:hover{color:var(--ink)}
 
@@ -1050,6 +1054,21 @@
   details.more[open]>summary::before{transform:rotate(90deg)}
   details.more>summary:hover{color:var(--mint)}
 
+  /* ===== ESPACE COMMUNAUTE : chat + classement ===== */
+  .g-comm{display:grid;grid-template-columns:1.5fr 1fr;gap:20px;align-items:start}
+  @media(max-width:900px){ .g-comm{grid-template-columns:1fr} }
+  .eyebrow .eb-meta{font-family:var(--mono);font-size:10.5px;color:var(--ink-faint);white-space:nowrap}
+  .lb-list{padding:8px 8px 12px}
+  .lb-row{display:flex;align-items:center;gap:11px;padding:11px 8px;border-radius:10px}
+  .lb-row:hover{background:var(--panel-2)}
+  .lb-rk{font-family:var(--mono);font-weight:700;width:20px;text-align:center;color:var(--ink-faint);flex:none}
+  .lb-row.top .lb-rk{color:var(--gold)}
+  .lb-av{width:30px;height:30px;border-radius:9px;flex:none;display:grid;place-items:center;
+    font-size:11px;font-weight:700;background:var(--panel-2);color:var(--ink)}
+  .lb-nm{flex:1;font-size:13px;font-weight:600;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .lb-p{font-family:var(--mono);font-weight:700;color:var(--mint);font-size:13px;flex:none}
+  .lb-empty{font-size:12.5px;color:var(--ink-dim);padding:18px;text-align:center}
+
   /* ===== SELECTEUR DEROULANT DES SUREBETS ===== */
   .sb-select{position:relative;margin-bottom:16px}
   .sb-current{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;
@@ -1129,7 +1148,13 @@
     font-size:11px;font-weight:400;margin-top:3px}
   .calc-out .co-v{font-family:var(--mono);font-size:24px;font-weight:700;color:var(--mint);white-space:nowrap}
   .calc-out.lose .co-v{color:var(--red)}
-  .issue-blk{margin-bottom:14px}
+  /* cotes cote a cote (maquette) : label, cote, bookmaker empiles par colonne */
+  .issue-grid{display:grid;gap:12px}
+  .issue-grid.legs-2{grid-template-columns:1fr 1fr}
+  .issue-grid.legs-3{grid-template-columns:1fr 1fr 1fr}
+  @media(max-width:560px){ .issue-grid.legs-2,.issue-grid.legs-3{grid-template-columns:1fr} }
+  .issue-blk{display:flex;flex-direction:column;gap:7px;margin:0;min-width:0}
+  .issue-blk .calcOdd,.issue-blk .calcBk{width:100%}
   details.more.top{margin:0 0 16px;border-top:none;border-bottom:1px solid var(--line-soft);padding:0 0 12px}
 
   /* ===== PANNEAU SUREBETS DANS LA PAGE ===== */
@@ -1544,6 +1569,10 @@
   <!-- ═══ ESPACE 3 · COMMUNAUTÉ ═══ -->
   <section class="view" id="v-chat">
 
+  <div class="eyebrow"><span class="eb-lb" data-i18n="cm.section">Salon communautaire</span><span class="eb-rule"></span>
+    <span class="eb-meta" id="cmOnline">—</span></div>
+
+  <div class="g-comm">
   <!-- ===== CHAT COMMUNAUTAIRE ===== -->
   <div class="card chat-card" id="chatCard">
     <div class="card-head">
@@ -1578,7 +1607,6 @@
       <div class="chat-rooms" id="chatRooms">
         <button class="chat-room-tab on" data-room="general" data-i18n="chat.room_general">💬 Général</button>
         <button class="chat-room-tab" data-room="surebets" data-i18n="chat.room_surebets">🎯 Surebets</button>
-        <button class="chat-room-tab" data-room="debutants" data-i18n="chat.room_beginners">🌱 Débutants</button>
       </div>
       <div id="activePoll" class="active-poll" style="display:none"></div>
       <div id="chatMessages" class="chat-messages"><div class="chat-loading">Chargement…</div></div>
@@ -1599,6 +1627,13 @@
       </div>
       <div class="chat-foot" data-i18n="chat.foot">⚠️ Restez courtois. Les messages sont visibles par tous les utilisateurs. L'administrateur peut supprimer tout message.</div>
     </div>
+  </div>
+
+  <!-- CLASSEMENT (profit sur 7 jours) -->
+  <div class="card">
+    <div class="card-h"><h3 data-i18n="lb.title">🏆 Classement</h3><span class="tagm" data-i18n="lb.tag">profit · 7 j</span></div>
+    <div id="lbList" class="lb-list"></div>
+  </div>
   </div>
 
   </section>
@@ -1623,6 +1658,7 @@
 
 <!-- ===== POP-UP NOUVEAU MESSAGE CHAT ===== -->
 <div class="chatpop" id="chatPop">
+  <span class="cbadge" id="chatPopBadge">1</span>
   <div class="cav" id="chatPopAv">?</div>
   <div class="cbody"><div class="cw" id="chatPopWho">—</div><div class="cm" id="chatPopMsg">—</div></div>
   <button class="cx" id="chatPopX" aria-label="Fermer">✕</button>
@@ -2210,11 +2246,12 @@
     for(let i=0;i<n;i++){
       html+=`<div class="issue-blk">
         <span class="lab" data-oddlab="${i}">${tOr('calc.leg','Cote')} ${i+1}</span>
-        <div class="bkline">
-          <input type="number" class="calcOdd" data-i="${i}" value="2.10" step="0.01" min="1.01" placeholder="Cote">
-          <select class="calcBk" data-i="${i}">${bkOptions}</select>
-        </div></div>`;
+        <input type="number" class="calcOdd" data-i="${i}" value="2.10" step="0.01" min="1.01" placeholder="Cote">
+        <select class="calcBk" data-i="${i}">${bkOptions}</select>
+      </div>`;
     }
+    // cotes cote a cote, comme la maquette
+    $('#issueBlocks').className = 'issue-grid legs-'+n;
     $('#issueBlocks').innerHTML=html;
     // default distinct bookmakers
     $$('.calcBk').forEach((s,i)=>{s.selectedIndex=Math.min(i,BOOKMAKERS.length-1);});
@@ -3105,6 +3142,7 @@
     loadSponsorsPublic();             // carrousel sponsors (caché si vide)
     renderSubChip(); startSubTimer();
     renderSignalPanel();              // panneau surebets de l'espace (verrou / vide / tickets)
+    loadLeaderboard();                // classement de l'espace Communauté
     await loadHistory();
     await loadBankroll();
     renderHistory();
@@ -3241,13 +3279,20 @@
     if(!sb||presenceChannel)return;
     presenceChannel = sb.channel('NADOEDGE_presence', { config:{ presence:{ key:user.id } } });
     presenceChannel
-      .on('presence',{event:'sync'},()=>{ if(isAdmin(currentUser)) renderPresence(); })
+      .on('presence',{event:'sync'},()=>{ renderOnlineCount(); if(isAdmin(currentUser)) renderPresence(); })
       .subscribe(async status=>{
         if(status==='SUBSCRIBED'){
           await presenceChannel.track({ email:user.email, online_at:new Date().toISOString() });
+          renderOnlineCount();
           if(isAdmin(user)){ $('#adminPanel').style.display='block'; renderPresence(); }
         }
       });
+  }
+  // Nombre de personnes en ligne, affiché dans l'en-tête de l'espace Communauté
+  function renderOnlineCount(){
+    const el=$('#cmOnline'); if(!el||!presenceChannel) return;
+    let n=0; try{ n=Object.keys(presenceChannel.presenceState()).length; }catch(e){}
+    el.textContent = n+' '+tOr('cm.online','en ligne');
   }
   async function stopPresence(){
     if(presenceChannel){ try{await presenceChannel.untrack();}catch(e){}
@@ -3739,13 +3784,41 @@
   function spPubGo(i){ spPubI=(i+spPubList.length)%spPubList.length; const t=$('#spPubTrack'); if(t)t.style.transform='translateX(-'+(spPubI*100)+'%)'; $$('#spPubDots .sp-dot').forEach((d,k)=>d.classList.toggle('on',k===spPubI)); }
   function restartSpPub(){ if(spPubTimer)clearInterval(spPubTimer); if(spPubList.length>1) spPubTimer=setInterval(()=>spPubGo(spPubI+1),6000); }
 
+  /* ===== CLASSEMENT (profit 7 jours) =====
+     Les paris sont prives (RLS) : le classement vient d une vue SQL
+     « leaderboard_7d » qui n expose que pseudo + profit agrege.
+     Si la vue n existe pas encore, on l indique sans casser la page. */
+  async function loadLeaderboard(){
+    const box=$('#lbList'); if(!box||!sb) return;
+    box.innerHTML='<div class="lb-empty">…</div>';
+    try{
+      const {data,error}=await sb.from('leaderboard_7d').select('*').order('profit',{ascending:false}).limit(10);
+      if(error) throw error;
+      if(!data||!data.length){ box.innerHTML='<div class="lb-empty">'+escapeHTML(tOr('lb.empty','Aucun résultat sur les 7 derniers jours.'))+'</div>'; return; }
+      box.innerHTML=data.map((r,i)=>{
+        const nm=r.username||'—';
+        const me=currentUsername && nm===currentUsername;
+        return `<div class="lb-row${i<3?' top':''}">
+          <span class="lb-rk">${i+1}</span>
+          <div class="lb-av">${escapeHTML((nm[0]||'?').toUpperCase())}</div>
+          <div class="lb-nm">${escapeHTML(me?tOr('lb.you','vous'):nm)}</div>
+          <div class="lb-p">${r.profit>=0?'+':''}${money(Number(r.profit)||0)}</div>
+        </div>`;
+      }).join('');
+    }catch(e){
+      box.innerHTML='<div class="lb-empty">'+escapeHTML(tOr('lb.soon','Classement bientôt disponible.'))+'</div>';
+    }
+  }
+
   /* ===== POP-UP NOUVEAU MESSAGE ===== */
   let chatPopTimer=null;
   function showChatPop(who, text, room){
     const pop=$('#chatPop'); if(!pop) return;
     $('#chatPopAv').textContent=((who||'?')[0]||'?').toUpperCase();
-    $('#chatPopWho').textContent=(who||'?')+(room && room!=='general' ? ' · '+room : '');
+    const salon = room==='surebets' ? 'Surebets' : 'Général';
+    $('#chatPopWho').innerHTML=escapeHTML(who||'?')+' <span class="cr">· '+salon+'</span>';
     $('#chatPopMsg').textContent=(text||'').slice(0,80);
+    const bd=$('#chatPopBadge'); if(bd) bd.textContent = chatUnread>0 ? (chatUnread>9?'9+':chatUnread) : '1';
     pop.classList.add('show');
     clearTimeout(chatPopTimer); chatPopTimer=setTimeout(()=>pop.classList.remove('show'), 6000);
   }
@@ -3931,7 +4004,7 @@
     try{
       // On charge les derniers messages de CHAQUE salon séparément :
       // sinon un salon très actif (Général) peut faire disparaître les surebets.
-      const rooms=['general','surebets','debutants'];
+      const rooms=['general','surebets'];
       const results=await Promise.all(rooms.map(r=>
         sb.from('messages').select('*').eq('room',r)
           .order('created_at',{ascending:false}).limit(CHAT_LIMIT)
@@ -4262,7 +4335,7 @@
   $('#chatTimerToggle') && $('#chatTimerToggle').addEventListener('click',toggleCooldown);
 
   /* ----- Verrouillage temporaire d'un salon (admin) ----- */
-  let lockedRooms={};  // { general:true, debutants:false, ... }
+  let lockedRooms={};  // { general:true, surebets:false, ... }
   function updateRoomLockBtn(){
     const b=$('#chatRoomLock'); if(!b)return;
     // le salon surebets a déjà sa propre règle
@@ -5419,6 +5492,9 @@
       "calc.nosure_hint":"La somme des probabilités implicites dépasse 100 % : aucune mise ne garantit un gain. Cherchez une cote adverse plus élevée.",
       "sb.signal":"Signal","sb.roi_lab":"ROI GARANTI","sb.expires":"expire dans",
       "sb.load":"Charger ↧","sb.reload":"✓ Recharger",
+      "cm.section":"Salon communautaire","cm.online":"en ligne",
+      "lb.title":"🏆 Classement","lb.tag":"profit · 7 j","lb.you":"vous",
+      "lb.empty":"Aucun résultat sur les 7 derniers jours.","lb.soon":"Classement bientôt disponible.",
       "det.th_odd":"Cote adverse","det.th_sure":"Surebet","det.th_roi":"ROI garanti","det.th_status":"Statut",
       "det.hint":"<b>Lecture :</b> chaque ligne verte est exploitable. Reportez-la dans le calculateur pour connaître vos mises.",
       "conv.title":"🔁 Convertisseur de cotes",
@@ -5519,6 +5595,9 @@
       "calc.nosure_hint":"The implied probabilities add up to more than 100% : no stake can guarantee a win. Look for higher opposing odds.",
       "sb.signal":"Signal","sb.roi_lab":"GUARANTEED ROI","sb.expires":"expires in",
       "sb.load":"Load ↧","sb.reload":"✓ Reload",
+      "cm.section":"Community room","cm.online":"online",
+      "lb.title":"🏆 Leaderboard","lb.tag":"profit · 7 d","lb.you":"you",
+      "lb.empty":"No results over the last 7 days.","lb.soon":"Leaderboard coming soon.",
       "det.th_odd":"Opposing odds","det.th_sure":"Surebet","det.th_roi":"Guaranteed ROI","det.th_status":"Status",
       "det.hint":"<b>How to read:</b> every green row is usable. Enter it in the calculator to get your stakes.",
       "conv.title":"🔁 Odds converter",
