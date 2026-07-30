@@ -59,10 +59,11 @@
   };
 </script>
 <style>
+  /* Thème sombre — palette identique à la maquette (vert-noir profond) */
   :root{
-    --bg:#0a1014;--panel:#111c22;--panel-2:#0d171c;--line:#1e3038;--line-soft:#17272e;
-    --ink:#e8f1f2;--ink-dim:#8ba3ab;--ink-faint:#5c757d;--mint:#2fe6a8;--mint-dim:#1c7d5f;
-    --gold:#f5c542;--red:#ff5d6c;--blue:#4db6f0;--radius:14px;
+    --bg:#06110d;--panel:#0d1c16;--panel-2:#0a1712;--line:#1b3128;--line-soft:#12251d;
+    --ink:#e9f4ee;--ink-dim:#8ba79c;--ink-faint:#5d786d;--mint:#27e39a;--mint-dim:#1e6b4d;
+    --gold:#f2c14e;--red:#ff5a67;--blue:#5bb2f0;--radius:14px;
     --mono:'JetBrains Mono','SF Mono',ui-monospace,monospace;--sans:'Inter',-apple-system,system-ui,sans-serif;
   }
   :root[data-theme="light"]{
@@ -71,7 +72,9 @@
     --gold:#c9922b;--red:#e0435a;--blue:#2b83c9;
   }
   :root[data-theme="light"] body{
-    background:radial-gradient(1200px 600px at 80% -10%, #dcece6 0%, transparent 60%),var(--bg);
+    background:radial-gradient(1000px 520px at 90% -10%, rgba(15,157,110,.10), transparent 60%),
+      radial-gradient(760px 420px at 6% 118%, rgba(201,146,43,.08), transparent 55%),var(--bg);
+    background-attachment:fixed;
   }
   :root[data-theme="light"] .auth-gate{
     background:radial-gradient(600px 300px at 50% 0%, rgba(15,157,110,.10) 0%, transparent 70%),
@@ -89,9 +92,13 @@
   :root[data-theme="light"] .offline-banner{color:#ffffff}
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:var(--sans);background:radial-gradient(1200px 600px at 80% -10%, #10242c 0%, transparent 60%),var(--bg);
-    color:var(--ink);min-height:100vh;padding:28px 20px 60px;-webkit-font-smoothing:antialiased}
-  .wrap{max-width:1240px;margin:0 auto}
+  /* fond identique a la maquette : halo vert en haut a droite, ambre en bas a gauche */
+  body{font-family:var(--sans);
+    background:radial-gradient(1000px 520px at 90% -10%, rgba(39,227,154,.10), transparent 60%),
+      radial-gradient(760px 420px at 6% 118%, rgba(242,193,78,.07), transparent 55%),var(--bg);
+    background-attachment:fixed;
+    color:var(--ink);min-height:100vh;padding:22px 0 60px;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1240px;margin:0 auto;padding:0 26px}
   header{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;
     padding:18px 0 22px;margin-bottom:28px;border-bottom:1px solid var(--line);
     position:sticky;top:0;z-index:70;background:var(--bg);transition:box-shadow .25s}
@@ -292,7 +299,8 @@
     border:1px solid var(--line);background:var(--panel-2);cursor:pointer;font-family:var(--mono);
     font-size:11.5px;font-weight:700;color:var(--ink-dim);transition:.15s;line-height:1}
   .sub-chip:hover{transform:translateY(-1px)}
-  .sub-chip .sc-ic{font-size:13px}
+  .sub-chip .sc-ic{display:inline-flex;align-items:center}
+  .sub-chip .sc-ic svg{display:block}
   .sub-chip.active{color:var(--mint);border-color:rgba(47,230,168,.35);background:rgba(47,230,168,.08)}
   .sub-chip.warn{color:var(--gold);border-color:rgba(245,197,66,.4);background:rgba(245,197,66,.08)}
   .sub-chip.locked{color:var(--red);border-color:rgba(255,93,108,.4);background:rgba(255,93,108,.08);
@@ -986,9 +994,13 @@
   }
 
   /* ===== EN-TÊTE ÉPURÉ (comme la maquette) ===== */
-  .live-pill{display:inline-flex;align-items:center;gap:7px}
-  .live-pill .lp-dot{width:8px;height:8px;border-radius:50%;background:var(--mint);
-    display:inline-block;animation:pulse 2s infinite;flex:none}
+  .live-pill{display:inline-flex;align-items:center;gap:7px;padding:6px 10px}
+  .live-pill .lp-cloud{color:var(--mint);display:block}
+  #syncChip.sync-busy .lp-cloud{color:var(--gold)}
+  #syncChip.sync-offline .lp-cloud,#syncChip.sync-error .lp-cloud{color:var(--red)}
+  /* texte lu par les lecteurs d'ecran, invisible a l'oeil */
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+    clip:rect(0 0 0 0);white-space:nowrap;border:0}
   /* Menu du compte : regroupe Publier / Admin / Guide / Telegram / Stats / Déconnexion */
   .user-menu{position:relative;display:inline-block}
   .um-drop{position:absolute;right:0;top:calc(100% + 8px);min-width:220px;z-index:120;
@@ -1201,9 +1213,14 @@
   .sb-lock{background:var(--panel);border:1px solid rgba(255,93,108,.3);border-radius:14px;padding:26px 22px;text-align:center}
   .sb-lock .sl-ic{width:52px;height:52px;margin:0 auto 13px;border-radius:15px;display:grid;place-items:center;
     font-size:24px;background:rgba(255,93,108,.12);color:var(--red)}
-  .sb-lock h3{font-size:17px;font-weight:700;margin-bottom:7px}
-  .sb-lock p{font-size:12.5px;color:var(--ink-dim);max-width:46ch;margin:0 auto 15px;line-height:1.55}
-  .sb-lock .btn{margin:0 auto}
+  .sb-lock h3{font-size:19px;font-weight:750;margin-bottom:8px;letter-spacing:-.01em}
+  .sb-lock p{font-size:13px;color:var(--ink-dim);max-width:44ch;margin:0 auto 18px;line-height:1.55}
+  .sb-lock .sl-benefits{list-style:none;display:flex;flex-direction:column;gap:11px;
+    text-align:left;max-width:340px;margin:0 auto 20px;padding:0}
+  .sb-lock .sl-benefits li{display:flex;gap:11px;align-items:flex-start;font-size:13.5px;color:var(--ink)}
+  .sb-lock .sl-benefits .ck{color:var(--mint);font-weight:800;flex:none}
+  .sb-lock .sl-cta{width:100%;max-width:360px;margin:0 auto;justify-content:center;
+    font-size:14.5px;font-weight:750;padding:14px}
 
   /* ===== MARQUE NADOEDGE ===== */
   /* le conteneur historique du logo devient neutre : le SVG porte l'identité */
@@ -1345,8 +1362,10 @@
         <svg class="ic-moon" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
       </button>
       <button class="icon-chip" id="langBtn" title="English / Français" aria-label="Changer de langue" style="font-family:var(--mono);font-weight:700;font-size:12px">EN</button>
-      <span class="chip live-pill" id="syncChip" style="display:none"><span class="lp-dot"></span> <b id="syncState">Synchronisé</b></span>
-      <button class="sub-chip" id="subChip" style="display:none" title="Abonnement Surebets"><span class="sc-ic">🎯</span><span id="subChipTxt">Surebets</span></button>
+      <span class="chip live-pill" id="syncChip" style="display:none" title="Synchronisé">
+        <svg class="lp-cloud" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+        <b id="syncState" class="sr-only">Synchronisé</b></span>
+      <button class="sub-chip" id="subChip" style="display:none" title="Abonnement Surebets"><span class="sc-ic"></span><span id="subChipTxt">Surebets</span></button>
 
       <!-- Menu du compte : regroupe les actions secondaires (comme la maquette) -->
       <div class="user-menu" id="userMenu">
@@ -1736,12 +1755,8 @@
   </div>
 </div>
 
-<!-- ===== POPUP DE NOTIFICATION (utilisateur) ===== -->
-<button id="signalPopup" class="signal-popup" style="display:none">
-  <span class="sp-badge" id="signalCount">1</span>
-  <span class="sp-dot"></span>
-  <span class="sp-label">Surebet détecté — cliquez pour voir</span>
-</button>
+<!-- Le pop-up « Surebet détecté » a été retiré : les signaux s'affichent
+     directement dans l'espace Surebets, la notification faisait doublon. -->
 
 <!-- ===== FENÊTRE DES SUREBETS (utilisateur) ===== -->
 <div id="signalModal" class="edit-modal" style="display:none">
@@ -2100,6 +2115,7 @@
     if(!currentUser){c.style.display='none';return;}
     c.style.display='';
     const s=$('#syncState'); if(s) s.textContent=state;
+    c.title=state;                       // l'etat s'affiche au survol de l'icone nuage
     c.classList.remove('sync-ok','sync-busy','sync-offline','sync-error');
     c.classList.add('sync-'+(kind||'ok'));
   }
@@ -3394,16 +3410,23 @@
     if(!SUB.ENABLED || !currentUser){ chip.style.display='none'; return; }
     chip.style.display='inline-flex';
     chip.classList.remove('active','warn','locked');
+    // cadenas ouvert = acces, cadenas ferme = verrouille (plus de texte « accès complet »)
+    const open='<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>';
+    const shut='<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
+    const ic=chip.querySelector('.sc-ic');
     if(isPrivileged()){
-      txt.textContent='Surebets · accès complet'; chip.classList.add('active');
+      if(ic) ic.innerHTML=open;
+      txt.textContent='Surebets'; chip.classList.add('active');
       chip.title='Accès surebets (rôle privilégié)'; return;
     }
     if(hasActiveSub()){
-      txt.textContent='Surebets · '+fmtSubLeft();
+      if(ic) ic.innerHTML=open;
+      txt.textContent=fmtSubLeft();
       chip.classList.add(subMsLeft() < 2*86400000 ? 'warn' : 'active'); // alerte si < 2 jours
       chip.title='Abonnement actif — cliquez pour renouveler';
     }else{
-      txt.textContent='🔒 Débloquer les surebets'; chip.classList.add('locked');
+      if(ic) ic.innerHTML=shut;
+      txt.textContent=tOr('sub.unlock','Débloquer'); chip.classList.add('locked');
       chip.title='Abonnement expiré — cliquez pour vous abonner';
     }
   }
@@ -4713,29 +4736,11 @@
   }
   function unseenCount(){ return activeSignals.filter(s=>!signalsSeen[s.id]).length; }
   function unusedCount(){ return activeSignals.filter(s=>!signalsUsed[s.id]).length; }
+  // Le pop-up de notification a ete retire : les signaux apparaissent
+  // directement dans l'espace « Surebets ». Cette fonction ne fait plus que
+  // rafraichir ce panneau — elle garde son nom, appelee depuis plusieurs endroits.
   function updateSignalPopup(blink){
-    const pop=$('#signalPopup');
-    renderSignalPanel();   // garde le panneau de l'espace « Surebets » a jour
-    if(activeSignals.length===0){ pop.style.display='none'; return; }
-    const unseen=unseenCount();
-    const unused=unusedCount();
-    // Le popup reste visible tant qu'il y a des surebets non vus OU non encore utilisés
-    if(unseen>0 || unused>0){
-      pop.style.display='flex';
-      // le badge montre ce qu'il reste à traiter
-      const n = unseen>0 ? unseen : unused;
-      $('#signalCount').textContent=n;
-      // texte adapté : si tout est vu mais reste à utiliser
-      const label=pop.querySelector('.sp-label');
-      if(label){
-        label.textContent = unseen>0 ? 'Surebet détecté — cliquez pour voir'
-                                     : 'Encore '+unused+' surebet(s) à utiliser';
-      }
-      // clignote seulement s'il y a du non-vu
-      pop.style.animationPlayState = unseen>0 ? 'running' : 'paused';
-    }else{
-      pop.style.display='none';
-    }
+    renderSignalPanel();
   }
   function renderSignals(){
     const body=$('#signalBody');
@@ -4775,10 +4780,20 @@
     updateTrustBand();
     // non abonné → invitation à débloquer
     if(typeof hasActiveSub==='function' && !hasActiveSub()){
-      panel.innerHTML='<div class="sb-lock"><div class="sl-ic">🔒</div>'+
-        '<h3>'+escapeHTML(tOr('sb.lock_title','Débloquez les surebets'))+'</h3>'+
-        '<p>'+escapeHTML(tOr('sb.lock_desc','Profits garantis, envoyés en temps réel. Abonnement renouvelable, paiement MonCash ou NatCash.'))+'</p>'+
-        '<button class="btn primary" id="sbUnlock">'+escapeHTML(tOr('sb.lock_cta','Débloquer mon accès'))+'</button></div>';
+      const price=SUB.PRICE||'', days=SUB.DURATION_DAYS||7;
+      const cta=(tOr('sb.lock_cta','Débloquer')+(price?' — '+price:'')+' / '+days+' '+tOr('sb.days','jours'));
+      panel.innerHTML=
+        '<div class="sb-lock">'+
+          '<div class="sl-ic">🔒</div>'+
+          '<h3>'+escapeHTML(tOr('sb.lock_title','Débloquez les surebets'))+'</h3>'+
+          '<p>'+escapeHTML(tOr('sb.lock_desc','Profits garantis, en temps réel. Abonnement 7 jours, paiement MonCash ou NatCash.'))+'</p>'+
+          '<ul class="sl-benefits">'+
+            '<li><span class="ck">✓</span>'+escapeHTML(tOr('sb.lock_b1','Signaux d\'arbitrage vérifiés, en direct'))+'</li>'+
+            '<li><span class="ck">✓</span>'+escapeHTML(tOr('sb.lock_b2','Chargement en 1 clic dans le calculateur'))+'</li>'+
+            '<li><span class="ck">✓</span>'+escapeHTML(tOr('sb.lock_b3','Salon privé réservé aux abonnés'))+'</li>'+
+          '</ul>'+
+          '<button class="btn primary sl-cta" id="sbUnlock">'+escapeHTML(cta)+'</button>'+
+        '</div>';
       const b=$('#sbUnlock'); if(b) b.addEventListener('click',()=>{ if(typeof openPaywall==='function') openPaywall(); });
       return;
     }
@@ -4820,15 +4835,17 @@
     const m=Math.max(0,Math.floor(ms/60000)), sec=Math.max(0,Math.floor((ms%60000)/1000));
     return String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0');
   }
-  // Retire un surebet de MA liste (masquage local, ne supprime rien pour les autres)
-  function dismissSignal(id){
-    const i=activeSignals.findIndex(x=>x.id===id);
-    if(i<0) return;
-    activeSignals.splice(i,1);
-    signalsSeen[id]=true; signalsUsed[id]=true;   // ne le fait pas reapparaitre en alerte
-    if(sbSel>=activeSignals.length) sbSel=Math.max(0,activeSignals.length-1);
-    updateSignalPopup();
-    showToast(tOr('sb.removed','Surebet retiré de votre liste'));
+  // Retire le surebet DU CALCULATEUR — le signal reste dans la liste.
+  // Utile quand on a charge le mauvais surebet et qu on veut en charger un autre.
+  function unloadSignal(id){
+    if(id) delete signalsUsed[id];          // il redevient « non utilise »
+    $$('.calcOdd').forEach(el=>{ el.value='2.10'; });
+    const m1=$('#match1'), m2=$('#match2');
+    if(m1) m1.value=''; if(m2) m2.value='';
+    syncOddLabels();
+    renderCalc();
+    updateSignalPopup();                     // le bouton du ticket redevient « Charger »
+    showToast(tOr('sb.unloaded','Calculateur vidé — chargez un autre surebet'));
   }
   // Ticket du surebet selectionne
   function renderSbTicket(){
@@ -4860,14 +4877,14 @@
           <div class="tk-track"><i style="width:${pct}%"></i></div></div>
         <div class="tk-btns">
           ${canUse?`<button class="btn ${used?'ghost':'primary'} tk-use" data-puse="${s.id}">${used?tOr('sb.reload','✓ Recharger'):tOr('sb.load','Charger ↧')}</button>`:''}
-          <button class="btn ghost tk-drop" data-pdrop="${s.id}" title="${escapeHTML(tOr('sb.remove_t','Retirer ce surebet de ma liste'))}">${tOr('sb.remove','Retirer')}</button>
+          <button class="btn ghost tk-drop" data-pdrop="${s.id}" title="${escapeHTML(tOr('sb.remove_t','Retirer ce surebet du calculateur'))}">${tOr('sb.remove','Retirer')}</button>
         </div>
       </div>
     </article>`;
     const b=host.querySelector('.tk-use');
     if(b) b.addEventListener('click',()=>useSignalInCalc(b.dataset.puse));
     const d=host.querySelector('.tk-drop');
-    if(d) d.addEventListener('click',()=>dismissSignal(d.dataset.pdrop));
+    if(d) d.addEventListener('click',()=>unloadSignal(d.dataset.pdrop));
   }
 
   /* Bandeau de confiance : signaux actifs, meilleur ROI, état de l'accès */
@@ -5083,7 +5100,6 @@
   $('#pubSend').addEventListener('click',sendPublish);
   $('#pubClean').addEventListener('click',cleanExpiredSignals);
   $('#pubAddLeg').addEventListener('click',()=>{ $('#pubLegs').appendChild(buildPubLeg()); computePubRoi(); });
-  $('#signalPopup').addEventListener('click',openSurebetsOrPaywall);
   $('#signalClose').addEventListener('click',closeSignals);
   $('#signalCloseBtn').addEventListener('click',closeSignals);
   $('#signalBackdrop').addEventListener('click',closeSignals);
@@ -5182,7 +5198,6 @@
     currentSubExpires=null; if(subTimer){ clearInterval(subTimer); subTimer=null; }
     $('#subChip') && ($('#subChip').style.display='none');
     $('#payModal') && ($('#payModal').style.display='none');
-    $('#signalPopup').style.display='none';
     $('#chatFab') && ($('#chatFab').style.display='none'); chatUnread=0;
     $('#authEmail').value='';$('#authPass').value='';clearAuthError();
   }
@@ -5540,8 +5555,11 @@
       "sb.section":"Signaux en direct","sb.realtime":"temps réel","sb.tools":"Outils",
       "sb.empty":"Aucun surebet actif pour le moment. Vous serez alerté dès qu'un signal est publié.",
       "sb.lock_title":"Débloquez les surebets",
-      "sb.lock_desc":"Profits garantis, envoyés en temps réel. Abonnement renouvelable, paiement MonCash ou NatCash.",
-      "sb.lock_cta":"Débloquer mon accès",
+      "sb.lock_desc":"Profits garantis, en temps réel. Abonnement 7 jours, paiement MonCash ou NatCash.",
+      "sb.lock_b1":"Signaux d'arbitrage vérifiés, en direct",
+      "sb.lock_b2":"Chargement en 1 clic dans le calculateur",
+      "sb.lock_b3":"Salon privé réservé aux abonnés",
+      "sb.lock_cta":"Débloquer","sb.days":"jours","sub.unlock":"Débloquer",
       "hdr.threshold":"Seuil actif",
       "hdr.saved":"Paris enregistrés",
       "hdr.guide":"❔ Guide",
@@ -5562,8 +5580,8 @@
       "calc.nosure_hint":"La somme des probabilités implicites dépasse 100 % : aucune mise ne garantit un gain. Cherchez une cote adverse plus élevée.",
       "sb.signal":"Signal","sb.roi_lab":"ROI GARANTI","sb.expires":"expire dans",
       "sb.load":"Charger ↧","sb.reload":"✓ Recharger",
-      "sb.remove":"Retirer","sb.remove_t":"Retirer ce surebet de ma liste",
-      "sb.removed":"Surebet retiré de votre liste",
+      "sb.remove":"Retirer","sb.remove_t":"Retirer ce surebet du calculateur",
+      "sb.unloaded":"Calculateur vidé — chargez un autre surebet",
       "sb.warn_title":"Les cotes bougent vite",
       "sb.warn_desc":"Vérifiez chaque cote chez le bookmaker juste avant de miser : quelques secondes suffisent pour qu'elle change et que le profit garanti disparaisse. Placez la mise la plus incertaine en premier.",
       "sb.title":"Surebets en direct",
@@ -5653,8 +5671,11 @@
       "sb.section":"Live signals","sb.realtime":"real time","sb.tools":"Tools",
       "sb.empty":"No active surebet right now. You'll be alerted as soon as a signal is published.",
       "sb.lock_title":"Unlock the surebets",
-      "sb.lock_desc":"Guaranteed profits, sent in real time. Renewable subscription, pay with MonCash or NatCash.",
-      "sb.lock_cta":"Unlock my access",
+      "sb.lock_desc":"Guaranteed profits, in real time. 7-day subscription, pay with MonCash or NatCash.",
+      "sb.lock_b1":"Verified arbitrage signals, live",
+      "sb.lock_b2":"One-click loading into the calculator",
+      "sb.lock_b3":"Private room for subscribers only",
+      "sb.lock_cta":"Unlock","sb.days":"days","sub.unlock":"Unlock",
       "hdr.threshold":"Active threshold",
       "hdr.saved":"Saved bets",
       "hdr.guide":"❔ Guide",
@@ -5675,8 +5696,8 @@
       "calc.nosure_hint":"The implied probabilities add up to more than 100% : no stake can guarantee a win. Look for higher opposing odds.",
       "sb.signal":"Signal","sb.roi_lab":"GUARANTEED ROI","sb.expires":"expires in",
       "sb.load":"Load ↧","sb.reload":"✓ Reload",
-      "sb.remove":"Remove","sb.remove_t":"Remove this surebet from my list",
-      "sb.removed":"Surebet removed from your list",
+      "sb.remove":"Remove","sb.remove_t":"Remove this surebet from the calculator",
+      "sb.unloaded":"Calculator cleared — load another surebet",
       "sb.warn_title":"Odds move fast",
       "sb.warn_desc":"Check every price at the bookmaker right before staking: a few seconds are enough for it to change and for the guaranteed profit to vanish. Place the least reliable leg first.",
       "sb.title":"Live surebets",
