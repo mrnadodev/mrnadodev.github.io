@@ -1026,7 +1026,7 @@
     animation:pulse 2s infinite}
 
   /* ===== DISPOSITION : signaux a gauche, calculateur a droite ===== */
-  .sb-grid{display:grid;grid-template-columns:1.35fr 1fr;gap:22px;align-items:start;margin-bottom:6px}
+  .sb-grid{display:grid;grid-template-columns:1.35fr 1fr;gap:22px;align-items:stretch;margin-bottom:6px}
   .sb-grid > .card{margin:0}
   @media(max-width:900px){ .sb-grid{grid-template-columns:1fr} }
   /* sous « Outils » : detecteur + convertisseur cote a cote */
@@ -1157,8 +1157,18 @@
   .issue-blk .calcOdd,.issue-blk .calcBk{width:100%}
   details.more.top{margin:0 0 16px;border-top:none;border-bottom:1px solid var(--line-soft);padding:0 0 12px}
 
+  /* ===== AVERTISSEMENT COTES (remplit la hauteur restante) ===== */
+  .sb-warn{margin-top:auto;display:flex;gap:12px;align-items:flex-start;
+    background:rgba(245,197,66,.07);border:1px solid rgba(245,197,66,.28);
+    border-radius:14px;padding:14px 16px}
+  .sb-warn .sw-ic{font-size:18px;flex:none;line-height:1.3}
+  .sb-warn .sw-t{font-size:13px;font-weight:700;color:var(--gold)}
+  .sb-warn .sw-d{font-size:12px;color:var(--ink-dim);line-height:1.55;margin-top:3px}
+
   /* ===== PANNEAU SUREBETS DANS LA PAGE ===== */
-  .sb-panel{position:relative;margin-bottom:6px}
+  /* colonne en hauteur pleine : l'avertissement se cale en bas, plus de vide */
+  .sb-panel{position:relative;margin-bottom:6px;display:flex;flex-direction:column;height:100%;gap:16px}
+  .sb-panel > .sb-select{margin-bottom:0}
   .sb-empty{background:var(--panel);border:1px dashed var(--line);border-radius:14px;padding:26px 20px;
     text-align:center;color:var(--ink-dim);font-size:13px}
   .sb-empty .se-ic{font-size:28px;display:block;margin-bottom:8px;opacity:.65}
@@ -4753,7 +4763,12 @@
         </button>
         <div class="sb-options" id="sbOptions" role="listbox">${opts}</div>
       </div>
-      <div id="sbTicket"></div>`;
+      <div id="sbTicket"></div>
+      <div class="sb-warn">
+        <span class="sw-ic">⚠️</span>
+        <div><div class="sw-t">${escapeHTML(tOr('sb.warn_title','Les cotes bougent vite'))}</div>
+          <div class="sw-d">${escapeHTML(tOr('sb.warn_desc','Vérifiez chaque cote chez le bookmaker juste avant de miser : quelques secondes suffisent pour qu\'elle change et que le profit garanti disparaisse. Placez la mise la plus incertaine en premier.'))}</div></div>
+      </div>`;
     renderSbTicket();
     const selBox=$('#sbSelect'), curBtn=$('#sbCurrent');
     curBtn.addEventListener('click',e=>{ e.stopPropagation(); selBox.classList.toggle('open');
@@ -5492,6 +5507,8 @@
       "calc.nosure_hint":"La somme des probabilités implicites dépasse 100 % : aucune mise ne garantit un gain. Cherchez une cote adverse plus élevée.",
       "sb.signal":"Signal","sb.roi_lab":"ROI GARANTI","sb.expires":"expire dans",
       "sb.load":"Charger ↧","sb.reload":"✓ Recharger",
+      "sb.warn_title":"Les cotes bougent vite",
+      "sb.warn_desc":"Vérifiez chaque cote chez le bookmaker juste avant de miser : quelques secondes suffisent pour qu'elle change et que le profit garanti disparaisse. Placez la mise la plus incertaine en premier.",
       "cm.section":"Salon communautaire","cm.online":"en ligne",
       "lb.title":"🏆 Classement","lb.tag":"profit · 7 j","lb.you":"vous",
       "lb.empty":"Aucun résultat sur les 7 derniers jours.","lb.soon":"Classement bientôt disponible.",
@@ -5595,6 +5612,8 @@
       "calc.nosure_hint":"The implied probabilities add up to more than 100% : no stake can guarantee a win. Look for higher opposing odds.",
       "sb.signal":"Signal","sb.roi_lab":"GUARANTEED ROI","sb.expires":"expires in",
       "sb.load":"Load ↧","sb.reload":"✓ Reload",
+      "sb.warn_title":"Odds move fast",
+      "sb.warn_desc":"Check every price at the bookmaker right before staking: a few seconds are enough for it to change and for the guaranteed profit to vanish. Place the least reliable leg first.",
       "cm.section":"Community room","cm.online":"online",
       "lb.title":"🏆 Leaderboard","lb.tag":"profit · 7 d","lb.you":"you",
       "lb.empty":"No results over the last 7 days.","lb.soon":"Leaderboard coming soon.",
