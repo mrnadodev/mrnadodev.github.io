@@ -98,9 +98,10 @@
       radial-gradient(760px 420px at 6% 118%, rgba(242,193,78,.07), transparent 55%),var(--bg);
     background-attachment:fixed;
     color:var(--ink);min-height:100vh;padding:22px 0 60px;-webkit-font-smoothing:antialiased}
-  .wrap{max-width:1240px;margin:0 auto;padding:0 26px}
+  .wrap{max-width:1240px;margin:0 auto;padding:0 32px}
+  /* marge interne : le logo et les boutons ne collent plus aux bords */
   header{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;
-    padding:18px 0 22px;margin-bottom:28px;border-bottom:1px solid var(--line);
+    padding:18px 14px 22px;margin-bottom:28px;border-bottom:1px solid var(--line);
     position:sticky;top:0;z-index:70;background:var(--bg);transition:box-shadow .25s}
   header.stuck{box-shadow:0 8px 24px -12px rgba(0,0,0,.55)}
   .brand{display:flex;flex-direction:column;gap:6px}
@@ -1021,6 +1022,8 @@
   .tchip .tc-ic{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;font-size:17px;flex:none;
     background:rgba(47,230,168,.12);color:var(--mint)}
   .tchip .tc-ic.gold{background:rgba(245,197,66,.12);color:var(--gold)}
+  /* acces verrouille : le fond du cadenas passe au rouge, coherent avec le texte */
+  .tchip .tc-ic.locked{background:rgba(255,90,103,.12);color:var(--red)}
   .tchip .tc-k{font-size:10px;text-transform:uppercase;letter-spacing:.09em;color:var(--ink-faint)}
   .tchip .tc-v{font-family:var(--mono);font-weight:700;font-size:17px;margin-top:2px;letter-spacing:-.01em}
   .tchip .tc-v.good{color:var(--mint)} .tchip .tc-v.gold{color:var(--gold)} .tchip .tc-v.warn{color:var(--red)}
@@ -1434,7 +1437,7 @@
   <div class="trust">
     <div class="tchip"><div class="tc-ic">🎯</div><div><div class="tc-k" data-i18n="trust.active">Signaux actifs</div><div class="tc-v good" id="trustActive">0</div></div></div>
     <div class="tchip"><div class="tc-ic gold">📈</div><div><div class="tc-k" data-i18n="trust.roi">Meilleur ROI actif</div><div class="tc-v gold" id="trustRoi">—</div></div></div>
-    <div class="tchip"><div class="tc-ic">🔓</div><div><div class="tc-k" data-i18n="trust.access">Votre accès</div><div class="tc-v good" id="trustAccess">—</div></div></div>
+    <div class="tchip"><div class="tc-ic" id="trustAccessIc">🔓</div><div><div class="tc-k" data-i18n="trust.access">Votre accès</div><div class="tc-v good" id="trustAccess">—</div></div></div>
   </div>
 
   <!-- Surebets en direct, affichés dans la page -->
@@ -4930,6 +4933,9 @@
       const ok=hasActiveSub();
       ac.textContent = ok ? (typeof isPrivileged==='function' && isPrivileged() ? 'Complet' : fmtSubLeft()) : 'Verrouillé';
       ac.className='tc-v '+(ok?'good':'warn');
+      // le cadenas suit l'etat : ouvert si l'acces est actif, ferme sinon
+      const ic=$('#trustAccessIc');
+      if(ic){ ic.textContent = ok ? '🔓' : '🔒'; ic.className = 'tc-ic'+(ok?'':' locked'); }
     }
   }
 
