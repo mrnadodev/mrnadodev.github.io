@@ -1150,6 +1150,69 @@
   #chatRules .cr-list{display:flex;flex-direction:column;gap:7px;margin-top:10px;
     font-size:12px;color:var(--ink-dim);line-height:1.5}
 
+  /* ===== TABLEAU DES SIGNAUX (dense, triable) ===== */
+  .sb-table-card{margin-bottom:16px;overflow:hidden}
+  .tbl-wrap{overflow-x:auto}
+  #sbTable{width:100%;border-collapse:collapse;font-size:12.5px}
+  #sbTable thead th{position:sticky;top:0;background:var(--panel-2);text-align:left;
+    font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;
+    color:var(--ink-faint);font-weight:700;padding:9px 12px;white-space:nowrap;
+    border-bottom:1px solid var(--line);cursor:pointer;user-select:none}
+  #sbTable thead th:hover{color:var(--mint)}
+  #sbTable thead th .ar{opacity:.35;margin-left:4px}
+  #sbTable thead th.sorted{color:var(--mint)} #sbTable thead th.sorted .ar{opacity:1}
+  #sbTable tbody td{padding:9px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+  #sbTable tbody tr{cursor:pointer;transition:background .12s}
+  #sbTable tbody tr:hover{background:var(--panel-2)}
+  #sbTable tbody tr.on{background:rgba(47,230,168,.10)}
+  #sbTable .num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right}
+  #sbTable .pos{color:var(--mint);font-weight:700}
+  #sbTable .bkm{font-family:var(--mono);font-size:11px;color:var(--ink-dim)}
+  /* âge du signal : le meilleur indicateur de fiabilité */
+  .age{font-family:var(--mono);font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;
+    display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+  .age .d{width:6px;height:6px;border-radius:50%;background:currentColor;flex:none}
+  .age.fresh{color:var(--mint);background:rgba(47,230,168,.13)}
+  .age.warm{color:var(--gold);background:rgba(245,197,66,.13)}
+  .age.stale{color:var(--red);background:rgba(255,90,103,.13)}
+  .age.fresh .d{animation:blip 1.4s infinite}
+  @keyframes blip{0%,100%{opacity:1}50%{opacity:.25}}
+  .age-legend{display:flex;gap:16px;flex-wrap:wrap;padding:10px 14px;background:var(--panel-2);
+    font-size:11px;color:var(--ink-dim);border-top:1px solid var(--line)}
+  .age-legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+
+  /* ===== CARROUSEL PÉDAGOGIQUE (aucun surebet actif) ===== */
+  .sb-none{background:var(--panel);border:1px dashed var(--line);border-radius:var(--radius);
+    padding:26px 22px;text-align:center;flex:1;display:flex;flex-direction:column;min-height:0}
+  .sb-none .sn-head{flex:none}
+  .sb-none .sn-ic{font-size:28px;display:block;margin-bottom:9px;opacity:.55}
+  .sb-none .sn-t{font-size:14.5px;font-weight:700;color:var(--ink)}
+  .sb-none .sn-d{font-size:12.5px;color:var(--ink-dim);margin-top:6px;max-width:44ch;
+    margin-left:auto;margin-right:auto;line-height:1.55}
+  .edu{flex:1;display:flex;flex-direction:column;justify-content:center;min-height:0;
+    margin-top:22px;padding-top:20px;border-top:1px solid var(--line)}
+  /* la fenêtre qui découpe : sans elle les diapos s'affichent côte à côte et débordent */
+  .edu-view{overflow:hidden;width:100%}
+  .edu-track{display:flex;transition:transform .45s cubic-bezier(.4,0,.2,1);width:100%}
+  .edu-slide{position:relative;flex:0 0 100%;min-width:100%;max-width:100%;box-sizing:border-box;
+    padding:18px 10px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    border-radius:14px;overflow:hidden}
+  .edu-bg{position:absolute;inset:0;pointer-events:none;opacity:.16}
+  .edu-bg svg{width:100%;height:100%;display:block}
+  .edu-slide::after{content:"";position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(circle at 50% 45%, var(--panel) 22%, transparent 72%)}
+  .edu-fg{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:12px}
+  .edu-art{width:130px;height:96px;flex:none}
+  .edu-art svg{width:100%;height:100%;display:block}
+  .edu-t{font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.01em}
+  .edu-d{font-size:12.5px;color:var(--ink-dim);line-height:1.6;max-width:42ch}
+  .edu-d b{color:var(--ink);font-weight:650}
+  .edu-dots{display:flex;gap:7px;justify-content:center;margin-top:18px;flex:none}
+  .edu-dot{width:8px;height:8px;border-radius:50%;border:none;background:var(--line);
+    cursor:pointer;padding:0;transition:.2s}
+  .edu-dot.on{background:var(--mint);width:22px;border-radius:4px}
+  @media(max-width:900px){ .edu{margin-top:16px} .edu-art{width:104px;height:78px} }
+
   /* ===== SELECTEUR DEROULANT DES SUREBETS ===== */
   .sb-select{position:relative;margin-bottom:16px}
   .sb-current{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;
@@ -3482,15 +3545,25 @@
   /* ===== SUREBETS EN DIRECT (signals) ===== */
   let signalsChannel=null, activeSignals=[], signalsSeen={}, signalsUsed={}, signalSweepTimer=null;
   let sbSel=0;            // surebet choisi dans le selecteur du panneau
-  // fermeture du menu deroulant au clic exterieur
-  document.addEventListener('click',e=>{ if(!e.target.closest('#sbSelect')){ const b=$('#sbSelect'); if(b) b.classList.remove('open'); } });
-  // minuteries vivantes (selecteur + ticket), sans re-rendre tout le panneau
+  // (le menu déroulant a été remplacé par le tableau triable)
+  // minuteries et âges vivants (tableau + ticket), sans re-rendre tout le panneau
   setInterval(()=>{
     if(!activeSignals.length) return;
-    const cur=activeSignals[sbSel]; if(!cur) return;
-    const t1=document.querySelector('#sbCurrent .sc-t'); if(t1) t1.textContent=sigLeft(cur);
-    const t2=document.querySelector('#sbTicket [data-sbtimer]'); if(t2) t2.textContent=sigLeft(cur);
-    document.querySelectorAll('#sbOptions .so-t').forEach((el,i)=>{ if(activeSignals[i]) el.textContent=sigLeft(activeSignals[i]); });
+    const cur=activeSignals[sbSel];
+    if(cur){
+      const t2=document.querySelector('#sbTicket [data-sbtimer]'); if(t2) t2.textContent=sigLeft(cur);
+      const ag=document.querySelector('#sbTicket [data-sbage]');
+      if(ag){ ag.className='age '+ageCls(sigAgeSec(cur)); ag.textContent=ageTxt(sigAgeSec(cur)); }
+    }
+    // tableau : age (couleur incluse) et temps restant
+    document.querySelectorAll('#sbBody [data-agecell]').forEach(el=>{
+      const s=activeSignals[+el.dataset.agecell]; if(!s) return;
+      el.className='age '+ageCls(sigAgeSec(s));
+      el.innerHTML='<span class="d"></span>'+ageTxt(sigAgeSec(s));
+    });
+    document.querySelectorAll('#sbBody [data-leftcell]').forEach(el=>{
+      const s=activeSignals[+el.dataset.leftcell]; if(s) el.textContent=sigLeft(s);
+    });
   },1000);
 
   function startSignals(user){
@@ -4911,34 +4984,131 @@
       const b=$('#sbUnlock'); if(b) b.addEventListener('click',()=>{ if(typeof openPaywall==='function') openPaywall(); });
       return;
     }
-    if(!activeSignals.length){
-      panel.innerHTML='<div class="sb-empty"><span class="se-ic">🎯</span>'+
-        escapeHTML(tOr('sb.empty','Aucun surebet actif pour le moment. Vous serez alerté dès qu\'un signal est publié.'))+'</div>';
-      return;
-    }
+    // aucun signal : carrousel pédagogique (l'espace vide devient de l'onboarding)
+    if(!activeSignals.length){ renderEduEmpty(panel); return; }
     // l'index selectionne reste valide meme si des surebets expirent
     if(sbSel>=activeSignals.length) sbSel=0;
-    const cur=activeSignals[sbSel];
-    const opts=activeSignals.map((s,i)=>`
-      <div class="sb-opt${i===sbSel?' sel':''}" data-sbi="${i}" role="option" aria-selected="${i===sbSel}">
-        <span class="so-i"><span class="so-c">${escapeHTML(sigCat(s))}</span><span class="so-m">${escapeHTML(sigName(s))}</span></span>
-        <span class="so-r">${sigRoi(s)}<span class="so-t">${sigLeft(s)}</span></span>
-      </div>`).join('');
-    panel.innerHTML=`
-      <div class="sb-select" id="sbSelect">
-        <button class="sb-current" id="sbCurrent" aria-haspopup="listbox" aria-expanded="false">
-          <span class="sc-l"><span class="sc-c">${escapeHTML(sigCat(cur))}</span><span class="sc-m">${escapeHTML(sigName(cur))}</span></span>
-          <span class="sc-r">${sigRoi(cur)}<span class="sc-t">${sigLeft(cur)}</span><span class="sc-caret">▾</span></span>
-        </button>
-        <div class="sb-options" id="sbOptions" role="listbox">${opts}</div>
-      </div>
-      <div id="sbTicket"></div>`;
+    // Le tableau n'apparait qu'a partir de 2 signaux : en dessous il n'apporte rien.
+    const table = activeSignals.length>=2 ? `
+      <div class="card sb-table-card">
+        <div class="tbl-wrap">
+          <table id="sbTable"><thead><tr>
+            <th data-k="roi">${tOr('sb.th_roi','ROI')} <span class="ar">▾</span></th>
+            <th data-k="age">${tOr('sb.th_age','Âge')} <span class="ar">▾</span></th>
+            <th data-k="event">${tOr('sb.th_event','Événement')} <span class="ar">▾</span></th>
+            <th data-k="books">${tOr('sb.th_books','Bookmakers')} <span class="ar">▾</span></th>
+            <th data-k="left">${tOr('sb.th_left','Expire')} <span class="ar">▾</span></th>
+          </tr></thead><tbody id="sbBody"></tbody></table>
+        </div>
+        <div class="age-legend">
+          <span><i style="background:var(--mint)"></i>${tOr('sb.age_ok','&lt; 10 min · fiable')}</span>
+          <span><i style="background:var(--gold)"></i>${tOr('sb.age_mid','10 à 30 min · à vérifier')}</span>
+          <span><i style="background:var(--red)"></i>${tOr('sb.age_old','&gt; 30 min · probablement mort')}</span>
+        </div>
+      </div>` : '';
+    panel.innerHTML=table+'<div id="sbTicket"></div>';
+    if(table) renderSbTable();
     renderSbTicket();
-    const selBox=$('#sbSelect'), curBtn=$('#sbCurrent');
-    curBtn.addEventListener('click',e=>{ e.stopPropagation(); selBox.classList.toggle('open');
-      curBtn.setAttribute('aria-expanded', selBox.classList.contains('open')?'true':'false'); });
-    $$('#sbOptions .sb-opt').forEach(o=>o.addEventListener('click',()=>{ sbSel=+o.dataset.sbi; renderSignalPanel(); }));
   }
+
+  /* ===== CARROUSEL PÉDAGOGIQUE (quand aucun surebet n'est actif) =====
+     L'espace vide devient de l'onboarding : un nouvel abonné qui arrive sans
+     signal actif comprend quand même la valeur du service. */
+  const EDU=[
+    { bg:`<svg viewBox="0 0 400 260" preserveAspectRatio="xMidYMid slice" fill="none">
+        <circle cx="140" cy="130" r="112" stroke="var(--mint)" stroke-width="1.5"/>
+        <circle cx="260" cy="130" r="112" stroke="var(--gold)" stroke-width="1.5"/>
+        <circle cx="140" cy="130" r="78" stroke="var(--mint)" stroke-width="1" opacity=".6"/>
+        <circle cx="260" cy="130" r="78" stroke="var(--gold)" stroke-width="1" opacity=".6"/></svg>`,
+      art:`<svg viewBox="0 0 120 90" fill="none"><circle cx="34" cy="45" r="20" stroke="var(--mint)" stroke-width="4"/><circle cx="86" cy="45" r="20" stroke="var(--gold)" stroke-width="4"/><path d="M54 45h12" stroke="var(--ink-dim)" stroke-width="3" stroke-linecap="round"/><text x="34" y="51" font-size="15" fill="var(--mint)" text-anchor="middle" font-family="monospace" font-weight="bold">2.14</text><text x="86" y="51" font-size="15" fill="var(--gold)" text-anchor="middle" font-family="monospace" font-weight="bold">4.05</text></svg>`,
+      k:'edu1' },
+    { bg:`<svg viewBox="0 0 400 260" preserveAspectRatio="xMidYMid slice" fill="none">
+        <path d="M200 -20V280" stroke="var(--ink-dim)" stroke-width="1" stroke-dasharray="5 7" opacity=".5"/>
+        <path d="M30 60h130M30 100h100M30 140h130M30 180h90" stroke="var(--mint)" stroke-width="2" stroke-linecap="round" opacity=".45"/>
+        <path d="M240 60h130M270 100h100M240 140h130M280 180h90" stroke="var(--gold)" stroke-width="2" stroke-linecap="round" opacity=".45"/></svg>`,
+      art:`<svg viewBox="0 0 120 90" fill="none"><rect x="14" y="22" width="42" height="46" rx="7" stroke="var(--mint)" stroke-width="3.5"/><rect x="64" y="22" width="42" height="46" rx="7" stroke="var(--gold)" stroke-width="3.5"/><path d="M24 40h22M24 50h16" stroke="var(--mint)" stroke-width="3" stroke-linecap="round"/><path d="M74 40h22M74 50h16" stroke="var(--gold)" stroke-width="3" stroke-linecap="round"/></svg>`,
+      k:'edu2' },
+    { bg:`<svg viewBox="0 0 400 260" preserveAspectRatio="xMidYMid slice" fill="none">
+        <circle cx="200" cy="130" r="60" stroke="var(--gold)" stroke-width="1.5" opacity=".7"/>
+        <circle cx="200" cy="130" r="98" stroke="var(--gold)" stroke-width="1.2" opacity=".45"/>
+        <circle cx="200" cy="130" r="136" stroke="var(--red)" stroke-width="1" opacity=".3"/>
+        <path d="M40 70h70M20 130h80M40 190h70" stroke="var(--red)" stroke-width="2" stroke-linecap="round" opacity=".35"/>
+        <path d="M290 70h70M300 130h80M290 190h70" stroke="var(--red)" stroke-width="2" stroke-linecap="round" opacity=".35"/></svg>`,
+      art:`<svg viewBox="0 0 120 90" fill="none"><circle cx="60" cy="45" r="26" stroke="var(--gold)" stroke-width="4"/><path d="M60 30v16l11 8" stroke="var(--gold)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M96 20l6 6M18 20l-6 6" stroke="var(--red)" stroke-width="3" stroke-linecap="round"/></svg>`,
+      k:'edu3' },
+    { bg:`<svg viewBox="0 0 400 260" preserveAspectRatio="xMidYMid slice" fill="none">
+        <rect x="20" y="30" width="160" height="42" rx="10" stroke="var(--mint)" stroke-width="1.5" opacity=".55"/>
+        <rect x="220" y="30" width="160" height="42" rx="10" stroke="var(--gold)" stroke-width="1.5" opacity=".55"/>
+        <rect x="20" y="108" width="160" height="42" rx="10" stroke="var(--gold)" stroke-width="1.5" opacity=".4"/>
+        <rect x="220" y="108" width="160" height="42" rx="10" stroke="var(--mint)" stroke-width="1.5" opacity=".4"/>
+        <rect x="20" y="186" width="160" height="42" rx="10" stroke="var(--mint)" stroke-width="1.5" opacity=".25"/>
+        <rect x="220" y="186" width="160" height="42" rx="10" stroke="var(--gold)" stroke-width="1.5" opacity=".25"/>
+        <path d="M180 51h40M180 129h40M180 207h40" stroke="var(--ink-dim)" stroke-width="1.2" stroke-dasharray="4 4" opacity=".6"/></svg>`,
+      art:`<svg viewBox="0 0 120 90" fill="none"><rect x="14" y="24" width="42" height="20" rx="5" fill="var(--mint)" opacity=".85"/><rect x="64" y="24" width="42" height="20" rx="5" fill="var(--gold)" opacity=".85"/><rect x="14" y="50" width="42" height="20" rx="5" fill="var(--gold)" opacity=".6"/><rect x="64" y="50" width="42" height="20" rx="5" fill="var(--mint)" opacity=".6"/></svg>`,
+      k:'edu4' }
+  ];
+  let eduI=0, eduTimer=null;
+  function renderEduEmpty(panel){
+    panel.innerHTML=`<div class="sb-none">
+      <div class="sn-head"><span class="sn-ic">🎯</span>
+        <div class="sn-t">${escapeHTML(tOr('sb.empty_t','Aucun surebet actif pour le moment'))}</div>
+        <div class="sn-d">${escapeHTML(tOr('sb.empty_d',"Vous serez alerté dès qu'un signal est publié. En attendant, voici comment ça marche."))}</div>
+      </div>
+      <div class="edu">
+        <div class="edu-view"><div class="edu-track" id="eduTrack">${EDU.map(s=>`
+          <div class="edu-slide">
+            <div class="edu-bg" aria-hidden="true">${s.bg}</div>
+            <div class="edu-fg">
+              <div class="edu-art">${s.art}</div>
+              <div class="edu-t">${escapeHTML(tOr(s.k+'_t',''))}</div>
+              <div class="edu-d">${tOr(s.k+'_d','')}</div>
+            </div>
+          </div>`).join('')}</div></div>
+        <div class="edu-dots" id="eduDots">${EDU.map((_,i)=>`<button class="edu-dot ${i===0?'on':''}" data-e="${i}" aria-label="Diapositive ${i+1}"></button>`).join('')}</div>
+      </div></div>`;
+    $$('#eduDots .edu-dot').forEach(b=>b.addEventListener('click',()=>{ eduGo(+b.dataset.e); restartEdu(); }));
+    eduI=0; eduGo(0); restartEdu();
+  }
+  function eduGo(i){
+    eduI=(i+EDU.length)%EDU.length;
+    const t=$('#eduTrack'); if(t) t.style.transform='translateX(-'+(eduI*100)+'%)';
+    $$('#eduDots .edu-dot').forEach((d,k)=>d.classList.toggle('on',k===eduI));
+  }
+  function restartEdu(){ if(eduTimer) clearInterval(eduTimer); eduTimer=setInterval(()=>{ if($('#eduTrack')) eduGo(eduI+1); },6000); }
+
+  /* ===== TABLEAU DES SIGNAUX (dense, triable) ===== */
+  let sbSortK='roi', sbSortDir=-1;
+  function renderSbTable(){
+    const body=$('#sbBody'); if(!body) return;
+    const rows=activeSignals.map((s,i)=>({s,i})).sort((x,y)=>{
+      const a=x.s, b=y.s; let r=0;
+      if(sbSortK==='roi')        r=(parseFloat(a.roi)||0)-(parseFloat(b.roi)||0);
+      else if(sbSortK==='age')   r=sigAgeSec(a)-sigAgeSec(b);
+      else if(sbSortK==='left')  r=new Date(a.expires_at)-new Date(b.expires_at);
+      else if(sbSortK==='books') r=sigCat(a).localeCompare(sigCat(b));
+      else                       r=sigName(a).localeCompare(sigName(b));
+      return r*sbSortDir;
+    });
+    body.innerHTML=rows.map(({s,i})=>`
+      <tr data-sbi="${i}" class="${i===sbSel?'on':''}">
+        <td class="num pos">${s.roi?'+'+Number(s.roi).toFixed(2)+' %':'—'}</td>
+        <td><span class="age ${ageCls(sigAgeSec(s))}" data-agecell="${i}"><span class="d"></span>${ageTxt(sigAgeSec(s))}</span></td>
+        <td>${escapeHTML(sigName(s))}</td>
+        <td class="bkm">${escapeHTML(sigCat(s))}</td>
+        <td class="num bkm" data-leftcell="${i}">${sigLeft(s)}</td>
+      </tr>`).join('');
+    $$('#sbBody tr').forEach(tr=>tr.addEventListener('click',()=>{ sbSel=+tr.dataset.sbi; renderSignalPanel(); }));
+    $$('#sbTable thead th').forEach(th=>{
+      th.classList.toggle('sorted', th.dataset.k===sbSortK);
+      const ar=th.querySelector('.ar'); if(ar) ar.textContent = th.dataset.k===sbSortK ? (sbSortDir<0?'▾':'▴') : '▾';
+      th.addEventListener('click',()=>{
+        if(sbSortK===th.dataset.k) sbSortDir*=-1;
+        else { sbSortK=th.dataset.k; sbSortDir=(sbSortK==='roi')?-1:1; }
+        renderSbTable();
+      });
+    });
+  }
+
   // Helpers d'affichage d'un signal
   function sigLegs(s){ try{ return Array.isArray(s.legs)?s.legs:JSON.parse(s.legs||'[]'); }catch(e){ return []; } }
   function sigName(s){ return s.title||'Surebet'; }
@@ -4949,6 +5119,15 @@
     const m=Math.max(0,Math.floor(ms/60000)), sec=Math.max(0,Math.floor((ms%60000)/1000));
     return String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0');
   }
+  // Âge du signal : depuis combien de temps l'arbitrage a été publié.
+  // Meilleur indicateur de fiabilité qu'un temps restant.
+  function sigAgeSec(s){
+    const t=new Date(s.created_at||s.inserted_at||0).getTime();
+    if(!t) return 0;
+    return Math.max(0, Math.floor((Date.now()-t)/1000));
+  }
+  const ageCls=sec=> sec<600 ? 'fresh' : (sec<1800 ? 'warm' : 'stale');
+  const ageTxt=sec=> sec<60 ? sec+' s' : Math.floor(sec/60)+' min';
   // Retire le surebet DU CALCULATEUR — le signal reste dans la liste.
   // Utile quand on a charge le mauvais surebet et qu on veut en charger un autre.
   function unloadSignal(id){
@@ -4987,7 +5166,7 @@
           <div class="sw-d">${escapeHTML(tOr('sb.warn_desc','Vérifiez chaque cote chez le bookmaker juste avant de miser : quelques secondes suffisent pour qu\'elle change et que le profit garanti disparaisse. Placez la mise la plus incertaine en premier.'))}</div></div>
       </div>
       <div class="tk-foot">
-        <div class="tk-exp"><div class="tk-exp-r">${tOr('sb.expires','expire dans')} <b data-sbtimer>${sigLeft(s)}</b></div>
+        <div class="tk-exp"><div class="tk-exp-r">${tOr('sb.detected','détecté il y a')} <b class="age ${ageCls(sigAgeSec(s))}" data-sbage>${ageTxt(sigAgeSec(s))}</b> · ${tOr('sb.expires','expire dans')} <b data-sbtimer>${sigLeft(s)}</b></div>
           <div class="tk-track"><i style="width:${pct}%"></i></div></div>
         <div class="tk-btns">
           ${canUse?`<button class="btn ${used?'ghost':'primary'} tk-use" data-puse="${s.id}">${used?tOr('sb.reload','✓ Recharger'):tOr('sb.load','Charger ↧')}</button>`:''}
@@ -5672,6 +5851,19 @@
       "sb.lock_b2":"Chargement en 1 clic dans le calculateur",
       "sb.lock_b3":"Salon privé réservé aux abonnés",
       "sb.lock_cta":"Débloquer","sb.days":"jours","sub.unlock":"Débloquer",
+      "sb.th_roi":"ROI","sb.th_age":"Âge","sb.th_event":"Événement","sb.th_books":"Bookmakers","sb.th_left":"Expire",
+      "sb.age_ok":"&lt; 10 min · fiable","sb.age_mid":"10 à 30 min · à vérifier","sb.age_old":"&gt; 30 min · probablement mort",
+      "sb.detected":"détecté il y a",
+      "sb.empty_t":"Aucun surebet actif pour le moment",
+      "sb.empty_d":"Vous serez alerté dès qu'un signal est publié. En attendant, voici comment ça marche.",
+      "edu1_t":"Qu'est-ce qu'un surebet ?",
+      "edu1_d":"Deux bookmakers ne sont pas d'accord sur le même match. En misant sur <b>toutes les issues</b>, chez l'un et chez l'autre, vous encaissez un gain <b>quel que soit le résultat</b>. Ce n'est pas un pronostic : c'est de l'arithmétique.",
+      "edu2_t":"Comment en profiter",
+      "edu2_d":"Le calculateur répartit votre montant entre les issues pour <b>égaliser le gain</b>. Vous placez les deux mises, chacune chez son bookmaker. Le profit garanti s'affiche <b>avant</b> que vous misiez.",
+      "edu3_t":"La vitesse est décisive",
+      "edu3_d":"Les cotes bougent vite. Un signal <b>frais</b> (moins de 10 minutes) est fiable ; au-delà de 30 minutes il a souvent disparu. <b>Vérifiez toujours la cote</b> chez le bookmaker avant de valider.",
+      "edu4_t":"Les bookmakers couverts",
+      "edu4_d":"<b>1xBet</b>, <b>Paryaj Lakay</b>, <b>Paryaj Pam</b> et <b>Golcash</b>. Un arbitrage n'existe qu'<b>entre deux opérateurs</b> : plus vous avez de comptes approvisionnés, plus vous captez de surebets.",
       "hdr.threshold":"Seuil actif",
       "hdr.saved":"Paris enregistrés",
       "hdr.guide":"❔ Guide",
@@ -5793,6 +5985,19 @@
       "sb.lock_b2":"One-click loading into the calculator",
       "sb.lock_b3":"Private room for subscribers only",
       "sb.lock_cta":"Unlock","sb.days":"days","sub.unlock":"Unlock",
+      "sb.th_roi":"ROI","sb.th_age":"Age","sb.th_event":"Event","sb.th_books":"Bookmakers","sb.th_left":"Expires",
+      "sb.age_ok":"&lt; 10 min · reliable","sb.age_mid":"10 to 30 min · check first","sb.age_old":"&gt; 30 min · likely gone",
+      "sb.detected":"detected",
+      "sb.empty_t":"No active surebet right now",
+      "sb.empty_d":"You'll be alerted as soon as a signal is published. In the meantime, here's how it works.",
+      "edu1_t":"What is a surebet?",
+      "edu1_d":"Two bookmakers disagree on the same match. By backing <b>every outcome</b>, one at each bookmaker, you collect a profit <b>whatever the result</b>. It isn't a prediction: it's arithmetic.",
+      "edu2_t":"How to profit from it",
+      "edu2_d":"The calculator splits your amount across the outcomes to <b>equalise the payout</b>. You place both stakes, each at its own bookmaker. The guaranteed profit is shown <b>before</b> you stake.",
+      "edu3_t":"Speed is decisive",
+      "edu3_d":"Odds move fast. A <b>fresh</b> signal (under 10 minutes) is reliable; beyond 30 minutes it has often gone. <b>Always check the price</b> at the bookmaker before confirming.",
+      "edu4_t":"Bookmakers covered",
+      "edu4_d":"<b>1xBet</b>, <b>Paryaj Lakay</b>, <b>Paryaj Pam</b> and <b>Golcash</b>. An arbitrage only exists <b>between two operators</b>: the more funded accounts you hold, the more surebets you catch.",
       "hdr.threshold":"Active threshold",
       "hdr.saved":"Saved bets",
       "hdr.guide":"❔ Guide",
