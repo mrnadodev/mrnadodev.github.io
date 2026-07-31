@@ -927,12 +927,19 @@
   .sp-carousel{overflow:hidden; border-radius:var(--radius)}
   .sp-track{display:flex; transition:transform .5s ease}
   .sp-slide{min-width:100%}
-  .sponsor{position:relative; display:flex; align-items:center; gap:16px; padding:15px 18px; border-radius:var(--radius);
+  /* hauteur doublee : la banniere respire et accueille un visuel */
+  .sponsor{position:relative; display:flex; align-items:center; gap:20px; padding:30px 24px; min-height:150px;
+    border-radius:var(--radius); overflow:hidden;
     border:1px solid rgba(47,230,168,.22); background:linear-gradient(120deg, rgba(47,230,168,.08), transparent 72%), var(--panel)}
-  .sponsor .sp-tag{position:absolute; top:9px; right:12px; font-size:8.5px; font-family:var(--mono); text-transform:uppercase; letter-spacing:.12em; color:var(--ink-faint)}
-  .sponsor .sp-logo{width:48px;height:48px;border-radius:13px;display:grid;place-items:center;font-weight:800;font-size:20px;color:#fff;background:linear-gradient(150deg,#3a86ff,#2667cc);flex:none}
+  .sponsor .sp-tag{position:absolute; top:10px; right:14px; font-size:8.5px; font-family:var(--mono); text-transform:uppercase; letter-spacing:.12em; color:var(--ink-faint)}
+  .sponsor .sp-logo{width:76px;height:76px;border-radius:18px;display:grid;place-items:center;font-weight:800;font-size:30px;color:#fff;background:linear-gradient(150deg,#3a86ff,#2667cc);flex:none;overflow:hidden}
+  .sponsor .sp-logo img{width:100%;height:100%;object-fit:cover;display:block}
+  /* image de fond optionnelle (bannière fournie par l'admin) */
+  .sponsor .sp-banner{position:absolute;inset:0;z-index:0;opacity:.22;pointer-events:none}
+  .sponsor .sp-banner img{width:100%;height:100%;object-fit:cover;display:block}
+  .sponsor > *:not(.sp-banner){position:relative;z-index:1}
   .sponsor .sp-txt{flex:1; min-width:0}
-  .sponsor .sp-t{font-weight:700; font-size:15px} .sponsor .sp-d{font-size:12.5px; color:var(--ink-dim); margin-top:2px}
+  .sponsor .sp-t{font-weight:700; font-size:17px} .sponsor .sp-d{font-size:13px; color:var(--ink-dim); margin-top:4px; line-height:1.5}
   .sponsor .sp-cta{flex:none; border:none; border-radius:11px; padding:11px 18px; font-weight:700; font-size:13px; background:var(--mint); color:var(--bg); text-decoration:none}
   .sp-dots{display:flex; gap:7px; justify-content:center; margin-top:10px}
   .sp-dot{width:8px;height:8px;border-radius:50%;border:none;background:var(--line);cursor:pointer;padding:0;transition:.2s}
@@ -1159,6 +1166,7 @@
     color:var(--ink-faint);font-weight:700;padding:9px 12px;white-space:nowrap;
     border-bottom:1px solid var(--line);cursor:pointer;user-select:none}
   #sbTable thead th:hover{color:var(--mint)}
+  #sbTable thead th.r{text-align:right}   /* l'en-tete suit l'alignement de sa colonne */
   #sbTable thead th .ar{opacity:.35;margin-left:4px}
   #sbTable thead th.sorted{color:var(--mint)} #sbTable thead th.sorted .ar{opacity:1}
   #sbTable tbody td{padding:9px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
@@ -1191,6 +1199,9 @@
     margin-left:auto;margin-right:auto;line-height:1.55}
   .edu{flex:1;display:flex;flex-direction:column;justify-content:center;min-height:0;
     margin-top:22px;padding-top:20px;border-top:1px solid var(--line)}
+  /* carrousel affiché sous l'écran de déblocage (compte non abonné) */
+  .edu-locked{margin-top:18px;padding:18px 16px 4px;border:1px solid var(--line);
+    border-radius:var(--radius);background:var(--panel);border-top:1px solid var(--line)}
   /* la fenêtre qui découpe : sans elle les diapos s'affichent côte à côte et débordent */
   .edu-view{overflow:hidden;width:100%}
   .edu-track{display:flex;transition:transform .45s cubic-bezier(.4,0,.2,1);width:100%}
@@ -4035,7 +4046,16 @@
       const color=s.color||'linear-gradient(150deg,#3a86ff,#2667cc)';
       const cta = s.url ? '<a class="sp-cta" href="'+escapeHTML(s.url)+'" target="_blank" rel="noopener nofollow">'+escapeHTML(s.cta_label||'Découvrir')+'</a>'
                         : '<span class="sp-cta">'+escapeHTML(s.cta_label||'Découvrir')+'</span>';
-      return '<div class="sp-slide"><div class="sponsor"><span class="sp-tag">Sponsorisé</span><div class="sp-logo" style="background:'+escapeHTML(color)+'">'+escapeHTML(s.logo||(s.name||'?')[0])+'</div><div class="sp-txt"><div class="sp-t">'+escapeHTML(s.name||'')+'</div><div class="sp-d">'+escapeHTML(s.tagline||'')+'</div></div>'+cta+'</div></div>';
+      // logo : image si une URL est fournie, sinon la lettre / l'emoji
+      const isUrl=v=>/^https?:\/\//i.test(String(v||''));
+      const logoHtml = isUrl(s.logo)
+        ? '<div class="sp-logo"><img src="'+escapeHTML(s.logo)+'" alt="'+escapeHTML(s.name||'')+'" loading="lazy"></div>'
+        : '<div class="sp-logo" style="background:'+escapeHTML(color)+'">'+escapeHTML(s.logo||(s.name||'?')[0])+'</div>';
+      const bannerHtml = isUrl(s.banner)
+        ? '<div class="sp-banner" aria-hidden="true"><img src="'+escapeHTML(s.banner)+'" alt="" loading="lazy"></div>' : '';
+      const tag = (s.kind==='ad') ? 'Publicité' : 'Sponsorisé';
+      return '<div class="sp-slide"><div class="sponsor">'+bannerHtml+'<span class="sp-tag">'+tag+'</span>'+logoHtml+
+        '<div class="sp-txt"><div class="sp-t">'+escapeHTML(s.name||'')+'</div><div class="sp-d">'+escapeHTML(s.tagline||'')+'</div></div>'+cta+'</div></div>';
     }).join('')+'</div></div>'+(spPubList.length>1 ? '<div class="sp-dots" id="spPubDots">'+spPubList.map((_,i)=>'<button class="sp-dot '+(i===0?'on':'')+'" data-spd="'+i+'" aria-label="Sponsor '+(i+1)+'"></button>').join('')+'</div>' : '');
     $$('#spPubDots .sp-dot').forEach(d=>d.addEventListener('click',()=>{ spPubGo(+d.dataset.spd); restartSpPub(); }));
     restartSpPub();
@@ -4980,8 +5000,15 @@
             '<li><span class="ck">✓</span>'+escapeHTML(tOr('sb.lock_b3','Salon privé réservé aux abonnés'))+'</li>'+
           '</ul>'+
           '<button class="btn primary sl-cta" id="sbUnlock">'+escapeHTML(cta)+'</button>'+
+        '</div>'+
+        // Le carrousel reste visible pour les non-abonnés : il explique la valeur
+        // du service au moment précis où l'on décide de s'abonner.
+        '<div class="edu edu-locked">'+
+          '<div class="edu-view"><div class="edu-track" id="eduTrack">'+eduSlidesHTML()+'</div></div>'+
+          '<div class="edu-dots" id="eduDots">'+eduDotsHTML()+'</div>'+
         '</div>';
       const b=$('#sbUnlock'); if(b) b.addEventListener('click',()=>{ if(typeof openPaywall==='function') openPaywall(); });
+      bindEdu();
       return;
     }
     // aucun signal : carrousel pédagogique (l'espace vide devient de l'onboarding)
@@ -4993,11 +5020,11 @@
       <div class="card sb-table-card">
         <div class="tbl-wrap">
           <table id="sbTable"><thead><tr>
-            <th data-k="roi">${tOr('sb.th_roi','ROI')} <span class="ar">▾</span></th>
+            <th data-k="roi" class="r">${tOr('sb.th_roi','ROI')} <span class="ar">▾</span></th>
             <th data-k="age">${tOr('sb.th_age','Âge')} <span class="ar">▾</span></th>
             <th data-k="event">${tOr('sb.th_event','Événement')} <span class="ar">▾</span></th>
             <th data-k="books">${tOr('sb.th_books','Bookmakers')} <span class="ar">▾</span></th>
-            <th data-k="left">${tOr('sb.th_left','Expire')} <span class="ar">▾</span></th>
+            <th data-k="left" class="r">${tOr('sb.th_left','Expire')} <span class="ar">▾</span></th>
           </tr></thead><tbody id="sbBody"></tbody></table>
         </div>
         <div class="age-legend">
@@ -5048,6 +5075,24 @@
       k:'edu4' }
   ];
   let eduI=0, eduTimer=null;
+  function eduSlidesHTML(){
+    return EDU.map(s=>`
+      <div class="edu-slide">
+        <div class="edu-bg" aria-hidden="true">${s.bg}</div>
+        <div class="edu-fg">
+          <div class="edu-art">${s.art}</div>
+          <div class="edu-t">${escapeHTML(tOr(s.k+'_t',''))}</div>
+          <div class="edu-d">${tOr(s.k+'_d','')}</div>
+        </div>
+      </div>`).join('');
+  }
+  function eduDotsHTML(){
+    return EDU.map((_,i)=>`<button class="edu-dot ${i===0?'on':''}" data-e="${i}" aria-label="Diapositive ${i+1}"></button>`).join('');
+  }
+  function bindEdu(){
+    $$('#eduDots .edu-dot').forEach(b=>b.addEventListener('click',()=>{ eduGo(+b.dataset.e); restartEdu(); }));
+    eduI=0; eduGo(0); restartEdu();
+  }
   function renderEduEmpty(panel){
     panel.innerHTML=`<div class="sb-none">
       <div class="sn-head"><span class="sn-ic">🎯</span>
@@ -5055,19 +5100,10 @@
         <div class="sn-d">${escapeHTML(tOr('sb.empty_d',"Vous serez alerté dès qu'un signal est publié. En attendant, voici comment ça marche."))}</div>
       </div>
       <div class="edu">
-        <div class="edu-view"><div class="edu-track" id="eduTrack">${EDU.map(s=>`
-          <div class="edu-slide">
-            <div class="edu-bg" aria-hidden="true">${s.bg}</div>
-            <div class="edu-fg">
-              <div class="edu-art">${s.art}</div>
-              <div class="edu-t">${escapeHTML(tOr(s.k+'_t',''))}</div>
-              <div class="edu-d">${tOr(s.k+'_d','')}</div>
-            </div>
-          </div>`).join('')}</div></div>
-        <div class="edu-dots" id="eduDots">${EDU.map((_,i)=>`<button class="edu-dot ${i===0?'on':''}" data-e="${i}" aria-label="Diapositive ${i+1}"></button>`).join('')}</div>
+        <div class="edu-view"><div class="edu-track" id="eduTrack">${eduSlidesHTML()}</div></div>
+        <div class="edu-dots" id="eduDots">${eduDotsHTML()}</div>
       </div></div>`;
-    $$('#eduDots .edu-dot').forEach(b=>b.addEventListener('click',()=>{ eduGo(+b.dataset.e); restartEdu(); }));
-    eduI=0; eduGo(0); restartEdu();
+    bindEdu();
   }
   function eduGo(i){
     eduI=(i+EDU.length)%EDU.length;
@@ -5122,9 +5158,20 @@
   // Âge du signal : depuis combien de temps l'arbitrage a été publié.
   // Meilleur indicateur de fiabilité qu'un temps restant.
   function sigAgeSec(s){
-    const t=new Date(s.created_at||s.inserted_at||0).getTime();
+    const t=parseDbTime(s.created_at||s.inserted_at);
     if(!t) return 0;
     return Math.max(0, Math.floor((Date.now()-t)/1000));
+  }
+  // Postgres peut renvoyer un horodatage SANS fuseau ("2026-07-26T12:34:56").
+  // Le navigateur le lirait alors comme heure LOCALE, d'ou un age fausse.
+  // On force l'interpretation en UTC quand le fuseau est absent.
+  function parseDbTime(v){
+    if(!v) return 0;
+    let str=String(v);
+    const hasTz=/[zZ]$|[+-]\d{2}:?\d{2}$/.test(str);
+    if(!hasTz){ str=str.replace(' ','T')+'Z'; }
+    const t=new Date(str).getTime();
+    return isNaN(t)?0:t;
   }
   const ageCls=sec=> sec<600 ? 'fresh' : (sec<1800 ? 'warm' : 'stale');
   const ageTxt=sec=> sec<60 ? sec+' s' : Math.floor(sec/60)+' min';
