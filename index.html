@@ -920,6 +920,22 @@
   #adminUsers, #adminPayments{max-width:820px}
   #adminUsers .user-row, #adminPayments .pay-req{max-width:none}
   #usersList, #payReqList{max-height:none}
+  .u-filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  .u-chip{background:var(--panel-2);border:1px solid var(--line);color:var(--ink-dim);border-radius:999px;
+          padding:6px 13px;font-size:11.5px;font-weight:600;cursor:pointer;transition:.15s}
+  .u-chip:hover{color:var(--ink);border-color:var(--mint-dim)}
+  .u-chip.on{background:rgba(39,227,154,.12);border-color:var(--mint);color:var(--mint)}
+  .paylock{text-align:center;padding:14px 4px}
+  .paylock-ic{font-size:38px;margin-bottom:8px;opacity:.8}
+  .paylock .adash-p{text-align:center}
+  /* pca- : liste des canaux dans l'admin. Préfixe distinct de .pc- (fenêtre de paiement). */
+  .pca-row{display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--line);
+          border-radius:12px;padding:14px 16px;margin-bottom:10px}
+  .pca-qr{width:52px;height:52px;border-radius:10px;object-fit:cover;flex:none;background:var(--panel-2);border:1px solid var(--line-soft)}
+  .pca-i{flex:1;min-width:0}
+  .pca-nm{font-weight:700;font-size:14px}
+  .pca-sub{font-size:12px;color:var(--ink-dim);font-family:var(--mono);margin-top:3px;word-break:break-all}
+  .pca-act{display:flex;gap:6px;flex:none}
   @media(max-width:700px){ .adash{flex-direction:column} .adash-side{width:auto; flex-direction:row; flex-wrap:wrap; height:auto; gap:6px} .adash-side>div[style]{display:none} .adash-main{padding:20px 16px} }
 
   /* ===== CARROUSEL SPONSORS (utilisateur) ===== */
@@ -1277,6 +1293,7 @@
     border:1px solid var(--line);border-radius:8px;padding:6px 11px;min-width:62px;text-align:center}
   .tk-none{color:var(--ink-faint);font-size:12px;display:block;padding:12px 0}
   .tk-note{font-size:12px;color:var(--gold);padding:12px 20px 0}
+  .tk-meta{display:flex;gap:14px;flex-wrap:wrap;padding:0 20px 2px;font-size:11.5px;color:var(--ink-dim);letter-spacing:.02em}
   .tk-foot{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 20px 16px}
   .tk-exp{display:flex;flex-direction:column;gap:6px;flex:1}
   .tk-exp-r{font-size:11px;color:var(--ink-dim)}
@@ -1870,6 +1887,16 @@
       <p class="edit-note">Ce surebet sera envoyé en direct à tous les utilisateurs en ligne, et restera visible quelques minutes pour ceux qui se connectent juste après.</p>
       <label class="fld"><span class="lab">Titre / Match</span><input type="text" id="pubTitle" placeholder="ex : PSG vs OM — 1X2"></label>
       <div class="row r2" style="margin-bottom:12px">
+        <label class="fld" style="margin:0"><span class="lab">Sport</span>
+          <select id="pubSport">
+            <option value="">— non précisé —</option>
+            <option>Football</option><option>Basket</option><option>Tennis</option>
+            <option>Volley</option><option>Hockey</option><option>Baseball</option><option>Autre</option>
+          </select></label>
+        <label class="fld" style="margin:0"><span class="lab">Coup d'envoi (heure du match)</span>
+          <input type="datetime-local" id="pubStart"></label>
+      </div>
+      <div class="row r2" style="margin-bottom:12px">
         <label class="fld" style="margin:0"><span class="lab">ROI calculé (%)</span><input type="text" id="pubRoi" readonly placeholder="— (auto)" style="background:var(--panel);color:var(--mint);font-weight:700"></label>
         <label class="fld" style="margin:0"><span class="lab">Validité (minutes)</span>
           <select id="pubTtl"><option value="5">5 min</option><option value="10" selected>10 min</option><option value="15">15 min</option><option value="30">30 min</option></select></label>
@@ -1941,6 +1968,7 @@
     <button class="adash-nav" data-sec="texts">📝 Textes (FR/EN)</button>
     <button class="adash-nav" data-sec="appear">🎨 Apparence</button>
     <button class="adash-nav" data-sec="manage">👥 Comptes &amp; paiements</button>
+    <button class="adash-nav" data-sec="paychan">🔐 Coordonnées de paiement</button>
     <div style="flex:1"></div>
     <button class="adash-close" id="adashClose">✕ Fermer</button>
   </aside>
@@ -1962,42 +1990,67 @@
     <!-- Sponsors -->
     <section class="adash-sec" data-sec="spons" style="display:none">
       <h2>Sponsors &amp; publicité</h2>
-      <p class="adash-p">Réservé aux entreprises <b>hors paris</b> (télécoms, paiement, commerces). Tant que la liste est vide, <b>rien ne s'affiche</b> côté utilisateurs. Plusieurs sponsors = carrousel automatique.</p>
+      <p class="adash-p">Réservé aux entreprises <b>hors paris</b> (télécoms, paiement, commerces). Tant que la liste est vide, <b>rien ne s'affiche</b> côté utilisateurs. Plusieurs entrées = carrousel automatique.</p>
+
+      <div class="adash-subtabs">
+        <button class="adash-subtab on" data-sptab="sponsor">🤝 Partenaires</button>
+        <button class="adash-subtab" data-sptab="ad">📣 Publicités</button>
+      </div>
+
+      <p class="adash-p" id="spKindHint">Un <b>partenaire</b> est une entreprise associée au projet : il est présenté comme « Sponsorisé ».</p>
+
       <div class="adash-card">
-        <div class="adash-lab">Ajouter un sponsor</div>
+        <div class="adash-lab" id="spFormTitle">Ajouter un partenaire</div>
         <div class="row2">
           <label class="fld"><span class="lab">Nom</span><input type="text" id="spName" placeholder="ex : Digicel"></label>
-          <label class="fld"><span class="lab">Logo (lettre / emoji)</span><input type="text" id="spLogo" placeholder="ex : D" maxlength="2"></label>
+          <label class="fld"><span class="lab">Logo — lettre/emoji <i style="color:var(--ink-faint);font-style:normal">ou</i> URL d'image</span><input type="text" id="spLogo" placeholder="D  ·  ou  https://…/logo.png"></label>
         </div>
         <label class="fld" style="margin-top:12px"><span class="lab">Accroche</span><input type="text" id="spTag" placeholder="ex : Internet & recharge partout en Haïti"></label>
         <div class="row2" style="margin-top:12px">
           <label class="fld"><span class="lab">Texte du bouton</span><input type="text" id="spCta" placeholder="Découvrir"></label>
           <label class="fld"><span class="lab">Lien</span><input type="text" id="spUrl" placeholder="https://…"></label>
         </div>
+        <label class="fld" style="margin-top:12px"><span class="lab">Bannière de fond (URL d'image, optionnel)</span><input type="text" id="spBanner" placeholder="https://…/banniere.jpg"></label>
         <div style="margin-top:14px"><button class="btn primary" id="spAdd">＋ Ajouter</button></div>
       </div>
-      <div class="adash-lab" style="margin-top:18px">Sponsors actuels</div>
+      <div class="adash-lab" style="margin-top:18px" id="spListTitle">Partenaires actuels</div>
       <div id="adSponsorList"></div>
     </section>
 
     <!-- Chat & modération -->
     <section class="adash-sec" data-sec="chatmod" style="display:none">
       <h2>Chat &amp; modération</h2>
-      <p class="adash-p">Verrouillez un salon, activez le minuteur anti-spam, lancez un sondage ou videz le chat. Pour nommer un modérateur, allez dans <b>Comptes &amp; paiements</b>.</p>
+      <p class="adash-p">Chaque salon se modère <b>séparément</b> : choisissez-le ci-dessous, les actions ne s'appliquent qu'à lui. Pour nommer un modérateur, allez dans <b>Comptes &amp; paiements</b>.</p>
+
+      <div class="adash-subtabs">
+        <button class="adash-subtab on" data-crtab="general">💬 Général</button>
+        <button class="adash-subtab" data-crtab="surebets">🎯 Surebets</button>
+      </div>
+
       <div class="adash-card">
-        <div class="adash-lab">Salon en cours</div>
+        <div class="adash-lab">Salon <span id="adRoomName" style="color:var(--mint)">Général</span> — état</div>
+        <div id="adRoomState" class="adash-p" style="margin:0 0 14px">—</div>
+
+        <div class="adash-lab">Écriture</div>
         <div style="display:flex; gap:10px; flex-wrap:wrap">
-          <button class="btn" id="adChatLock">🔒 Verrouiller / ouvrir le salon</button>
+          <button class="btn" id="adChatLock">🔒 Verrouiller / ouvrir ce salon</button>
+        </div>
+
+        <div class="adash-lab" style="margin-top:18px">Anti-spam (tous salons)</div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap">
           <button class="btn" id="adChatTimer">⏱️ Minuteur anti-spam</button>
         </div>
-        <div class="adash-lab" style="margin-top:18px">Sondages</div>
+
+        <div class="adash-lab" style="margin-top:18px">Sondages <span style="color:var(--ink-faint);font-weight:400;text-transform:none;letter-spacing:0">· salon Général</span></div>
         <div style="display:flex; gap:10px; flex-wrap:wrap">
           <button class="btn" id="adChatPoll">📊 Lancer un sondage</button>
           <button class="btn" id="adChatResults">🗂 Voir les résultats</button>
         </div>
+
         <div class="adash-lab" style="margin-top:18px">Zone sensible</div>
         <div style="display:flex; gap:10px; flex-wrap:wrap">
-          <button class="btn" id="adChatClear" style="border-color:var(--red);color:var(--red)">🧹 Vider tout le chat</button>
+          <button class="btn" id="adChatClear" style="border-color:var(--red);color:var(--red)">🧹 Vider ce salon</button>
+          <button class="btn" id="adChatClearAll" style="border-color:var(--red);color:var(--red)">🧹 Vider tous les salons</button>
         </div>
         <p class="adash-p" style="margin:14px 0 0">Les actions sur un message précis (supprimer, répondre) se font directement dans le chat.</p>
       </div>
@@ -2043,6 +2096,15 @@
           <span id="usersSummary">—</span>
           <button class="btn ghost" id="usersRefresh" style="padding:6px 12px;font-size:12px">↻ Actualiser</button>
         </div>
+        <div class="u-filters">
+          <button class="u-chip on" data-ufil="all">Tous</button>
+          <button class="u-chip" data-ufil="sub">🎯 Abonnés</button>
+          <button class="u-chip" data-ufil="nosub">Non-abonnés</button>
+          <button class="u-chip" data-ufil="expired">Abo expiré</button>
+          <button class="u-chip" data-ufil="pending">En attente</button>
+          <button class="u-chip" data-ufil="staff">Publisher / Modo</button>
+        </div>
+        <input type="text" id="usersSearch" placeholder="Rechercher un pseudo ou un e-mail…" style="width:100%;margin:0 0 12px">
         <div id="usersList"></div>
       </div>
 
@@ -2052,6 +2114,54 @@
           <button class="btn ghost" id="payRefresh" style="padding:6px 12px;font-size:12px">↻ Actualiser</button>
         </div>
         <div id="payReqList"></div>
+      </div>
+    </section>
+
+    <!-- Coordonnées de paiement (verrou supplémentaire) -->
+    <section class="adash-sec" data-sec="paychan" style="display:none">
+      <h2>Coordonnées de paiement</h2>
+      <p class="adash-p">Les numéros MonCash / NatCash et les QR affichés aux utilisateurs dans la fenêtre de paiement. Cette section est protégée par un <b>code distinct</b> de votre mot de passe de connexion.</p>
+
+      <!-- Écran de verrouillage -->
+      <div class="adash-card" id="payLockScreen">
+        <div class="paylock">
+          <div class="paylock-ic">🔐</div>
+          <div class="adash-lab" style="margin:0">Section verrouillée</div>
+          <p class="adash-p" id="payLockMsg" style="margin:8px 0 14px">Saisissez le code d'accès pour afficher et modifier les coordonnées de paiement.</p>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+            <input type="password" id="payLockInput" placeholder="Code d'accès" autocomplete="off" style="flex:1;min-width:180px">
+            <button class="btn primary" id="payLockGo">Déverrouiller</button>
+          </div>
+          <p class="adash-p" id="payLockErr" style="color:var(--red);display:none;margin:10px 0 0"></p>
+        </div>
+      </div>
+
+      <!-- Contenu déverrouillé -->
+      <div id="payChanBody" style="display:none">
+        <div class="adash-card">
+          <div class="adash-lab">Ajouter un canal de paiement</div>
+          <div class="row2">
+            <label class="fld"><span class="lab">Nom du service</span><input type="text" id="pcName" placeholder="ex : MonCash"></label>
+            <label class="fld"><span class="lab">Numéro à créditer</span><input type="text" id="pcNumber" placeholder="ex : 3xxx xxxx"></label>
+          </div>
+          <div class="row2" style="margin-top:12px">
+            <label class="fld"><span class="lab">Nom / code du business</span><input type="text" id="pcBiz" placeholder="ex : NADOEDGE HT"></label>
+            <label class="fld"><span class="lab">QR code (URL d'image)</span><input type="text" id="pcQr" placeholder="https://…/qr.png"></label>
+          </div>
+          <div style="margin-top:14px"><button class="btn primary" id="pcAdd">＋ Ajouter</button></div>
+        </div>
+        <div class="adash-lab" style="margin-top:18px">Canaux enregistrés</div>
+        <div id="pcList"></div>
+
+        <div class="adash-card" style="margin-top:22px">
+          <div class="adash-lab">Code d'accès de cette section</div>
+          <p class="adash-p" style="margin:0 0 12px">Protection d'<b>interface</b> : elle évite qu'un écran resté ouvert expose vos numéros. La vraie sécurité reste côté serveur — seul un compte admin peut écrire ici. N'utilisez pas votre mot de passe de connexion.</p>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+            <input type="password" id="pcNewCode" placeholder="Nouveau code (vide = désactiver)" autocomplete="new-password" style="flex:1;min-width:180px">
+            <button class="btn" id="pcCodeSave">Enregistrer le code</button>
+            <button class="btn ghost" id="pcRelock">🔒 Reverrouiller</button>
+          </div>
+        </div>
       </div>
     </section>
   </div>
@@ -3646,8 +3756,19 @@
     const info=[ch.name, ch.business, ch.number, SUB.PRICE].filter(Boolean).join(' | ');
     return 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=6&data='+encodeURIComponent(info);
   }
+  // Canaux saisis par l'admin (table payment_channels). Tant qu'aucun n'est
+  // enregistré, on retombe sur SUB.CHANNELS défini en tête de fichier.
+  let payChansPublic=[];
+  async function loadPayChansPublic(){
+    if(!sb) return;
+    try{
+      const {data}=await sb.from('payment_channels').select('*').eq('active',true).order('sort',{ascending:true});
+      payChansPublic=data||[];
+    }catch(e){ payChansPublic=[]; }
+  }
   function buildPayChannels(){
-    const box=$('#payChans'); const chans=(SUB.CHANNELS||[]).filter(c=>c&&c.name);
+    const box=$('#payChans');
+    const chans = payChansPublic.length ? payChansPublic : (SUB.CHANNELS||[]).filter(c=>c&&c.name);
     box.innerHTML = chans.map(ch=>{
       const qr=chanQrSrc(ch);
       const qrHtml = qr
@@ -3670,6 +3791,7 @@
     }));
   }
   async function openPaywall(){
+    await loadPayChansPublic();
     $('#payPlanName').textContent = SUB.PLAN_LABEL||'Accès Surebets';
     $('#payPlanSub').textContent = SUB.DURATION_DAYS+' jours renouvelables';
     $('#payDurTxt').textContent = SUB.DURATION_DAYS+' jours';
@@ -3846,6 +3968,110 @@
     }catch(e){ /* tables absentes : on garde les valeurs par défaut */ }
   }
 
+  /* ===== COORDONNÉES DE PAIEMENT (section verrouillée) =====
+     Le code d'accès est une protection d'INTERFACE : il évite qu'un écran resté
+     ouvert expose les numéros. Ce qui protège réellement les données, c'est la RLS
+     de payment_channels (écriture réservée aux admins) — voir migration_v2.sql. */
+  let payUnlocked=false, payChans=[];
+
+  async function getPayLockCode(){
+    try{
+      const {data}=await sb.from('app_settings').select('value').eq('key','pay_lock_code').maybeSingle();
+      return (data&&data.value)||'';
+    }catch(e){ return ''; }
+  }
+  async function openPayChanSection(){
+    if(!sb||!isAdmin(currentUser))return;
+    const code=await getPayLockCode();
+    // Aucun code configuré : on ouvre, et on invite à en poser un.
+    if(!code){ payUnlocked=true; }
+    showPayChan(payUnlocked, code);
+    if(payUnlocked) loadPayChans();
+  }
+  function showPayChan(unlocked, code){
+    const lock=$('#payLockScreen'), body=$('#payChanBody');
+    if(!lock||!body) return;
+    lock.style.display = unlocked ? 'none' : '';
+    body.style.display = unlocked ? '' : 'none';
+    const msg=$('#payLockMsg');
+    if(msg && !code) msg.textContent="Aucun code n'est configuré. Définissez-en un plus bas pour protéger cette section.";
+    const err=$('#payLockErr'); if(err) err.style.display='none';
+    const inp=$('#payLockInput'); if(inp) inp.value='';
+  }
+  async function tryUnlockPay(){
+    const inp=$('#payLockInput'), err=$('#payLockErr');
+    const code=await getPayLockCode();
+    if(!code || (inp && inp.value===code)){
+      payUnlocked=true; showPayChan(true, code); loadPayChans();
+    }else{
+      if(err){ err.textContent='Code incorrect.'; err.style.display=''; }
+      if(inp){ inp.value=''; inp.focus(); }
+    }
+  }
+  $('#payLockGo') && $('#payLockGo').addEventListener('click',tryUnlockPay);
+  $('#payLockInput') && $('#payLockInput').addEventListener('keydown',e=>{ if(e.key==='Enter') tryUnlockPay(); });
+  $('#pcRelock') && $('#pcRelock').addEventListener('click',async()=>{
+    payUnlocked=false; showPayChan(false, await getPayLockCode()); showToast('Section reverrouillée 🔒');
+  });
+  $('#pcCodeSave') && $('#pcCodeSave').addEventListener('click',async()=>{
+    if(!sb||!isAdmin(currentUser))return;
+    const v=($('#pcNewCode').value||'').trim();
+    try{
+      await sb.from('app_settings').upsert({key:'pay_lock_code', value:v});
+      $('#pcNewCode').value='';
+      showToast(v?'Code enregistré ✓':'Code retiré — section libre');
+    }catch(e){ console.error(e); showToast('Échec (droits admin ?)',true); }
+  });
+
+  async function loadPayChans(){
+    if(!sb||!isAdmin(currentUser))return;
+    const list=$('#pcList'); if(!list) return;
+    list.innerHTML='<div class="ad-empty">Chargement…</div>';
+    try{
+      const {data,error}=await sb.from('payment_channels').select('*').order('sort',{ascending:true});
+      if(error)throw error;
+      payChans=data||[];
+      if(!payChans.length){ list.innerHTML='<div class="ad-empty">Aucun canal. Tant que rien n’est ajouté, la fenêtre de paiement affiche les coordonnées par défaut du code.</div>'; return; }
+      const isUrl=v=>/^https?:\/\//i.test(String(v||''));
+      list.innerHTML=payChans.map(c=>`<div class="pca-row">
+        ${isUrl(c.qr)?`<img class="pca-qr" src="${escapeHTML(c.qr)}" alt="">`:'<div class="pca-qr"></div>'}
+        <div class="pca-i">
+          <div class="pca-nm">${escapeHTML(c.name)} ${c.active?'<span class="ad-on">actif</span>':'<span class="ad-off">inactif</span>'}</div>
+          <div class="pca-sub">${escapeHTML(c.number||'— pas de numéro —')}${c.business?' · '+escapeHTML(c.business):''}</div>
+        </div>
+        <div class="pca-act">
+          <button class="u-btn" data-pc-toggle="${c.id}" data-active="${c.active?1:0}">${c.active?'Désactiver':'Activer'}</button>
+          <button class="u-btn block" data-pc-del="${c.id}">✕</button>
+        </div>
+      </div>`).join('');
+      $$('#pcList [data-pc-toggle]').forEach(b=>b.addEventListener('click',()=>togglePayChan(b.dataset.pcToggle, b.dataset.active!=='1')));
+      $$('#pcList [data-pc-del]').forEach(b=>b.addEventListener('click',()=>delPayChan(b.dataset.pcDel)));
+    }catch(e){ console.error(e); list.innerHTML='<div class="ad-empty">Impossible de charger (table « payment_channels » ? Exécutez migration_v2.sql).</div>'; }
+  }
+  async function addPayChan(){
+    if(!sb||!isAdmin(currentUser))return;
+    const name=($('#pcName').value||'').trim(); if(!name){ showToast('Nom du service requis',true); return; }
+    const payload={ name,
+      number:($('#pcNumber').value||'').trim()||null,
+      business:($('#pcBiz').value||'').trim()||null,
+      qr:($('#pcQr').value||'').trim()||null,
+      active:true };
+    try{ const {error}=await sb.from('payment_channels').insert(payload); if(error)throw error;
+      ['pcName','pcNumber','pcBiz','pcQr'].forEach(id=>{ if($('#'+id))$('#'+id).value=''; });
+      showToast('Canal ajouté ✓'); loadPayChans(); loadPayChansPublic();
+    }catch(e){ console.error(e); showToast('Échec (droits admin ?)',true); }
+  }
+  async function togglePayChan(id,active){
+    try{ await sb.from('payment_channels').update({active}).eq('id',id); loadPayChans(); loadPayChansPublic(); }
+    catch(e){ showToast('Action impossible',true); }
+  }
+  async function delPayChan(id){
+    if(!confirm('Supprimer ce canal de paiement ?'))return;
+    try{ await sb.from('payment_channels').delete().eq('id',id); showToast('Canal supprimé'); loadPayChans(); loadPayChansPublic(); }
+    catch(e){ showToast('Action impossible',true); }
+  }
+  $('#pcAdd') && $('#pcAdd').addEventListener('click',addPayChan);
+
   /* ===== TABLEAU DE BORD ADMIN (page séparée) ===== */
   function openAdminDash(){
     if(!isAdmin(currentUser))return;
@@ -3861,8 +4087,10 @@
   function adashSection(sec){
     $$('#adminDash .adash-nav').forEach(b=>b.classList.toggle('on', b.dataset.sec===sec));
     $$('#adminDash .adash-sec').forEach(s=>s.style.display=(s.dataset.sec===sec?'block':'none'));
-    if(sec==='manage') manageTab('users');   // charge la liste des comptes
-    if(sec==='spons')  loadSponsorsAdmin();
+    if(sec==='manage')  manageTab('users');   // charge la liste des comptes
+    if(sec==='spons')   setSpKind(spKind);    // recharge la nature affichée
+    if(sec==='chatmod') setAdRoom(adRoom);    // rafraîchit l'état du salon choisi
+    if(sec==='paychan') openPayChanSection();
   }
   $$('#adminDash .adash-nav').forEach(b=>b.addEventListener('click',()=>adashSection(b.dataset.sec)));
   $('#adashClose') && $('#adashClose').addEventListener('click',closeAdminDash);
@@ -3895,15 +4123,38 @@
   $('#adFontSave') && $('#adFontSave').addEventListener('click',saveFont);
 
   // Sponsors / publicité
+  // Deux natures gérées séparément : 'sponsor' (partenaire) et 'ad' (emplacement payant).
+  // Le sous-onglet actif détermine ce qu'on liste ET ce qu'on crée.
+  let spKind='sponsor';
+  const SP_WORD={
+    sponsor:{ add:'Ajouter un partenaire', many:'Partenaires', list:'Partenaires actuels', done:'Partenaire ajouté ✓' },
+    ad:     { add:'Ajouter une publicité', many:'Publicités',  list:'Publicités actuelles', done:'Publicité ajoutée ✓' }
+  };
+  function setSpKind(k){
+    spKind = (k==='ad') ? 'ad' : 'sponsor';
+    $$('#adminDash [data-sptab]').forEach(b=>b.classList.toggle('on', b.dataset.sptab===spKind));
+    const w=SP_WORD[spKind];
+    if($('#spFormTitle')) $('#spFormTitle').textContent=w.add;
+    if($('#spListTitle')) $('#spListTitle').textContent=w.list;
+    if($('#spKindHint')) $('#spKindHint').innerHTML = spKind==='ad'
+      ? 'Une <b>publicité</b> est un emplacement payant : elle est présentée comme « Publicité », comme l\'exige la loyauté commerciale.'
+      : 'Un <b>partenaire</b> est une entreprise associée au projet : il est présenté comme « Sponsorisé ».';
+    loadSponsorsAdmin();
+  }
+  $$('#adminDash [data-sptab]').forEach(b=>b.addEventListener('click',()=>setSpKind(b.dataset.sptab)));
+
   async function loadSponsorsAdmin(){
     if(!sb||!isAdmin(currentUser))return;
-    const list=$('#adSponsorList'); list.innerHTML='<div class="ad-empty">Chargement…</div>';
+    const list=$('#adSponsorList'); if(!list) return;
+    list.innerHTML='<div class="ad-empty">Chargement…</div>';
+    const w=SP_WORD[spKind];
     try{
-      const {data,error}=await sb.from('sponsors').select('*').order('sort',{ascending:true});
+      const {data,error}=await sb.from('sponsors').select('*').eq('kind',spKind).order('sort',{ascending:true});
       if(error)throw error;
-      if(!(data&&data.length)){ list.innerHTML='<div class="ad-empty">Aucun sponsor. La section pub reste <b>cachée</b> côté utilisateurs tant que rien n’est ajouté.</div>'; return; }
+      if(!(data&&data.length)){ list.innerHTML='<div class="ad-empty">Aucune entrée dans « '+w.many+' ». La section reste <b>cachée</b> côté utilisateurs tant que rien n’est ajouté.</div>'; return; }
+      const isUrl=v=>/^https?:\/\//i.test(String(v||''));
       list.innerHTML=data.map(s=>`<div class="ad-srow">
-        <div class="ad-si"><span class="ad-nm">${escapeHTML(s.name)}</span> ${s.active?'<span class="ad-on">actif</span>':'<span class="ad-off">inactif</span>'}<div class="ad-sub">${escapeHTML(s.tagline||'')}</div></div>
+        <div class="ad-si"><span class="ad-nm">${escapeHTML(s.name)}</span> ${s.active?'<span class="ad-on">actif</span>':'<span class="ad-off">inactif</span>'}<div class="ad-sub">${escapeHTML(s.tagline||'')}${isUrl(s.logo)?' · logo image':''}${isUrl(s.banner)?' · bannière':''}</div></div>
         <div class="ad-sact"><button class="u-btn" data-sp-toggle="${s.id}" data-active="${s.active?1:0}">${s.active?'Désactiver':'Activer'}</button><button class="u-btn block" data-sp-del="${s.id}">✕</button></div>
       </div>`).join('');
       $$('#adSponsorList [data-sp-toggle]').forEach(b=>b.addEventListener('click',()=>toggleSponsor(b.dataset.spToggle, b.dataset.active!=='1')));
@@ -3912,15 +4163,21 @@
   }
   async function addSponsor(){
     if(!sb||!isAdmin(currentUser))return;
-    const name=($('#spName').value||'').trim(); if(!name){ showToast('Nom du sponsor requis',true); return; }
-    const payload={ name, tagline:($('#spTag').value||'').trim()||null, cta_label:($('#spCta').value||'').trim()||'Découvrir', url:($('#spUrl').value||'').trim()||null, logo:($('#spLogo').value||'').trim()||name[0].toUpperCase(), active:true };
+    const name=($('#spName').value||'').trim(); if(!name){ showToast('Nom requis',true); return; }
+    const payload={ name, kind:spKind,
+      tagline:($('#spTag').value||'').trim()||null,
+      cta_label:($('#spCta').value||'').trim()||'Découvrir',
+      url:($('#spUrl').value||'').trim()||null,
+      logo:($('#spLogo').value||'').trim()||name[0].toUpperCase(),
+      banner:(($('#spBanner')&&$('#spBanner').value)||'').trim()||null,
+      active:true };
     try{ const {error}=await sb.from('sponsors').insert(payload); if(error)throw error;
-      ['spName','spTag','spCta','spUrl','spLogo'].forEach(id=>{ if($('#'+id))$('#'+id).value=''; });
-      showToast('Sponsor ajouté ✓'); loadSponsorsAdmin(); loadSponsorsPublic();
+      ['spName','spTag','spCta','spUrl','spLogo','spBanner'].forEach(id=>{ if($('#'+id))$('#'+id).value=''; });
+      showToast(SP_WORD[spKind].done); loadSponsorsAdmin(); loadSponsorsPublic();
     }catch(e){ console.error(e); showToast('Échec (droits admin ?)',true); }
   }
   async function toggleSponsor(id,active){ try{ await sb.from('sponsors').update({active}).eq('id',id); loadSponsorsAdmin(); loadSponsorsPublic(); }catch(e){ showToast('Action impossible',true); } }
-  async function delSponsor(id){ try{ await sb.from('sponsors').delete().eq('id',id); showToast('Sponsor supprimé'); loadSponsorsAdmin(); loadSponsorsPublic(); }catch(e){ showToast('Action impossible',true); } }
+  async function delSponsor(id){ try{ await sb.from('sponsors').delete().eq('id',id); showToast('Entrée supprimée'); loadSponsorsAdmin(); loadSponsorsPublic(); }catch(e){ showToast('Action impossible',true); } }
   $('#spAdd') && $('#spAdd').addEventListener('click',addSponsor);
 
   /* ===== MINI-CMS : textes du site (FR/EN) ===== */
@@ -3982,21 +4239,45 @@
   $('#cmsReset') && $('#cmsReset').addEventListener('click',resetCms);
   $('#cmsSearch') && $('#cmsSearch').addEventListener('input',e=>renderCmsEditor(e.target.value));
 
-  // Chat & modération : relaie vers les contrôles existants du chat
+  // Chat & modération : chaque salon se pilote séparément depuis le tableau de bord.
+  // Le verrou et le vidage agissent sur adRoom (le salon choisi ici), pas sur celui
+  // qu'on regarde dans le chat — c'est tout l'intérêt de modérer à distance.
+  let adRoom='general';
+  function roomLabel(r){ return r==='surebets' ? 'Surebets' : 'Général'; }
+  function updateAdRoomState(){
+    const n=$('#adRoomName'); if(n) n.textContent=roomLabel(adRoom);
+    const st=$('#adRoomState'); if(!st) return;
+    const locked=!!lockedRooms[adRoom];
+    const cnt=chatMsgs.filter(m=>(m.room||'general')===adRoom && !m.deleted).length;
+    st.innerHTML = (locked
+        ? '<b style="color:var(--red)">🔒 Fermé</b> — personne ne peut écrire'
+        : '<b style="color:var(--mint)">🔓 Ouvert</b> — écriture autorisée')
+      + ' · ' + cnt + ' message' + (cnt>1?'s':'') + ' chargé' + (cnt>1?'s':'')
+      + (adRoom==='surebets' ? ' · réservé aux publishers' : '');
+  }
+  function setAdRoom(r){
+    adRoom = (r==='surebets') ? 'surebets' : 'general';
+    $$('#adminDash [data-crtab]').forEach(b=>b.classList.toggle('on', b.dataset.crtab===adRoom));
+    updateAdRoomState();
+  }
+  $$('#adminDash [data-crtab]').forEach(b=>b.addEventListener('click',()=>setAdRoom(b.dataset.crtab)));
+
+  // Le sondage et le minuteur restent globaux : on relaie vers les contrôles du chat.
   function relayChat(id, keepOpen){
     const el=document.getElementById(id); if(!el){ showToast('Contrôle indisponible',true); return; }
     if(!keepOpen) closeAdminDash();
     el.click();
   }
-  $('#adChatLock')    && $('#adChatLock').addEventListener('click',   ()=>relayChat('chatRoomLock', true));
-  $('#adChatTimer')   && $('#adChatTimer').addEventListener('click',  ()=>relayChat('chatTimerToggle', true));
-  $('#adChatPoll')    && $('#adChatPoll').addEventListener('click',   ()=>relayChat('chatPoll'));
-  $('#adChatResults') && $('#adChatResults').addEventListener('click',()=>relayChat('chatPollArchive'));
-  $('#adChatClear')   && $('#adChatClear').addEventListener('click',  ()=>relayChat('chatClear'));
+  $('#adChatLock')     && $('#adChatLock').addEventListener('click',    ()=>toggleRoomLock(adRoom));
+  $('#adChatTimer')    && $('#adChatTimer').addEventListener('click',   ()=>relayChat('chatTimerToggle', true));
+  $('#adChatPoll')     && $('#adChatPoll').addEventListener('click',    ()=>relayChat('chatPoll'));
+  $('#adChatResults')  && $('#adChatResults').addEventListener('click', ()=>relayChat('chatPollArchive'));
+  $('#adChatClear')    && $('#adChatClear').addEventListener('click',   ()=>clearChat(adRoom, $('#adChatClear')).then(updateAdRoomState));
+  $('#adChatClearAll') && $('#adChatClearAll').addEventListener('click',()=>clearChat(null,  $('#adChatClearAll')).then(updateAdRoomState));
 
   // Comptes & paiements : listes gérées directement dans le tableau de bord
   function manageTab(tab){
-    $$('#adminDash .adash-subtab').forEach(b=>b.classList.toggle('on', b.dataset.mtab===tab));
+    $$('#adminDash [data-mtab]').forEach(b=>b.classList.toggle('on', b.dataset.mtab===tab));
     const users=tab==='users';
     $('#adminUsers').style.display = users ? '' : 'none';
     $('#adminPayments').style.display = users ? 'none' : '';
@@ -4499,18 +4780,23 @@
     catch(err){ console.error(err); showToast('Action impossible',true); }
   }
   // Nettoyer tout le chat (admin)
-  async function clearChat(){
+  // room omis => tous les salons ; fourni => on ne vide que ce salon-là.
+  async function clearChat(room, srcBtn){
     if(!sb||!isAdmin(currentUser))return;
-    if(!confirm('Supprimer TOUS les messages du chat ? Cette action est irréversible.'))return;
-    const btn=$('#chatClear'); const old=btn.textContent; btn.disabled=true; btn.textContent='…';
+    const scope = room ? 'du salon '+roomLabel(room) : 'du chat (TOUS les salons)';
+    if(!confirm('Supprimer TOUS les messages '+scope+' ? Cette action est irréversible.'))return;
+    const btn=srcBtn||$('#chatClear'); const old=btn?btn.textContent:''; if(btn){ btn.disabled=true; btn.textContent='…'; }
     try{
-      // supprime tout (id non nul)
-      const {error}=await sb.from('messages').delete().neq('id','00000000-0000-0000-0000-000000000000');
+      // supprime tout (id non nul), restreint au salon si demandé
+      let q=sb.from('messages').delete().neq('id','00000000-0000-0000-0000-000000000000');
+      if(room) q=q.eq('room',room);
+      const {error}=await q;
       if(error)throw error;
-      chatMsgs=[]; renderChat(false);
-      showToast('Chat vidé ✓');
+      chatMsgs = room ? chatMsgs.filter(m=>(m.room||'general')!==room) : [];
+      renderChat(false);
+      showToast(room?('Salon '+roomLabel(room)+' vidé ✓'):'Chat vidé ✓');
     }catch(err){ console.error(err); showToast('Nettoyage impossible',true); }
-    finally{ btn.disabled=false; btn.textContent=old; }
+    finally{ if(btn){ btn.disabled=false; btn.textContent=old; } }
   }
   // Événements chat
   $('#chatSend').addEventListener('click',sendChatMsg);
@@ -4586,7 +4872,7 @@
     el.selectionStart=el.selectionEnd=start+clean.length;
   });
   $('#chatReplyCancel') && $('#chatReplyCancel').addEventListener('click',cancelReply);
-  $('#chatClear') && $('#chatClear').addEventListener('click',clearChat);
+  $('#chatClear') && $('#chatClear').addEventListener('click',()=>clearChat(currentRoom, $('#chatClear')));
 
   // Minuteur du chat : activer/désactiver (admin), partagé via Supabase
   function updateTimerBtn(){
@@ -4660,17 +4946,19 @@
     }, 8000); // toutes les 8 s
   }
   function stopSettingsPoll(){ if(settingsPollTimer){ clearInterval(settingsPollTimer); settingsPollTimer=null; } }
-  async function toggleRoomLock(){
+  // room omis => salon affiché dans le chat ; fourni => modération ciblée depuis l'admin.
+  async function toggleRoomLock(room){
     if(!sb||!isAdmin(currentUser))return;
-    if(currentRoom==='surebets')return;
-    lockedRooms[currentRoom]=!lockedRooms[currentRoom];
-    updateRoomLockBtn(); updateComposeState();
+    const r = room || currentRoom;
+    if(!room && currentRoom==='surebets') return;   // bouton de la barre chat : masqué sur Surebets
+    lockedRooms[r]=!lockedRooms[r];
+    updateRoomLockBtn(); updateComposeState(); updateAdRoomState();
     try{
       await sb.from('app_settings').upsert({key:'locked_rooms', value:JSON.stringify(lockedRooms)});
-      showToast(lockedRooms[currentRoom]?'Salon fermé — écriture suspendue':'Salon rouvert ✓');
+      showToast(lockedRooms[r]?'Salon '+roomLabel(r)+' fermé — écriture suspendue':'Salon '+roomLabel(r)+' rouvert ✓');
     }catch(err){ console.error(err); showToast('Action impossible',true); }
   }
-  $('#chatRoomLock') && $('#chatRoomLock').addEventListener('click',toggleRoomLock);
+  $('#chatRoomLock') && $('#chatRoomLock').addEventListener('click',()=>toggleRoomLock());
 
   $('#confirmLoginBtn') && $('#confirmLoginBtn').addEventListener('click',()=>{
     $('#confirmModal').style.display='none';
@@ -5022,8 +5310,10 @@
           <table id="sbTable"><thead><tr>
             <th data-k="roi" class="r">${tOr('sb.th_roi','ROI')} <span class="ar">▾</span></th>
             <th data-k="age">${tOr('sb.th_age','Âge')} <span class="ar">▾</span></th>
+            <th data-k="sport">${tOr('sb.th_sport','Sport')} <span class="ar">▾</span></th>
             <th data-k="event">${tOr('sb.th_event','Événement')} <span class="ar">▾</span></th>
             <th data-k="books">${tOr('sb.th_books','Bookmakers')} <span class="ar">▾</span></th>
+            <th data-k="start" class="r" title="${tOr('sb.th_start_t',"Heure du coup d'envoi du match")}">${tOr('sb.th_start',"Coup d'envoi")} <span class="ar">▾</span></th>
             <th data-k="left" class="r">${tOr('sb.th_left','Expire')} <span class="ar">▾</span></th>
           </tr></thead><tbody id="sbBody"></tbody></table>
         </div>
@@ -5122,6 +5412,9 @@
       else if(sbSortK==='age')   r=sigAgeSec(a)-sigAgeSec(b);
       else if(sbSortK==='left')  r=new Date(a.expires_at)-new Date(b.expires_at);
       else if(sbSortK==='books') r=sigCat(a).localeCompare(sigCat(b));
+      else if(sbSortK==='sport') r=String(a.sport||'').localeCompare(String(b.sport||''));
+      // Sans coup d'envoi renseigné, le signal part en fin de liste (8.64e15 = date max JS).
+      else if(sbSortK==='start') r=(parseDbTime(a.starts_at)||8.64e15)-(parseDbTime(b.starts_at)||8.64e15);
       else                       r=sigName(a).localeCompare(sigName(b));
       return r*sbSortDir;
     });
@@ -5129,8 +5422,10 @@
       <tr data-sbi="${i}" class="${i===sbSel?'on':''}">
         <td class="num pos">${s.roi?'+'+Number(s.roi).toFixed(2)+' %':'—'}</td>
         <td><span class="age ${ageCls(sigAgeSec(s))}" data-agecell="${i}"><span class="d"></span>${ageTxt(sigAgeSec(s))}</span></td>
+        <td class="bkm">${escapeHTML(s.sport||'—')}</td>
         <td>${escapeHTML(sigName(s))}</td>
         <td class="bkm">${escapeHTML(sigCat(s))}</td>
+        <td class="num bkm">${sigStart(s)}</td>
         <td class="num bkm" data-leftcell="${i}">${sigLeft(s)}</td>
       </tr>`).join('');
     $$('#sbBody tr').forEach(tr=>tr.addEventListener('click',()=>{ sbSel=+tr.dataset.sbi; renderSignalPanel(); }));
@@ -5150,6 +5445,15 @@
   function sigName(s){ return s.title||'Surebet'; }
   function sigCat(s){ const l=sigLegs(s); return (l[0]&&l[0].bk) ? l.map(x=>x.bk).filter(Boolean).join(' · ') : (tOr('sb.signal','Signal')); }
   function sigRoi(s){ return s.roi ? `<span class="so-roi">+${Number(s.roi).toFixed(2)}%</span>` : ''; }
+  // Heure du coup d'envoi du match. Affichée en heure locale du lecteur ;
+  // on précise le jour quand le match n'est pas aujourd'hui.
+  function sigStart(s){
+    const t=parseDbTime(s.starts_at); if(!t) return '—';
+    const d=new Date(t), now=new Date();
+    const hm=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+    const sameDay = d.getDate()===now.getDate() && d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear();
+    return sameDay ? hm : (String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+' '+hm);
+  }
   function sigLeft(s){
     const ms=new Date(s.expires_at).getTime()-Date.now();
     const m=Math.max(0,Math.floor(ms/60000)), sec=Math.max(0,Math.floor((ms%60000)/1000));
@@ -5205,6 +5509,7 @@
         <div class="tk-title"><span class="tk-cat">${escapeHTML(sigCat(s))}</span>${escapeHTML(sigName(s))}</div>
         ${s.roi?`<div class="tk-roi">+${Number(s.roi).toFixed(2)} %<small>${tOr('sb.roi_lab','ROI GARANTI')}</small></div>`:''}
       </div>
+      ${(s.sport||parseDbTime(s.starts_at))?`<div class="tk-meta">${s.sport?`<span>🏷️ ${escapeHTML(s.sport)}</span>`:''}${parseDbTime(s.starts_at)?`<span>⏱️ ${tOr('sb.kickoff','Coup d\'envoi')} ${sigStart(s)}</span>`:''}</div>`:''}
       <div class="tk-legs">${legsHtml||'<span class="tk-none">Détails dans la note.</span>'}</div>
       ${s.note?`<div class="tk-note">📝 ${escapeHTML(s.note)}</div>`:''}
       <div class="sb-warn">
@@ -5324,6 +5629,7 @@
 
   function openPublish(){
     $('#pubTitle').value=''; $('#pubRoi').value=''; $('#pubRoi').dataset.roi=''; $('#pubNote').value=''; $('#pubTtl').value='10';
+    $('#pubSport') && ($('#pubSport').value=''); $('#pubStart') && ($('#pubStart').value='');
     const box=$('#pubLegs'); box.innerHTML='';
     box.appendChild(buildPubLeg()); box.appendChild(buildPubLeg());
     $('#pubModal').style.display='flex';
@@ -5343,8 +5649,11 @@
     const note=($('#pubNote').value||'').trim();
     const expires=new Date(Date.now()+ttl*60000).toISOString();
     try{
+      const sport=($('#pubSport')&&$('#pubSport').value)||null;
+      const startVal=($('#pubStart')&&$('#pubStart').value)||'';
+      const starts_at = startVal ? new Date(startVal).toISOString() : null;
       const {error}=await sb.from('signals').insert({
-        author_id:currentUser.id, title, roi, legs, note, expires_at:expires
+        author_id:currentUser.id, title, roi, legs, note, expires_at:expires, sport, starts_at
       });
       if(error)throw error;
       showToast('Surebet publié ✓');
@@ -5645,6 +5954,12 @@
   $('#usersRefresh') && $('#usersRefresh').addEventListener('click',loadUsers);
 
   // Charge la liste des utilisateurs (table profiles)
+  // Liste complète conservée en mémoire : les filtres et la recherche
+  // travaillent dessus sans relancer de requête.
+  let allUsers=[], userFilter='all', userQuery='';
+  const subActive = u => !!(u.sub_expires_at && new Date(u.sub_expires_at).getTime()>Date.now());
+  const subExpired= u => !!(u.sub_expires_at && !subActive(u));
+
   async function loadUsers(){
     if(!sb||!isAdmin(currentUser))return;
     const list=$('#usersList');
@@ -5652,17 +5967,44 @@
     try{
       const {data,error}=await sb.from('profiles').select('*').order('created_at',{ascending:false});
       if(error)throw error;
-      renderUsers(data||[]);
+      allUsers=data||[];
+      renderUsers(allUsers);
     }catch(err){ console.error(err); list.innerHTML='<div class="users-empty">Impossible de charger les utilisateurs.<br>Vérifiez que la table « profiles » existe (voir le guide).</div>'; }
   }
 
+  function applyUserFilter(){
+    const q=userQuery.trim().toLowerCase();
+    renderUsers(allUsers.filter(u=>{
+      if(q && !((u.username||'')+' '+(u.email||'')).toLowerCase().includes(q)) return false;
+      switch(userFilter){
+        case 'sub':     return subActive(u);
+        case 'nosub':   return !subActive(u);
+        case 'expired': return subExpired(u);
+        case 'pending': return (u.status||'pending')==='pending';
+        case 'staff':   return u.role==='publisher'||u.role==='moderator'||u.role==='admin';
+        default:        return true;
+      }
+    }));
+  }
+  $$('#adminUsers [data-ufil]').forEach(b=>b.addEventListener('click',()=>{
+    userFilter=b.dataset.ufil;
+    $$('#adminUsers [data-ufil]').forEach(x=>x.classList.toggle('on', x===b));
+    applyUserFilter();
+  }));
+  $('#usersSearch') && $('#usersSearch').addEventListener('input',e=>{ userQuery=e.target.value; applyUserFilter(); });
+
   function renderUsers(users){
     const list=$('#usersList');
-    const pending=users.filter(u=>u.status==='pending').length;
-    const publishers=users.filter(u=>u.role==='publisher').length;
-    const mods=users.filter(u=>u.role==='moderator').length;
-    $('#usersSummary').textContent=users.length+' compte(s) · '+pending+' en attente · '+publishers+' publisher(s) · '+mods+' modo(s)';
-    if(!users.length){ list.innerHTML='<div class="users-empty">Aucun utilisateur inscrit.</div>'; return; }
+    // Le résumé décrit toujours l'ensemble des comptes, pas la vue filtrée :
+    // sinon les compteurs changeraient à chaque clic et ne voudraient plus rien dire.
+    const subs=allUsers.filter(subActive).length;
+    const pending=allUsers.filter(u=>(u.status||'pending')==='pending').length;
+    const publishers=allUsers.filter(u=>u.role==='publisher').length;
+    const mods=allUsers.filter(u=>u.role==='moderator').length;
+    $('#usersSummary').textContent=allUsers.length+' compte(s) · '+subs+' abonné(s) · '+(allUsers.length-subs)+' non-abonné(s) · '
+      +pending+' en attente · '+publishers+' publisher(s) · '+mods+' modo(s)'
+      +(users.length!==allUsers.length ? '  →  '+users.length+' affiché(s)' : '');
+    if(!users.length){ list.innerHTML='<div class="users-empty">'+(allUsers.length?'Aucun compte ne correspond au filtre.':'Aucun utilisateur inscrit.')+'</div>'; return; }
     const labels={approved:'Autorisé',pending:'En attente',blocked:'Bloqué'};
     list.innerHTML=users.map(u=>{
       const st=u.status||'pending';
@@ -5691,16 +6033,16 @@
       }
       const roleBadge = isPub?'<span class="u-badge pub-badge">Publisher</span>':(isMod?'<span class="u-badge mod-badge">Modérateur</span>':'');
       // Badge d'abonnement surebets
+      // Badge visible pour tous les comptes : c'est le critère de filtrage,
+      // il doit se lire directement sur la ligne.
       let subBadge='';
-      if(!isPub && !isMod){
-        const active=u.sub_expires_at && new Date(u.sub_expires_at).getTime()>Date.now();
-        if(active){
-          const ms=new Date(u.sub_expires_at).getTime()-Date.now();
-          const d=Math.max(0,Math.ceil(ms/86400000));
-          subBadge='<span class="u-badge approved" title="Abonnement surebets">🎯 '+d+'j</span>';
-        }else if(u.sub_expires_at){
-          subBadge='<span class="u-badge blocked" title="Abonnement expiré">🎯 expiré</span>';
-        }
+      if(subActive(u)){
+        const d=Math.max(0,Math.ceil((new Date(u.sub_expires_at).getTime()-Date.now())/86400000));
+        subBadge='<span class="u-badge approved" title="Abonnement surebets actif">🎯 '+d+'j</span>';
+      }else if(u.sub_expires_at){
+        subBadge='<span class="u-badge blocked" title="Abonnement expiré">🎯 expiré</span>';
+      }else{
+        subBadge='<span class="u-badge" title="Jamais abonné" style="opacity:.65">non-abonné</span>';
       }
       const uname = u.username ? escapeHTML(u.username) : '(sans pseudo)';
       return `<div class="user-row">
@@ -5899,6 +6241,7 @@
       "sb.lock_b3":"Salon privé réservé aux abonnés",
       "sb.lock_cta":"Débloquer","sb.days":"jours","sub.unlock":"Débloquer",
       "sb.th_roi":"ROI","sb.th_age":"Âge","sb.th_event":"Événement","sb.th_books":"Bookmakers","sb.th_left":"Expire",
+      "sb.th_sport":"Sport","sb.th_start":"Coup d'envoi","sb.th_start_t":"Heure du coup d'envoi du match","sb.kickoff":"Coup d'envoi",
       "sb.age_ok":"&lt; 10 min · fiable","sb.age_mid":"10 à 30 min · à vérifier","sb.age_old":"&gt; 30 min · probablement mort",
       "sb.detected":"détecté il y a",
       "sb.empty_t":"Aucun surebet actif pour le moment",
@@ -6033,6 +6376,7 @@
       "sb.lock_b3":"Private room for subscribers only",
       "sb.lock_cta":"Unlock","sb.days":"days","sub.unlock":"Unlock",
       "sb.th_roi":"ROI","sb.th_age":"Age","sb.th_event":"Event","sb.th_books":"Bookmakers","sb.th_left":"Expires",
+      "sb.th_sport":"Sport","sb.th_start":"Kick-off","sb.th_start_t":"Match kick-off time","sb.kickoff":"Kick-off",
       "sb.age_ok":"&lt; 10 min · reliable","sb.age_mid":"10 to 30 min · check first","sb.age_old":"&gt; 30 min · likely gone",
       "sb.detected":"detected",
       "sb.empty_t":"No active surebet right now",
