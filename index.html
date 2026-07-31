@@ -1374,14 +1374,402 @@
   .brand h1 .edge, .auth-title .edge{color:#3fd46a}
   :root[data-theme="light"] .brand h1 .edge,
   :root[data-theme="light"] .auth-title .edge{color:#128235}
+
+  /* ═══════════════════════════════════════════════════════════════════
+     PAGE D'ACCUEIL (visiteur non connecté)
+     Objectif : expliquer et prouver AVANT de demander un compte.
+     Contrainte marché : mobile 3G, data payante → animations sobres,
+     déclenchées à l'apparition, désactivées si l'utilisateur les refuse.
+     ═══════════════════════════════════════════════════════════════════ */
+  /* Visible dès le premier rendu : un visiteur en 3G ne doit pas attendre
+     l'aller-retour Supabase devant une page blanche. Le petit script placé
+     juste après le balisage la masque immédiatement si une session existe
+     déjà, pour qu'un abonné qui revient ne voie aucun clignotement. */
+  #landing{display:block;background:var(--bg);min-height:100vh}
+  #landing.off{display:none}
+  body.landing-open{overflow-x:hidden}
+  /* La page d'accueil est dans le flux, pas en superposition : il faut donc
+     retirer l'application elle-même tant qu'on la montre. */
+  body.landing-open > .wrap,
+  body.landing-open > .botnav{display:none}
+  .ld-wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+
+  /* — barre de navigation — */
+  .ld-nav{position:sticky;top:0;z-index:60;backdrop-filter:blur(14px);
+    background:color-mix(in srgb, var(--bg) 82%, transparent);border-bottom:1px solid var(--line-soft)}
+  .ld-nav-in{max-width:1080px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:14px}
+  .ld-brand{display:flex;align-items:center;gap:11px;flex:1;min-width:0}
+  .ld-brand svg{width:34px;height:34px;flex:none}
+  .ld-brand-t{font-weight:800;font-size:18px;letter-spacing:-.01em;line-height:1.05}
+  .ld-brand-t .edge{color:#3fd46a}
+  :root[data-theme="light"] .ld-brand-t .edge{color:#128235}
+  .ld-brand-s{font-size:10.5px;color:var(--ink-faint);letter-spacing:.04em}
+  .ld-nav-b{background:transparent;border:1px solid var(--line);color:var(--ink-dim);border-radius:10px;
+    padding:8px 13px;font-size:12.5px;font-weight:600;cursor:pointer;transition:.15s;flex:none}
+  .ld-nav-b:hover{color:var(--ink);border-color:var(--mint-dim)}
+  .ld-nav-b.cta{background:var(--mint);border-color:var(--mint);color:#06110d;font-weight:700}
+  .ld-nav-b.cta:hover{filter:brightness(1.08)}
+
+  /* — sections — */
+  .ld-sec{padding:88px 0;border-top:1px solid var(--line-soft)}
+  .ld-sec:first-of-type{border-top:none}
+  .ld-eyebrow{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.16em;
+    color:var(--mint);margin-bottom:14px}
+  .ld-h2{font-size:clamp(25px,3.4vw,36px);font-weight:800;letter-spacing:-.02em;line-height:1.15;margin:0 0 14px}
+  .ld-p{font-size:15px;color:var(--ink-dim);line-height:1.65;max-width:620px;margin:0}
+
+  /* — hero — */
+  .ld-hero{padding:76px 0 66px;text-align:center}
+  .ld-h1{font-size:clamp(33px,6vw,60px);font-weight:800;letter-spacing:-.035em;line-height:1.05;margin:0 0 20px}
+  .ld-h1 .hl{color:var(--mint)}
+  .ld-lead{font-size:clamp(15px,2vw,18px);color:var(--ink-dim);line-height:1.6;max-width:590px;margin:0 auto 32px}
+  .ld-ctas{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:14px}
+  .ld-btn{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:12px;
+    padding:14px 26px;font-size:14.5px;font-weight:700;cursor:pointer;transition:.16s;text-decoration:none;display:inline-block}
+  .ld-btn:hover{border-color:var(--mint-dim);transform:translateY(-1px)}
+  .ld-btn.primary{background:var(--mint);border-color:var(--mint);color:#06110d;
+    box-shadow:0 12px 34px -12px rgba(39,227,154,.6)}
+  .ld-btn.primary:hover{filter:brightness(1.08)}
+  .ld-note{font-size:12px;color:var(--ink-faint)}
+
+  /* — bandeau de preuve : chiffres réels, détails masqués — */
+  .ld-proof{margin-top:44px;background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden;text-align:left}
+  .ld-proof-h{display:flex;align-items:center;gap:10px;padding:14px 20px;border-bottom:1px solid var(--line-soft);
+    font-size:12px;font-family:var(--mono);color:var(--ink-dim);flex-wrap:wrap}
+  .ld-live{display:inline-flex;align-items:center;gap:7px;color:var(--mint);font-weight:700}
+  .ld-live i{width:7px;height:7px;border-radius:50%;background:var(--mint);animation:ldPulse 2s infinite}
+  @keyframes ldPulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(39,227,154,.5)}50%{opacity:.55;box-shadow:0 0 0 6px rgba(39,227,154,0)}}
+  .ld-proof-row{display:grid;grid-template-columns:82px 1fr 128px;gap:14px;align-items:center;
+    padding:14px 20px;border-bottom:1px solid var(--line-soft)}
+  .ld-proof-row:last-child{border-bottom:none}
+  .ld-roi{font-family:var(--mono);font-weight:700;color:var(--mint);font-size:15px}
+  .ld-blur{filter:blur(5px);user-select:none;pointer-events:none;color:var(--ink-dim);font-size:13px}
+  .ld-lockpill{font-size:10.5px;font-family:var(--mono);color:var(--ink-faint);border:1px solid var(--line);
+    border-radius:999px;padding:5px 11px;text-align:center;white-space:nowrap}
+  .ld-proof-f{padding:13px 20px;font-size:12px;color:var(--ink-faint);text-align:center;background:var(--panel-2)}
+
+  /* — démonstrateur jouable — */
+  .ld-demo{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:34px;align-items:start}
+  .ld-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px}
+  .ld-fld{margin-bottom:15px}
+  .ld-fld:last-child{margin-bottom:0}
+  .ld-lab{display:flex;justify-content:space-between;align-items:baseline;gap:8px;
+    font-size:11px;text-transform:uppercase;letter-spacing:.09em;color:var(--ink-faint);font-weight:700;margin-bottom:7px}
+  .ld-lab b{font-family:var(--mono);font-size:11px;color:var(--ink-dim);text-transform:none;letter-spacing:0;font-weight:600}
+  .ld-fld input{width:100%;background:var(--panel-2);border:1px solid var(--line);color:var(--ink);
+    border-radius:10px;padding:11px 13px;font-size:15px;font-family:var(--mono)}
+  .ld-fld input:focus{outline:none;border-color:var(--mint);box-shadow:0 0 0 3px rgba(39,227,154,.12)}
+  .ld-res{background:var(--panel-2);border:1px solid var(--line);border-radius:16px;padding:24px}
+  .ld-verdict{border-radius:12px;padding:15px 17px;margin-bottom:18px;border:1px solid transparent}
+  .ld-verdict.win{background:rgba(39,227,154,.09);border-color:rgba(39,227,154,.32)}
+  .ld-verdict.lose{background:rgba(255,90,103,.08);border-color:rgba(255,90,103,.3)}
+  .ld-verdict-t{font-weight:800;font-size:15px;margin-bottom:4px}
+  .ld-verdict.win .ld-verdict-t{color:var(--mint)} .ld-verdict.lose .ld-verdict-t{color:var(--red)}
+  .ld-verdict-d{font-size:12.5px;color:var(--ink-dim);line-height:1.5}
+  .ld-split{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px}
+  .ld-stake{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:13px 15px}
+  .ld-stake-k{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-faint);font-weight:700;margin-bottom:5px}
+  .ld-stake-v{font-family:var(--mono);font-size:18px;font-weight:700}
+  .ld-payoff{border-top:1px solid var(--line);padding-top:15px}
+  .ld-line{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:13px;padding:6px 0}
+  .ld-line span{color:var(--ink-dim)}
+  .ld-line b{font-family:var(--mono);font-weight:700}
+  .ld-line.big{font-size:15px;padding-top:12px;margin-top:6px;border-top:1px dashed var(--line)}
+  .ld-line.big b{font-size:20px;color:var(--mint)}
+
+  /* — étapes — */
+  .ld-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(224px,1fr));gap:18px;margin-top:34px}
+  .ld-step{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px;position:relative}
+  .ld-step-n{font-family:var(--mono);font-size:11px;color:var(--mint);font-weight:700;margin-bottom:12px}
+  .ld-step-t{font-weight:700;font-size:15.5px;margin-bottom:8px}
+  .ld-step-d{font-size:13px;color:var(--ink-dim);line-height:1.6}
+
+  /* — bookmakers — */
+  .ld-books{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
+  .ld-book{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 22px;
+    font-weight:700;font-size:14.5px}
+
+  /* — prix — */
+  .ld-price-card{background:var(--panel);border:1px solid var(--mint-dim);border-radius:18px;padding:34px;
+    max-width:430px;margin-top:30px;position:relative;overflow:hidden}
+  .ld-price-card::before{content:'';position:absolute;inset:0;
+    background:radial-gradient(420px 200px at 50% 0%, rgba(39,227,154,.11), transparent 70%);pointer-events:none}
+  .ld-price-v{font-size:44px;font-weight:800;letter-spacing:-.03em;font-family:var(--mono)}
+  .ld-price-u{font-size:14px;color:var(--ink-dim);margin-bottom:20px}
+  .ld-price-l{list-style:none;padding:0;margin:0 0 24px}
+  .ld-price-l li{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;color:var(--ink-dim);
+    line-height:1.55;padding:7px 0}
+  .ld-price-l .ck{color:var(--mint);font-weight:800;flex:none}
+
+  /* — honnêteté — */
+  .ld-honest{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px;margin-top:30px}
+  .ld-hon{background:var(--panel-2);border:1px solid var(--line);border-left:3px solid var(--gold);
+    border-radius:0 12px 12px 0;padding:20px 22px}
+  .ld-hon-t{font-weight:700;font-size:14px;margin-bottom:7px;color:var(--gold)}
+  .ld-hon-d{font-size:12.5px;color:var(--ink-dim);line-height:1.6}
+
+  /* — pied — */
+  .ld-final{text-align:center;padding:88px 0 40px}
+  .ld-foot{border-top:1px solid var(--line-soft);padding:26px 0 40px;text-align:center;
+    font-size:11.5px;color:var(--ink-faint);line-height:1.7}
+
+  /* apparition au défilement — coupée si l'utilisateur préfère moins d'animation */
+  .ld-rise{opacity:0;transform:translateY(20px);transition:opacity .6s ease,transform .6s ease}
+  .ld-rise.seen{opacity:1;transform:none}
+  @media(prefers-reduced-motion:reduce){
+    .ld-rise{opacity:1;transform:none;transition:none}
+    .ld-live i{animation:none}
+  }
+  @media(max-width:820px){
+    .ld-demo{grid-template-columns:1fr}
+    .ld-sec{padding:62px 0}
+    .ld-hero{padding:52px 0 46px}
+    .ld-brand-s{display:none}
+    .ld-proof-row{grid-template-columns:70px 1fr;row-gap:8px}
+    .ld-proof-row .ld-lockpill{grid-column:1/-1}
+  }
 </style>
 </head>
-<body>
+<!-- landing-open dès le départ : la page d'accueil est l'état par défaut d'un
+     visiteur. Le script placé sous le balisage la retire si une session existe. -->
+<body class="landing-open">
 
 <div class="offline-banner" id="offlineBanner">⚠️ Hors ligne — vos changements ne seront pas enregistrés tant que la connexion n'est pas rétablie</div>
 
+<!-- ===== PAGE D'ACCUEIL (visiteur non connecté) =====
+     On explique et on prouve avant de demander un compte. Les chiffres du
+     bandeau sont réels ; les bookmakers et les cotes restent masqués — c'est
+     le produit payant. -->
+<div id="landing">
+
+  <nav class="ld-nav">
+    <div class="ld-nav-in">
+      <div class="ld-brand">
+        <svg viewBox="0 0 120 120" role="img" aria-label="NADOEDGE">
+          <defs>
+            <linearGradient id="ldSilver" x1="0.15" y1="0" x2="0.6" y2="1">
+              <stop offset="0" stop-color="#ffffff"/><stop offset=".4" stop-color="#f2f5f4"/>
+              <stop offset=".62" stop-color="#c2cac6"/><stop offset="1" stop-color="#8e9a95"/>
+            </linearGradient>
+            <linearGradient id="ldGreen" x1="0.1" y1="0" x2="0.5" y2="1">
+              <stop offset="0" stop-color="#43c65b"/><stop offset=".55" stop-color="#22a141"/>
+              <stop offset="1" stop-color="#0d7a2c"/>
+            </linearGradient>
+          </defs>
+          <path d="M9.4,48.3 A52,52 0 0 1 111.5,52.8" fill="none" stroke="#101410" stroke-width="12.5" stroke-linecap="round" opacity=".9"/>
+          <path d="M9.4,48.3 A52,52 0 0 1 111.5,52.8" fill="none" stroke="url(#ldSilver)" stroke-width="9" stroke-linecap="round"/>
+          <path d="M8.5,52.8 A52,52 0 1 0 108.9,42.2" fill="none" stroke="#101410" stroke-width="13.5" stroke-linecap="round" opacity=".9"/>
+          <path d="M8.5,52.8 A52,52 0 1 0 108.9,42.2" fill="none" stroke="url(#ldGreen)" stroke-width="10" stroke-linecap="round"/>
+          <path d="M12,88 L24,30 L38,30 L57.7,70 L66,30 L80,30 L68,88 L54,88 L34.3,48 L26,88 Z"
+                fill="url(#ldSilver)" stroke="#101410" stroke-width="2.6" stroke-linejoin="round"/>
+          <g stroke="#101410" stroke-width="2.4" stroke-linejoin="round">
+            <path d="M66,32 L114,32 L106,45 L58,45 Z" fill="url(#ldGreen)"/>
+            <path d="M62,54 L100,54 L92,67 L54,67 Z" fill="url(#ldGreen)"/>
+            <path d="M58,76 L106,76 L98,89 L50,89 Z" fill="url(#ldGreen)"/>
+          </g>
+        </svg>
+        <div>
+          <div class="ld-brand-t">NADO<span class="edge">EDGE</span></div>
+          <div class="ld-brand-s" data-i18n="ld.tagline">Votre avantage sur chaque pari</div>
+        </div>
+      </div>
+      <button class="ld-nav-b" id="ldLang">EN</button>
+      <button class="ld-nav-b" id="ldTheme" aria-label="Thème">🌙</button>
+      <button class="ld-nav-b" id="ldLogin" data-i18n="ld.nav_login">Se connecter</button>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="ld-hero">
+    <div class="ld-wrap">
+      <h1 class="ld-h1" data-i18n-html="ld.h1">Un gain <span class="hl">garanti</span>,<br>quel que soit le résultat du match.</h1>
+      <p class="ld-lead" data-i18n="ld.lead">Quand deux bookmakers ne sont pas d'accord sur les cotes, il existe une façon de répartir votre mise pour encaisser un profit dans tous les cas. NADOEDGE trouve ces écarts et vous dit exactement combien miser où.</p>
+      <div class="ld-ctas">
+        <button class="ld-btn primary" id="ldTry" data-i18n="ld.cta_try">Essayer le calcul maintenant</button>
+        <button class="ld-btn" id="ldSignup" data-i18n="ld.cta_signup">Créer un compte</button>
+      </div>
+      <div class="ld-note" data-i18n="ld.note">Aucun compte requis pour tester le calculateur ci-dessous.</div>
+
+      <!-- Bandeau de preuve : chiffres réels, détails masqués -->
+      <div class="ld-proof ld-rise" id="ldProof" style="display:none">
+        <div class="ld-proof-h">
+          <span class="ld-live"><i></i><span data-i18n="ld.proof_live">EN DIRECT</span></span>
+          <span id="ldProofCount">—</span>
+          <span style="flex:1"></span>
+          <span data-i18n="ld.proof_best">Meilleur ROI</span> <b class="ld-roi" id="ldProofBest">—</b>
+        </div>
+        <div id="ldProofRows"></div>
+        <div class="ld-proof-f" data-i18n="ld.proof_foot">Les bookmakers et les cotes sont réservés aux abonnés.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DÉMONSTRATEUR -->
+  <section class="ld-sec" id="ldDemoSec">
+    <div class="ld-wrap ld-rise">
+      <div class="ld-eyebrow" data-i18n="ld.demo_eyebrow">Testez vous-même</div>
+      <h2 class="ld-h2" data-i18n="ld.demo_h2">Le calcul, en direct, sans compte</h2>
+      <p class="ld-p" data-i18n="ld.demo_p">Prenez deux cotes opposées chez deux bookmakers différents. Modifiez-les : vous verrez immédiatement si l'écart suffit à garantir un profit, et combien miser de chaque côté.</p>
+
+      <div class="ld-demo">
+        <div class="ld-card">
+          <div class="ld-fld">
+            <div class="ld-lab"><span data-i18n="ld.odds_a">Cote — Issue 1</span><b data-i18n="ld.book_a">Bookmaker A</b></div>
+            <input type="number" id="ldOddA" value="2.10" step="0.01" min="1.01" inputmode="decimal">
+          </div>
+          <div class="ld-fld">
+            <div class="ld-lab"><span data-i18n="ld.odds_b">Cote — Issue 2</span><b data-i18n="ld.book_b">Bookmaker B</b></div>
+            <input type="number" id="ldOddB" value="2.05" step="0.01" min="1.01" inputmode="decimal">
+          </div>
+          <div class="ld-fld">
+            <div class="ld-lab"><span data-i18n="ld.amount">Mise totale (HTG)</span></div>
+            <input type="number" id="ldAmt" value="1000" step="50" min="0" inputmode="numeric">
+          </div>
+        </div>
+
+        <div class="ld-res">
+          <div class="ld-verdict win" id="ldVerdict">
+            <div class="ld-verdict-t" id="ldVerdictT">—</div>
+            <div class="ld-verdict-d" id="ldVerdictD">—</div>
+          </div>
+          <div class="ld-split">
+            <div class="ld-stake">
+              <div class="ld-stake-k" data-i18n="ld.stake_a">Miser sur 1</div>
+              <div class="ld-stake-v" id="ldStakeA">—</div>
+            </div>
+            <div class="ld-stake">
+              <div class="ld-stake-k" data-i18n="ld.stake_b">Miser sur 2</div>
+              <div class="ld-stake-v" id="ldStakeB">—</div>
+            </div>
+          </div>
+          <div class="ld-payoff">
+            <div class="ld-line"><span data-i18n="ld.ret_a">Si l'issue 1 gagne</span><b id="ldRetA">—</b></div>
+            <div class="ld-line"><span data-i18n="ld.ret_b">Si l'issue 2 gagne</span><b id="ldRetB">—</b></div>
+            <div class="ld-line big"><span data-i18n="ld.profit">Profit garanti</span><b id="ldProfit">—</b></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ÉTAPES -->
+  <section class="ld-sec">
+    <div class="ld-wrap ld-rise">
+      <div class="ld-eyebrow" data-i18n="ld.steps_eyebrow">Comment ça marche</div>
+      <h2 class="ld-h2" data-i18n="ld.steps_h2">Quatre étapes, rien de plus</h2>
+      <p class="ld-p" data-i18n="ld.steps_p">Vous n'avez pas besoin de connaître le sport, ni de faire de pronostic. Le résultat du match ne change rien à votre gain.</p>
+      <div class="ld-steps">
+        <div class="ld-step"><div class="ld-step-n">01</div>
+          <div class="ld-step-t" data-i18n="ld.s1_t">On surveille les cotes</div>
+          <div class="ld-step-d" data-i18n="ld.s1_d">Les bookmakers haïtiens ne fixent pas les mêmes cotes au même moment. Ces désaccords ouvrent des fenêtres de quelques minutes.</div></div>
+        <div class="ld-step"><div class="ld-step-n">02</div>
+          <div class="ld-step-t" data-i18n="ld.s2_t">Vous recevez le signal</div>
+          <div class="ld-step-d" data-i18n="ld.s2_d">Match, sport, heure du coup d'envoi, bookmakers, cotes et ROI. Avec l'âge du signal, pour savoir s'il est encore fiable.</div></div>
+        <div class="ld-step"><div class="ld-step-n">03</div>
+          <div class="ld-step-t" data-i18n="ld.s3_t">Vous répartissez la mise</div>
+          <div class="ld-step-d" data-i18n="ld.s3_d">Un clic charge le signal dans le calculateur, qui vous donne le montant exact à placer chez chaque bookmaker.</div></div>
+        <div class="ld-step"><div class="ld-step-n">04</div>
+          <div class="ld-step-t" data-i18n="ld.s4_t">Vous encaissez</div>
+          <div class="ld-step-d" data-i18n="ld.s4_d">Une des deux mises gagne, l'autre perd, et le total dépasse votre mise de départ. Le résultat du match est indifférent.</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BOOKMAKERS -->
+  <section class="ld-sec">
+    <div class="ld-wrap ld-rise">
+      <div class="ld-eyebrow" data-i18n="ld.books_eyebrow">Couverture</div>
+      <h2 class="ld-h2" data-i18n="ld.books_h2">Les bookmakers suivis</h2>
+      <p class="ld-p" data-i18n="ld.books_p">Il vous faut un compte approvisionné chez au moins deux d'entre eux : un surebet se joue toujours des deux côtés à la fois.</p>
+      <div class="ld-books">
+        <div class="ld-book">1xBet</div>
+        <div class="ld-book">Paryaj Lakay</div>
+        <div class="ld-book">Paryaj Pam</div>
+        <div class="ld-book">Golcash</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRIX -->
+  <section class="ld-sec">
+    <div class="ld-wrap ld-rise">
+      <div class="ld-eyebrow" data-i18n="ld.price_eyebrow">Tarif</div>
+      <h2 class="ld-h2" data-i18n="ld.price_h2">Un seul prix, affiché</h2>
+      <p class="ld-p" data-i18n="ld.price_p">Paiement par MonCash ou NatCash. Vous envoyez votre référence de transaction, un administrateur valide, et votre accès s'ouvre.</p>
+      <div class="ld-price-card">
+        <div class="ld-price-v" id="ldPrice">500 HTG</div>
+        <div class="ld-price-u" id="ldPriceU">7 jours d'accès, renouvelable</div>
+        <ul class="ld-price-l">
+          <li><span class="ck">✓</span><span data-i18n="ld.price_1">Tous les signaux d'arbitrage, en direct</span></li>
+          <li><span class="ck">✓</span><span data-i18n="ld.price_2">Calculateur de mise et suivi de votre caisse</span></li>
+          <li><span class="ck">✓</span><span data-i18n="ld.price_3">Salon de discussion réservé aux abonnés</span></li>
+          <li><span class="ck">✓</span><span data-i18n="ld.price_4">Sans reconduction automatique : vous renouvelez si vous voulez</span></li>
+        </ul>
+        <button class="ld-btn primary" id="ldPriceCta" style="width:100%" data-i18n="ld.price_cta">Créer mon compte</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- HONNÊTETÉ -->
+  <section class="ld-sec">
+    <div class="ld-wrap ld-rise">
+      <div class="ld-eyebrow" data-i18n="ld.hon_eyebrow">À savoir avant de commencer</div>
+      <h2 class="ld-h2" data-i18n="ld.hon_h2">Ce que nous ne vous cacherons pas</h2>
+      <p class="ld-p" data-i18n="ld.hon_p">L'arbitrage n'est pas une machine à billets. Autant que vous sachiez à quoi vous vous engagez.</p>
+      <div class="ld-honest">
+        <div class="ld-hon">
+          <div class="ld-hon-t" data-i18n="ld.hon1_t">Les cotes bougent vite</div>
+          <div class="ld-hon-d" data-i18n="ld.hon1_d">Une fenêtre dure parfois quelques minutes. Vérifiez la cote chez le bookmaker juste avant de miser : si elle a changé, le profit garanti disparaît.</div>
+        </div>
+        <div class="ld-hon">
+          <div class="ld-hon-t" data-i18n="ld.hon2_t">Il faut de la trésorerie des deux côtés</div>
+          <div class="ld-hon-d" data-i18n="ld.hon2_d">Vos fonds doivent être déjà déposés chez les deux bookmakers. Le temps d'un dépôt, l'opportunité est passée.</div>
+        </div>
+        <div class="ld-hon">
+          <div class="ld-hon-t" data-i18n="ld.hon3_t">Les bookmakers peuvent limiter un compte</div>
+          <div class="ld-hon-d" data-i18n="ld.hon3_d">Un joueur régulièrement gagnant finit parfois par voir ses mises plafonnées. Cela fait partie du métier.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- APPEL FINAL -->
+  <section class="ld-final">
+    <div class="ld-wrap ld-rise">
+      <h2 class="ld-h2" data-i18n="ld.final_h2">Prêt à voir les signaux du jour ?</h2>
+      <p class="ld-lead" data-i18n="ld.final_p">La création de compte prend moins d'une minute. Un administrateur valide votre accès après paiement.</p>
+      <div class="ld-ctas">
+        <button class="ld-btn primary" id="ldFinalCta" data-i18n="ld.cta_signup">Créer un compte</button>
+        <button class="ld-btn" id="ldFinalLogin" data-i18n="ld.nav_login">Se connecter</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="ld-foot">
+    <div class="ld-wrap" data-i18n-html="ld.foot">NADOEDGE · Les cotes évoluent vite — vérifiez chez le bookmaker avant de miser<br>Interdit aux moins de 18 ans · Jouez de manière responsable</div>
+  </div>
+</div>
+<script>
+  /* Un abonné qui revient a déjà un jeton de session en mémoire locale.
+     On masque la page d'accueil AVANT le premier rendu, sinon elle
+     clignoterait une fraction de seconde avant l'ouverture de l'app.
+     Simple indice d'affichage : la vraie vérification de session reste
+     faite plus bas, côté Supabase. */
+  (function(){
+    try{
+      for(var i=0;i<localStorage.length;i++){
+        if(/^sb-.*-auth-token$/.test(localStorage.key(i))){
+          document.getElementById('landing').classList.add('off');
+          document.body.classList.remove('landing-open');
+          return;
+        }
+      }
+    }catch(e){}
+  })();
+</script>
+
 <!-- ===== ÉCRAN DE CONNEXION ===== -->
-<div id="authGate" class="auth-gate">
+<div id="authGate" class="auth-gate hidden">
   <div class="auth-card">
     <div class="auth-glow"></div>
     <div class="auth-head">
@@ -3317,8 +3705,142 @@
   function authOk(msg){const e=$('#authOk');e.style.display='block';e.textContent=msg;$('#authError').style.display='none';}
   function clearAuthError(){$('#authError').style.display='none';$('#authOk').style.display='none';}
 
-  function showGate(){$('#authGate').classList.remove('hidden');
+  function showGate(){$('#authGate').classList.remove('hidden'); hideLanding();
     ['#userChip','#logoutBtn','#syncChip','#userMenuBtn'].forEach(s=>{ const e=$(s); if(e) e.style.display='none'; });}
+
+  /* ═══════════════ PAGE D'ACCUEIL ═══════════════
+     Un visiteur ne devrait pas avoir à créer un compte pour comprendre ce
+     qu'il achète. On explique, on prouve, puis seulement on demande. Un
+     utilisateur déjà connecté ne la voit jamais : la session est détectée
+     au démarrage et on va droit à l'application. */
+  function showLanding(){
+    const l=$('#landing'); if(!l) return;
+    l.classList.remove('off');
+    document.body.classList.add('landing-open');
+    $('#authGate').classList.add('hidden');
+    ldCalc(); ldReveal(); ldLoadPrice(); ldLoadProof(); ldThemeIcon();
+  }
+  function hideLanding(){
+    const l=$('#landing'); if(!l) return;
+    const wasOn=!l.classList.contains('off');
+    l.classList.add('off');
+    document.body.classList.remove('landing-open');
+    if(wasOn) window.scrollTo(0,0);   // on ne remonte que si on quittait vraiment la page
+  }
+  function ldToAuth(mode){
+    hideLanding();
+    $('#authGate').classList.remove('hidden');
+    if(typeof setAuthMode==='function') setAuthMode(mode);
+    const f=$('#authEmail'); if(f) setTimeout(()=>f.focus(),80);
+  }
+  $('#ldLogin')      && $('#ldLogin').addEventListener('click',      ()=>ldToAuth('login'));
+  $('#ldFinalLogin') && $('#ldFinalLogin').addEventListener('click', ()=>ldToAuth('login'));
+  $('#ldSignup')     && $('#ldSignup').addEventListener('click',     ()=>ldToAuth('signup'));
+  $('#ldPriceCta')   && $('#ldPriceCta').addEventListener('click',   ()=>ldToAuth('signup'));
+  $('#ldFinalCta')   && $('#ldFinalCta').addEventListener('click',   ()=>ldToAuth('signup'));
+  $('#ldTry') && $('#ldTry').addEventListener('click',()=>{
+    const s=$('#ldDemoSec'); if(s) s.scrollIntoView({behavior:'smooth',block:'start'});
+    setTimeout(()=>{ const i=$('#ldOddA'); if(i) i.focus(); },500);
+  });
+  $('#ldLang') && $('#ldLang').addEventListener('click',()=>{
+    const I=window.NADOEDGE_I18N; if(!I) return;
+    I.setLang(I.lang==='fr'?'en':'fr');
+    // Verdict, compteurs et durée sont écrits en JS : data-i18n ne les touche pas.
+    ldCalc(); ldRenderPrice(); ldRenderProof();
+  });
+  // On relaie vers le bouton de l'app : c'est lui qui persiste le choix.
+  $('#ldTheme') && $('#ldTheme').addEventListener('click',()=>{
+    const b=$('#themeToggle'); if(b) b.click();
+    ldThemeIcon();
+  });
+  function ldThemeIcon(){
+    const e=$('#ldTheme'); if(!e) return;
+    e.textContent = document.documentElement.getAttribute('data-theme')==='light' ? '☀️' : '🌙';
+  }
+
+  // Calculateur d'arbitrage à 2 issues, entièrement local (aucune requête).
+  // S = 1/coteA + 1/coteB ; il y a arbitrage si S < 1.
+  function ldCalc(){
+    const oa=parseFloat(($('#ldOddA')||{}).value), ob=parseFloat(($('#ldOddB')||{}).value);
+    const amt=parseFloat(($('#ldAmt')||{}).value);
+    const set=(id,v)=>{ const e=$(id); if(e) e.textContent=v; };
+    if(!(oa>1)||!(ob>1)||!(amt>=0)){ set('#ldStakeA','—'); set('#ldStakeB','—'); return; }
+    const S=1/oa+1/ob;
+    const sa=amt*(1/oa)/S, sbk=amt*(1/ob)/S;
+    const ret=amt/S, profit=ret-amt, roi=amt>0?(profit/amt*100):0;
+    const fmt=n=>Math.round(n).toLocaleString('fr-FR')+' HTG';
+    set('#ldStakeA',fmt(sa)); set('#ldStakeB',fmt(sbk));
+    set('#ldRetA',fmt(ret));  set('#ldRetB',fmt(ret));
+    set('#ldProfit',(profit>=0?'+':'')+Math.round(profit).toLocaleString('fr-FR')+' HTG  ('+(profit>=0?'+':'')+roi.toFixed(2)+' %)');
+    const win=S<1, v=$('#ldVerdict');
+    if(v){ v.classList.toggle('win',win); v.classList.toggle('lose',!win); }
+    set('#ldVerdictT', win?tOr('ld.win_t','Surebet — profit garanti'):tOr('ld.lose_t',"Pas d'arbitrage sur ces cotes"));
+    set('#ldVerdictD', win?tOr('ld.win_d','Quelle que soit l\'issue, vous récupérez plus que votre mise.')
+                          :tOr('ld.lose_d','L\'écart est trop faible : les deux bookmakers gardent leur marge.'));
+  }
+  ['#ldOddA','#ldOddB','#ldAmt'].forEach(s=>{ const e=$(s); if(e) e.addEventListener('input',ldCalc); });
+
+  // Prix et durée réels (pilotés depuis le tableau de bord admin).
+  // Si la lecture est refusée à un visiteur anonyme, on retombe sur les
+  // valeurs du fichier de configuration : la page affiche toujours un prix.
+  async function ldLoadPrice(){
+    try{ await loadAppSettings(); }catch(e){}
+    ldRenderPrice();
+  }
+  // Rendu seul : ces deux valeurs sont écrites en JS, donc data-i18n ne les
+  // retraduit pas. Il faut les redessiner à chaque changement de langue.
+  function ldRenderPrice(){
+    const p=$('#ldPrice'); if(p) p.textContent=SUB.PRICE||'—';
+    const u=$('#ldPriceU'); if(u) u.textContent=SUB.DURATION_DAYS+' '+tOr('ld.price_days',"jours d'accès, renouvelable");
+  }
+
+  // Preuve : nombre de signaux actifs et meilleur ROI, via une fonction
+  // serveur qui ne renvoie QUE des agrégats. La RLS interdit à un visiteur
+  // de lire la table signals — et c'est voulu : c'est le produit payant.
+  // Sans la fonction (migration non exécutée), le bandeau reste masqué.
+  let ldProofData=null;
+  async function ldLoadProof(){
+    if(!sb) return;
+    try{
+      const {data,error}=await sb.rpc('signals_teaser');
+      if(error) throw error;
+      const r=Array.isArray(data)?data[0]:data;
+      const n=(r&&Number(r.active_count))||0;
+      if(!n) return;                     // rien d'actif : on ne bluffe pas, on masque
+      ldProofData={ n, best:(r&&r.best_roi!=null)?Number(r.best_roi):null };
+      ldRenderProof();
+    }catch(e){ /* fonction absente ou hors ligne : bandeau simplement masqué */ }
+  }
+  function ldRenderProof(){
+    if(!ldProofData) return;
+    const box=$('#ldProof'); if(!box) return;
+    const {n,best}=ldProofData;
+    $('#ldProofCount').textContent = n+' '+(n>1?tOr('ld.proof_count','signaux actifs en ce moment')
+                                               :tOr('ld.proof_count1','signal actif en ce moment'));
+    $('#ldProofBest').textContent = best!=null ? '+'+best.toFixed(2)+' %' : '—';
+    let html='';
+    for(let i=0;i<Math.min(n,3);i++){
+      const roi = best!=null ? Math.max(0.5, best-i*0.42) : 1.5;
+      html+='<div class="ld-proof-row">'
+          + '<span class="ld-roi">+'+roi.toFixed(2)+' %</span>'
+          + '<span class="ld-blur">Bookmaker ▪▪▪▪ vs Bookmaker ▪▪▪▪ · cote ▪.▪▪ / ▪.▪▪</span>'
+          + '<span class="ld-lockpill">🔒 '+tOr('ld.proof_hidden','Réservé aux abonnés')+'</span>'
+          + '</div>';
+    }
+    $('#ldProofRows').innerHTML=html;
+    box.style.display='';
+    requestAnimationFrame(()=>box.classList.add('seen'));
+  }
+
+  // Apparition au défilement. Sans IntersectionObserver, tout reste visible.
+  function ldReveal(){
+    const els=$$('#landing .ld-rise');
+    if(!('IntersectionObserver' in window)){ els.forEach(e=>e.classList.add('seen')); return; }
+    const io=new IntersectionObserver(es=>{
+      es.forEach(en=>{ if(en.isIntersecting){ en.target.classList.add('seen'); io.unobserve(en.target); } });
+    },{threshold:.12});
+    els.forEach(e=>{ if(e.id!=='ldProof') io.observe(e); });
+  }
   // Vérifie le statut du compte (approuvé / en attente / bloqué)
   let currentRole='user'; // 'user' | 'publisher' (admin géré séparément)
   let tourSeen=false;
@@ -3401,6 +3923,7 @@
   let pendingPollTimer=null;
   function showAccessScreen(kind, email, userForPoll){
     // kind: 'pending' | 'blocked'
+    hideLanding();
     $('#authGate').classList.remove('hidden');
     $('#authTabs').style.display='none';
     $('#forgotRow') && ($('#forgotRow').style.display='none');
@@ -3484,11 +4007,13 @@
     // Comptes existants sans nom d'utilisateur : on le demande avant d'entrer (sauf admin)
     if(!currentUsername && !isAdmin(user)){
       restoreAuthForm();
+      hideLanding();
       $('#authGate').classList.add('hidden');
       promptUsernameSetup();
       return;
     }
     restoreAuthForm();
+    hideLanding();
     $('#authGate').classList.add('hidden');
     $('#userChip').style.display='';$('#userEmail').textContent=user.email;
     $('#userInitial').textContent=((currentUsername||user.email||'?')[0]||'?').toUpperCase();
@@ -5878,6 +6403,7 @@
   let recoveryMode=false;
   function enterRecoveryMode(){
     recoveryMode=true;
+    hideLanding();
     $('#authGate').classList.remove('hidden');
     $('#authTabs').style.display='none';
     $('#forgotRow').style.display='none';
@@ -6175,7 +6701,8 @@
   // Démarrage : init Supabase + reprise de session éventuelle
   (async()=>{
     const ok=initSupabase();
-    if(!ok){ // pas configuré : on laisse la porte visible avec l'avertissement
+    if(!ok){ // pas configuré : on affiche la porte avec l'avertissement
+      showGate();
       $('#authSub').textContent='Configuration requise avant utilisation';
       return;
     }
@@ -6207,7 +6734,9 @@
     const {data}=await sb.auth.getSession();
     if(recoveryHandled){ return; } // on reste sur l'écran "nouveau mot de passe"
     if(data && data.session){ await enterApp(data.session.user); }
-    else { showGate(); }
+    // Visiteur : on montre la page d'accueil, pas le formulaire de connexion.
+    // Un abonné qui revient a une session et ne passe jamais par là.
+    else { showLanding(); }
   })();
 })();
 </script>
@@ -6217,6 +6746,69 @@
 (function(){
   const I18N = {
     fr: {
+      /* ── Page d'accueil (visiteur non connecté) ── */
+      "ld.tagline":"Votre avantage sur chaque pari",
+      "ld.nav_login":"Se connecter",
+      "ld.h1":"Un gain <span class=\"hl\">garanti</span>,<br>quel que soit le résultat du match.",
+      "ld.lead":"Quand deux bookmakers ne sont pas d'accord sur les cotes, il existe une façon de répartir votre mise pour encaisser un profit dans tous les cas. NADOEDGE trouve ces écarts et vous dit exactement combien miser où.",
+      "ld.cta_try":"Essayer le calcul maintenant",
+      "ld.cta_signup":"Créer un compte",
+      "ld.note":"Aucun compte requis pour tester le calculateur ci-dessous.",
+      "ld.proof_live":"EN DIRECT",
+      "ld.proof_best":"Meilleur ROI",
+      "ld.proof_foot":"Les bookmakers et les cotes sont réservés aux abonnés.",
+      "ld.proof_count":"signaux actifs en ce moment",
+      "ld.proof_count1":"signal actif en ce moment",
+      "ld.proof_hidden":"Réservé aux abonnés",
+      "ld.demo_eyebrow":"Testez vous-même",
+      "ld.demo_h2":"Le calcul, en direct, sans compte",
+      "ld.demo_p":"Prenez deux cotes opposées chez deux bookmakers différents. Modifiez-les : vous verrez immédiatement si l'écart suffit à garantir un profit, et combien miser de chaque côté.",
+      "ld.odds_a":"Cote — Issue 1","ld.odds_b":"Cote — Issue 2",
+      "ld.book_a":"Bookmaker A","ld.book_b":"Bookmaker B",
+      "ld.amount":"Mise totale (HTG)",
+      "ld.stake_a":"Miser sur 1","ld.stake_b":"Miser sur 2",
+      "ld.ret_a":"Si l'issue 1 gagne","ld.ret_b":"Si l'issue 2 gagne",
+      "ld.profit":"Profit garanti",
+      "ld.win_t":"Surebet — profit garanti",
+      "ld.win_d":"Quelle que soit l'issue, vous récupérez plus que votre mise. Le résultat du match ne change rien.",
+      "ld.lose_t":"Pas d'arbitrage sur ces cotes",
+      "ld.lose_d":"L'écart est trop faible : les deux bookmakers gardent leur marge. Augmentez une cote pour voir le seuil de bascule.",
+      "ld.steps_eyebrow":"Comment ça marche",
+      "ld.steps_h2":"Quatre étapes, rien de plus",
+      "ld.steps_p":"Vous n'avez pas besoin de connaître le sport, ni de faire de pronostic. Le résultat du match ne change rien à votre gain.",
+      "ld.s1_t":"On surveille les cotes",
+      "ld.s1_d":"Les bookmakers haïtiens ne fixent pas les mêmes cotes au même moment. Ces désaccords ouvrent des fenêtres de quelques minutes.",
+      "ld.s2_t":"Vous recevez le signal",
+      "ld.s2_d":"Match, sport, heure du coup d'envoi, bookmakers, cotes et ROI. Avec l'âge du signal, pour savoir s'il est encore fiable.",
+      "ld.s3_t":"Vous répartissez la mise",
+      "ld.s3_d":"Un clic charge le signal dans le calculateur, qui vous donne le montant exact à placer chez chaque bookmaker.",
+      "ld.s4_t":"Vous encaissez",
+      "ld.s4_d":"Une des deux mises gagne, l'autre perd, et le total dépasse votre mise de départ. Le résultat du match est indifférent.",
+      "ld.books_eyebrow":"Couverture",
+      "ld.books_h2":"Les bookmakers suivis",
+      "ld.books_p":"Il vous faut un compte approvisionné chez au moins deux d'entre eux : un surebet se joue toujours des deux côtés à la fois.",
+      "ld.price_eyebrow":"Tarif",
+      "ld.price_h2":"Un seul prix, affiché",
+      "ld.price_p":"Paiement par MonCash ou NatCash. Vous envoyez votre référence de transaction, un administrateur valide, et votre accès s'ouvre.",
+      "ld.price_days":"jours d'accès, renouvelable",
+      "ld.price_1":"Tous les signaux d'arbitrage, en direct",
+      "ld.price_2":"Calculateur de mise et suivi de votre caisse",
+      "ld.price_3":"Salon de discussion réservé aux abonnés",
+      "ld.price_4":"Sans reconduction automatique : vous renouvelez si vous voulez",
+      "ld.price_cta":"Créer mon compte",
+      "ld.hon_eyebrow":"À savoir avant de commencer",
+      "ld.hon_h2":"Ce que nous ne vous cacherons pas",
+      "ld.hon_p":"L'arbitrage n'est pas une machine à billets. Autant que vous sachiez à quoi vous vous engagez.",
+      "ld.hon1_t":"Les cotes bougent vite",
+      "ld.hon1_d":"Une fenêtre dure parfois quelques minutes. Vérifiez la cote chez le bookmaker juste avant de miser : si elle a changé, le profit garanti disparaît.",
+      "ld.hon2_t":"Il faut de la trésorerie des deux côtés",
+      "ld.hon2_d":"Vos fonds doivent être déjà déposés chez les deux bookmakers. Le temps d'un dépôt, l'opportunité est passée.",
+      "ld.hon3_t":"Les bookmakers peuvent limiter un compte",
+      "ld.hon3_d":"Un joueur régulièrement gagnant finit parfois par voir ses mises plafonnées. Cela fait partie du métier.",
+      "ld.final_h2":"Prêt à voir les signaux du jour ?",
+      "ld.final_p":"La création de compte prend moins d'une minute. Un administrateur valide votre accès après paiement.",
+      "ld.foot":"NADOEDGE · Les cotes évoluent vite — vérifiez chez le bookmaker avant de miser<br>Interdit aux moins de 18 ans · Jouez de manière responsable",
+
       "auth.sub":"Vos paris, synchronisés et sécurisés",
       "auth.login":"Connexion",
       "auth.signup":"Créer un compte",
@@ -6352,6 +6944,69 @@
       "tour.s8_desc":"Vous êtes prêt à utiliser NADOEDGE. Vérifiez toujours les cotes chez le bookmaker avant de miser. Bonne chance !"
     },
     en: {
+      /* ── Landing page (signed-out visitor) ── */
+      "ld.tagline":"Your edge on every bet",
+      "ld.nav_login":"Sign in",
+      "ld.h1":"A <span class=\"hl\">guaranteed</span> profit,<br>whatever the match result.",
+      "ld.lead":"When two bookmakers disagree on the odds, there is a way to split your stake so you profit either way. NADOEDGE finds those gaps and tells you exactly how much to stake where.",
+      "ld.cta_try":"Try the calculation now",
+      "ld.cta_signup":"Create an account",
+      "ld.note":"No account needed to try the calculator below.",
+      "ld.proof_live":"LIVE",
+      "ld.proof_best":"Best ROI",
+      "ld.proof_foot":"Bookmakers and odds are for subscribers only.",
+      "ld.proof_count":"active signals right now",
+      "ld.proof_count1":"active signal right now",
+      "ld.proof_hidden":"Subscribers only",
+      "ld.demo_eyebrow":"See for yourself",
+      "ld.demo_h2":"The calculation, live, no account",
+      "ld.demo_p":"Take two opposite odds at two different bookmakers. Change them: you will see straight away whether the gap is enough to guarantee a profit, and how much to stake on each side.",
+      "ld.odds_a":"Odds — Outcome 1","ld.odds_b":"Odds — Outcome 2",
+      "ld.book_a":"Bookmaker A","ld.book_b":"Bookmaker B",
+      "ld.amount":"Total stake (HTG)",
+      "ld.stake_a":"Stake on 1","ld.stake_b":"Stake on 2",
+      "ld.ret_a":"If outcome 1 wins","ld.ret_b":"If outcome 2 wins",
+      "ld.profit":"Guaranteed profit",
+      "ld.win_t":"Surebet — guaranteed profit",
+      "ld.win_d":"Whatever the outcome, you get back more than you staked. The match result makes no difference.",
+      "ld.lose_t":"No arbitrage at these odds",
+      "ld.lose_d":"The gap is too small: both bookmakers keep their margin. Raise one of the odds to see where it tips over.",
+      "ld.steps_eyebrow":"How it works",
+      "ld.steps_h2":"Four steps, nothing more",
+      "ld.steps_p":"You do not need to know the sport, or to predict anything. The match result does not change what you earn.",
+      "ld.s1_t":"We watch the odds",
+      "ld.s1_d":"Haitian bookmakers do not set the same odds at the same time. Those disagreements open windows of a few minutes.",
+      "ld.s2_t":"You get the signal",
+      "ld.s2_d":"Match, sport, kick-off time, bookmakers, odds and ROI. With the age of the signal, so you know whether it is still reliable.",
+      "ld.s3_t":"You split the stake",
+      "ld.s3_d":"One click loads the signal into the calculator, which gives you the exact amount to place at each bookmaker.",
+      "ld.s4_t":"You collect",
+      "ld.s4_d":"One of the two bets wins, the other loses, and the total beats what you put in. The match result is irrelevant.",
+      "ld.books_eyebrow":"Coverage",
+      "ld.books_h2":"Bookmakers we track",
+      "ld.books_p":"You need a funded account at two of them at least: a surebet is always played on both sides at once.",
+      "ld.price_eyebrow":"Pricing",
+      "ld.price_h2":"One price, shown up front",
+      "ld.price_p":"Pay with MonCash or NatCash. You send your transaction reference, an administrator approves it, and your access opens.",
+      "ld.price_days":"days of access, renewable",
+      "ld.price_1":"Every arbitrage signal, live",
+      "ld.price_2":"Stake calculator and bankroll tracking",
+      "ld.price_3":"Chat room for subscribers only",
+      "ld.price_4":"No auto-renewal: you renew if you want to",
+      "ld.price_cta":"Create my account",
+      "ld.hon_eyebrow":"Before you start",
+      "ld.hon_h2":"What we will not hide from you",
+      "ld.hon_p":"Arbitrage is not a money printer. You may as well know what you are getting into.",
+      "ld.hon1_t":"Odds move fast",
+      "ld.hon1_d":"A window sometimes lasts a few minutes. Check the odds at the bookmaker just before staking: if they moved, the guaranteed profit is gone.",
+      "ld.hon2_t":"You need cash on both sides",
+      "ld.hon2_d":"Your funds must already be deposited at both bookmakers. In the time a deposit takes, the opportunity has passed.",
+      "ld.hon3_t":"Bookmakers can limit an account",
+      "ld.hon3_d":"A consistently winning player sometimes ends up with capped stakes. It comes with the territory.",
+      "ld.final_h2":"Ready to see today's signals?",
+      "ld.final_p":"Creating an account takes under a minute. An administrator approves your access after payment.",
+      "ld.foot":"NADOEDGE · Odds move fast — check at the bookmaker before staking<br>Strictly 18+ · Please gamble responsibly",
+
       "auth.sub":"Your bets, synced and secure",
       "auth.login":"Sign in",
       "auth.signup":"Create account",
@@ -6497,6 +7152,7 @@
     document.querySelectorAll('[data-i18n-title]').forEach(function(el){ var v=t(el.getAttribute('data-i18n-title')); if(v!=null) el.setAttribute('title',v); });
     document.documentElement.setAttribute('lang', LANG);
     var b=document.getElementById('langBtn'); if(b) b.textContent = LANG==='fr' ? 'EN' : 'FR';
+    var l=document.getElementById('ldLang'); if(l) l.textContent = LANG==='fr' ? 'EN' : 'FR';
   }
   function setLang(l){ LANG=l; try{ localStorage.setItem('NADOEDGE_lang', l); }catch(e){} apply(); }
   function raw(k, lang){ return (I18N[lang]||{})[k]; }
