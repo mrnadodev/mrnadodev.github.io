@@ -76,12 +76,18 @@
       radial-gradient(760px 420px at 6% 118%, rgba(201,146,43,.08), transparent 55%),var(--bg);
     background-attachment:fixed;
   }
-  :root[data-theme="light"] .auth-gate{
-    background:radial-gradient(600px 300px at 50% 0%, rgba(15,157,110,.10) 0%, transparent 70%),
-      radial-gradient(900px 600px at 50% -5%, #dcece6 0%, var(--bg) 55%);
+  :root[data-theme="light"] .auth-gate::before{
+    background:
+      radial-gradient(880px 520px at 14% -6%, rgba(15,157,110,.14), transparent 62%),
+      radial-gradient(720px 460px at 88% 18%, rgba(198,142,20,.11), transparent 64%);
   }
-  :root[data-theme="light"] .auth-card{background:linear-gradient(180deg,#ffffff,#f5f8f9)}
+  :root[data-theme="light"] .auth-gate::after{opacity:.5}
+  :root[data-theme="light"] .auth-card{background:linear-gradient(168deg,#ffffff,#f4f8f6 62%)}
+  :root[data-theme="light"] .auth-card::before{
+    background:radial-gradient(360px 200px at 88% -6%, rgba(198,142,20,.13), transparent 66%)}
+  :root[data-theme="light"] .auth-field input{background:#f7fafa}
   :root[data-theme="light"] .auth-field input:focus{background:#ffffff}
+  :root[data-theme="light"] .auth-back{background:rgba(0,0,0,.03)}
   :root[data-theme="light"] .admin-fab,
   :root[data-theme="light"] .admin-drawer{background:#ffffff}
   :root[data-theme="light"] .brand h1 .hlogo,
@@ -758,20 +764,46 @@
   .off{opacity:.4;pointer-events:none}
 
   /* ===== ÉCRAN DE CONNEXION ===== */
+  /* La porte prolonge la page d'accueil : même lumière, même or.
+     Un visiteur qui clique sur « Se connecter » ne doit pas avoir
+     l'impression d'atterrir sur un autre site. */
   .auth-gate{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;
-    padding:20px;background:
-      radial-gradient(600px 300px at 50% 0%, rgba(47,230,168,.10) 0%, transparent 70%),
-      radial-gradient(900px 600px at 50% -5%, #10242c 0%, var(--bg) 55%)}
+    padding:20px;overflow:auto;background:var(--bg)}
+  .auth-gate::before{content:'';position:fixed;inset:0;pointer-events:none;
+    background:
+      radial-gradient(880px 520px at 14% -6%,  rgba(39,227,154,.17), transparent 62%),
+      radial-gradient(720px 460px at 88% 18%,  rgba(242,193,78,.12), transparent 64%),
+      radial-gradient(980px 600px at 50% 112%, rgba(39,227,154,.10), transparent 66%)}
+  .auth-gate::after{content:'';position:fixed;inset:0;pointer-events:none;
+    background:radial-gradient(640px 400px at 74% 70%, rgba(242,193,78,.11), transparent 68%);
+    animation:ldBreathe 14s ease-in-out infinite}
   .auth-gate.hidden{display:none}
-  .auth-card{position:relative;width:100%;max-width:400px;
-    background:linear-gradient(180deg,rgba(20,33,40,.95),rgba(13,23,28,.98));
-    border:1px solid var(--line);border-radius:20px;padding:34px 30px 26px;
-    box-shadow:0 30px 80px -20px rgba(0,0,0,.7),0 0 0 1px rgba(47,230,168,.04),inset 0 1px 0 rgba(255,255,255,.03);
+  .auth-card{position:relative;z-index:1;width:100%;max-width:412px;
+    background:linear-gradient(168deg, rgba(24,42,34,.94), rgba(10,23,18,.97) 62%);
+    border:1px solid var(--line);border-radius:22px;padding:32px 30px 26px;
+    box-shadow:0 40px 100px -28px rgba(0,0,0,.85),
+               0 0 0 1px rgba(39,227,154,.06),
+               inset 0 1px 0 rgba(255,255,255,.05);
     overflow:hidden;animation:cardIn .5s cubic-bezier(.16,1,.3,1)}
   @keyframes cardIn{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
-  .auth-glow{position:absolute;top:-1px;left:50%;transform:translateX(-50%);
-    width:160px;height:2px;background:linear-gradient(90deg,transparent,var(--mint),transparent);opacity:.7}
-  .auth-head{text-align:center;margin-bottom:24px}
+  /* halo doré diffus dans l'angle haut droit de la carte */
+  .auth-card::before{content:'';position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(360px 200px at 88% -6%, rgba(242,193,78,.14), transparent 66%)}
+  .auth-card > *{position:relative;z-index:1}
+  /* filet lumineux qui balaie le haut de la carte, comme sur la carte tarif */
+  .auth-glow{position:absolute;top:0;left:-40%;z-index:2;
+    width:40%;height:1.5px;background:linear-gradient(90deg,transparent,var(--mint),transparent);
+    animation:ldSweep 5.5s ease-in-out infinite}
+
+  /* bouton de retour vers la page d'accueil */
+  .auth-back{position:absolute;top:16px;left:16px;z-index:3;display:inline-flex;align-items:center;gap:7px;
+    background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--ink-dim);
+    border-radius:999px;padding:7px 14px 7px 11px;font-family:var(--sans);font-size:12px;font-weight:600;
+    cursor:pointer;transition:.18s}
+  .auth-back:hover{color:var(--ink);border-color:var(--mint-dim);background:rgba(39,227,154,.08)}
+  .auth-back svg{transition:transform .18s}
+  .auth-back:hover svg{transform:translateX(-3px)}
+  .auth-head{text-align:center;margin:16px 0 24px}
   .auth-logo{position:relative;width:52px;height:52px;margin:0 auto 14px;border-radius:15px;
     display:grid;place-items:center;color:var(--mint);
     background:radial-gradient(circle at 30% 25%,rgba(47,230,168,.22),rgba(47,230,168,.06));
@@ -789,8 +821,9 @@
     padding:9px 0;border-radius:8px;transition:color .2s}
   .auth-tab.on{color:var(--bg)}
   .auth-tab-ind{position:absolute;z-index:1;top:4px;left:4px;height:calc(100% - 8px);width:calc(50% - 4px);
-    background:var(--mint);border-radius:8px;transition:transform .25s cubic-bezier(.16,1,.3,1);
-    box-shadow:0 3px 12px -3px rgba(47,230,168,.6)}
+    background:linear-gradient(140deg,#5cf0b6,var(--mint) 48%,#12b87a);border-radius:8px;
+    transition:transform .25s cubic-bezier(.16,1,.3,1);
+    box-shadow:0 4px 14px -3px rgba(39,227,154,.65),inset 0 1px 0 rgba(255,255,255,.32)}
   .auth-tabs[data-active="signup"] .auth-tab-ind{transform:translateX(100%)}
 
   .auth-error{background:rgba(255,93,108,.1);border:1px solid rgba(255,93,108,.3);color:var(--red);
@@ -801,22 +834,27 @@
   .auth-field{position:relative;margin-bottom:13px}
   .auth-ico{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--ink-faint);
     pointer-events:none;display:flex;transition:color .2s}
-  .auth-field input{width:100%;background:var(--panel-2);border:1px solid var(--line);border-radius:11px;
-    color:var(--ink);font-family:var(--sans);font-size:14.5px;padding:14px 14px 14px 42px;outline:none;transition:.18s}
+  .auth-field input{width:100%;background:rgba(6,17,13,.55);border:1px solid var(--line);border-radius:12px;
+    color:var(--ink);font-family:var(--sans);font-size:14.5px;padding:15px 14px 15px 42px;outline:none;transition:.18s}
   .auth-field input::placeholder{color:var(--ink-faint)}
-  .auth-field input:focus{border-color:var(--mint);background:#0f1c22;box-shadow:0 0 0 3px rgba(47,230,168,.12)}
+  .auth-field input:focus{border-color:var(--mint);background:rgba(10,28,20,.8);
+    box-shadow:0 0 0 3px rgba(39,227,154,.14), 0 0 26px -8px rgba(39,227,154,.5)}
   .auth-field input:focus + .auth-eye,.auth-field:focus-within .auth-ico{color:var(--mint)}
   .auth-eye{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;
     color:var(--ink-faint);cursor:pointer;padding:8px;border-radius:8px;display:flex;transition:.15s}
   .auth-eye:hover{color:var(--ink-dim);background:rgba(255,255,255,.04)}
   .auth-eye.shown{color:var(--mint)}
 
-  .auth-submit{width:100%;margin-top:8px;border:none;cursor:pointer;border-radius:11px;
+  .auth-submit{position:relative;overflow:hidden;width:100%;margin-top:8px;border:none;cursor:pointer;border-radius:11px;
     font-family:var(--sans);font-size:14.5px;font-weight:700;letter-spacing:.01em;
-    color:var(--bg);background:linear-gradient(180deg,#3ff0b4,var(--mint));
+    color:#04120c;background:linear-gradient(140deg,#5cf0b6,var(--mint) 46%,#12b87a);
     padding:14px;display:flex;align-items:center;justify-content:center;gap:8px;
-    box-shadow:0 10px 26px -8px rgba(47,230,168,.55),inset 0 1px 0 rgba(255,255,255,.25);transition:.18s}
-  .auth-submit:hover{transform:translateY(-1px);box-shadow:0 14px 32px -8px rgba(47,230,168,.7),inset 0 1px 0 rgba(255,255,255,.3)}
+    box-shadow:0 14px 40px -12px rgba(39,227,154,.65),inset 0 1px 0 rgba(255,255,255,.35);transition:.18s}
+  /* même reflet que le bouton principal de la page d'accueil */
+  .auth-submit::after{content:'';position:absolute;top:0;left:-60%;width:45%;height:100%;pointer-events:none;
+    background:linear-gradient(100deg,transparent,rgba(255,255,255,.4),transparent);
+    transform:skewX(-18deg);animation:ldShine 4.5s ease-in-out infinite}
+  .auth-submit:hover{transform:translateY(-1px);box-shadow:0 18px 48px -12px rgba(39,227,154,.8),inset 0 1px 0 rgba(255,255,255,.35)}
   .auth-submit:active{transform:translateY(0)}
   .auth-submit svg{transition:transform .2s}
   .auth-submit:hover svg{transform:translateX(3px)}
@@ -1851,6 +1889,10 @@
 <div id="authGate" class="auth-gate hidden">
   <div class="auth-card">
     <div class="auth-glow"></div>
+    <button type="button" class="auth-back" id="authBack">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+      <span data-i18n="auth.back">Accueil</span>
+    </button>
     <div class="auth-head">
       <div class="auth-logo ne-wrap" id="authLogo">
         <svg class="ne-mark" viewBox="0 0 120 120" role="img" aria-label="NADOEDGE">
@@ -3785,6 +3827,7 @@
   function clearAuthError(){$('#authError').style.display='none';$('#authOk').style.display='none';}
 
   function showGate(){$('#authGate').classList.remove('hidden'); hideLanding();
+    $('#authBack') && ($('#authBack').style.display='');
     ['#userChip','#logoutBtn','#syncChip','#userMenuBtn'].forEach(s=>{ const e=$(s); if(e) e.style.display='none'; });}
 
   /* ═══════════════ PAGE D'ACCUEIL ═══════════════
@@ -3812,6 +3855,14 @@
     if(typeof setAuthMode==='function') setAuthMode(mode);
     const f=$('#authEmail'); if(f) setTimeout(()=>f.focus(),80);
   }
+  // Retour à l'accueil. Masqué dans les écrans où il n'a pas de sens :
+  // compte en attente, compte bloqué, ou saisie d'un nouveau mot de passe —
+  // on ne quitte pas ces états d'un clic.
+  $('#authBack') && $('#authBack').addEventListener('click',()=>{
+    if(typeof clearAuthError==='function') clearAuthError();
+    const p=$('#authPass'); if(p) p.value='';
+    showLanding();
+  });
   $('#ldLogin')      && $('#ldLogin').addEventListener('click',      ()=>ldToAuth('login'));
   $('#ldFinalLogin') && $('#ldFinalLogin').addEventListener('click', ()=>ldToAuth('login'));
   $('#ldSignup')     && $('#ldSignup').addEventListener('click',     ()=>ldToAuth('signup'));
@@ -4027,6 +4078,7 @@
     // kind: 'pending' | 'blocked'
     hideLanding();
     $('#authGate').classList.remove('hidden');
+    $('#authBack') && ($('#authBack').style.display='none');
     $('#authTabs').style.display='none';
     $('#forgotRow') && ($('#forgotRow').style.display='none');
     document.querySelectorAll('.auth-field').forEach(f=>f.style.display='none');
@@ -4096,6 +4148,7 @@
     document.querySelectorAll('.auth-field').forEach(f=>f.style.display='');
     $('#loginBtn').style.display='';
     const back=$('#accessLogout'); if(back)back.style.display='none';
+    const home=$('#authBack'); if(home)home.style.display='';
     $('#authSub').textContent='Vos paris, synchronisés et sécurisés';
   }
 
@@ -6507,6 +6560,7 @@
     recoveryMode=true;
     hideLanding();
     $('#authGate').classList.remove('hidden');
+    $('#authBack') && ($('#authBack').style.display='none');
     $('#authTabs').style.display='none';
     $('#forgotRow').style.display='none';
     $('#authEmail').closest('.auth-field').style.display='none';
@@ -6911,6 +6965,7 @@
       "ld.final_p":"La création de compte prend moins d'une minute. Un administrateur valide votre accès après paiement.",
       "ld.foot":"NADOEDGE · Les cotes évoluent vite — vérifiez chez le bookmaker avant de miser<br>Interdit aux moins de 18 ans · Jouez de manière responsable",
 
+      "auth.back":"Accueil",
       "auth.sub":"Vos paris, synchronisés et sécurisés",
       "auth.login":"Connexion",
       "auth.signup":"Créer un compte",
@@ -7109,6 +7164,7 @@
       "ld.final_p":"Creating an account takes under a minute. An administrator approves your access after payment.",
       "ld.foot":"NADOEDGE · Odds move fast — check at the bookmaker before staking<br>Strictly 18+ · Please gamble responsibly",
 
+      "auth.back":"Home",
       "auth.sub":"Your bets, synced and secure",
       "auth.login":"Sign in",
       "auth.signup":"Create account",
