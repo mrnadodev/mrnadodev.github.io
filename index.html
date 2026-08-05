@@ -1407,7 +1407,12 @@
   .brand h1 .hlogo{background:none !important;border:none !important;box-shadow:none !important;
     width:52px;height:52px;overflow:visible;border-radius:0}
   .auth-logo.ne-wrap{background:none !important;border:none !important;box-shadow:none !important;overflow:visible}
-  .ne-mark{width:100%;height:100%;display:block;overflow:visible}
+  /* L'ombre douce donne au monogramme le relief qu'il a sur le fichier
+     d'origine. En CSS plutôt qu'en filtre SVG : une seule règle pour les
+     trois copies, et pas d'identifiant à dupliquer. */
+  .ne-mark{width:100%;height:100%;display:block;overflow:visible;
+    filter:drop-shadow(0 2px 3px rgba(0,0,0,.55))}
+  :root[data-theme="light"] .ne-mark{filter:drop-shadow(0 2px 3px rgba(0,0,0,.28))}
   /* « EDGE » toujours en vert, thème sombre comme thème clair.
      Même dégradé que le bouton « Se connecter » : le nom et l'action
      principale parlent d'une seule voix. La couleur pleine reste posée
@@ -1673,7 +1678,7 @@
   <nav class="ld-nav">
     <div class="ld-nav-in">
       <div class="ld-brand">
-        <svg viewBox="0 0 120 120" role="img" aria-label="NADOEDGE">
+        <svg class="ne-mark" viewBox="0 0 120 120" role="img" aria-label="NADOEDGE">
           <defs>
             <linearGradient id="ldSilver" x1="0.15" y1="0" x2="0.6" y2="1">
               <stop offset="0" stop-color="#ffffff"/><stop offset=".4" stop-color="#f2f5f4"/>
@@ -1684,16 +1689,16 @@
               <stop offset="1" stop-color="#0d7a2c"/>
             </linearGradient>
           </defs>
-          <path d="M9.4,48.3 A52,52 0 0 1 111.5,52.8" fill="none" stroke="#101410" stroke-width="12.5" stroke-linecap="round" opacity=".9"/>
-          <path d="M9.4,48.3 A52,52 0 0 1 111.5,52.8" fill="none" stroke="url(#ldSilver)" stroke-width="9" stroke-linecap="round"/>
-          <path d="M8.5,52.8 A52,52 0 1 0 108.9,42.2" fill="none" stroke="#101410" stroke-width="13.5" stroke-linecap="round" opacity=".9"/>
-          <path d="M8.5,52.8 A52,52 0 1 0 108.9,42.2" fill="none" stroke="url(#ldGreen)" stroke-width="10" stroke-linecap="round"/>
-          <path d="M12,88 L24,30 L38,30 L57.7,70 L66,30 L80,30 L68,88 L54,88 L34.3,48 L26,88 Z"
-                fill="url(#ldSilver)" stroke="#101410" stroke-width="2.6" stroke-linejoin="round"/>
-          <g stroke="#101410" stroke-width="2.4" stroke-linejoin="round">
-            <path d="M66,32 L114,32 L106,45 L58,45 Z" fill="url(#ldGreen)"/>
-            <path d="M62,54 L100,54 L92,67 L54,67 Z" fill="url(#ldGreen)"/>
-            <path d="M58,76 L106,76 L98,89 L50,89 Z" fill="url(#ldGreen)"/>
+          <path d="M9.4,48.3 A52,52 0 0 1 111.5,52.8" fill="none" stroke="#101410" stroke-width="8.6" stroke-linecap="round" opacity=".9"/>
+          <path d="M9.4,48.3 A52,52 0 0 1 111.5,52.8" fill="none" stroke="url(#ldSilver)" stroke-width="6" stroke-linecap="round"/>
+          <path d="M8.5,52.8 A52,52 0 1 0 108.9,42.2" fill="none" stroke="#101410" stroke-width="10.2" stroke-linecap="round" opacity=".9"/>
+          <path d="M8.5,52.8 A52,52 0 1 0 108.9,42.2" fill="none" stroke="url(#ldGreen)" stroke-width="7.4" stroke-linecap="round"/>
+          <path d="M12,85 L24,33 L38,33 L57.7,68.9 L66,33 L80,33 L68,85 L54,85 L34.3,49.1 L26,85 Z"
+                fill="url(#ldSilver)" stroke="#101410" stroke-width="1.9" stroke-linejoin="round"/>
+          <g stroke="#101410" stroke-width="1.7" stroke-linejoin="round">
+            <path d="M67,33 L114,33 L106,44.5 L59,44.5 Z" fill="url(#ldGreen)"/>
+            <path d="M62,53 L99,53 L91,63.5 L54,63.5 Z" fill="url(#ldGreen)"/>
+            <path d="M58,72.5 L104,72.5 L96,84 L50,84 Z" fill="url(#ldGreen)"/>
           </g>
         </svg>
         <div>
@@ -1917,16 +1922,16 @@
               <stop offset="1" stop-color="#0d7a2c"/>
             </linearGradient>
           </defs>
-          <path d="M9.4,48.3 A52,52 0 0 1 111.5,52.8" fill="none" stroke="#101410" stroke-width="12.5" stroke-linecap="round" opacity=".9"/>
-          <path d="M9.4,48.3 A52,52 0 0 1 111.5,52.8" fill="none" stroke="url(#neSilver2)" stroke-width="9" stroke-linecap="round"/>
-          <path d="M8.5,52.8 A52,52 0 1 0 108.9,42.2" fill="none" stroke="#101410" stroke-width="13.5" stroke-linecap="round" opacity=".9"/>
-          <path d="M8.5,52.8 A52,52 0 1 0 108.9,42.2" fill="none" stroke="url(#neGreen2)" stroke-width="10" stroke-linecap="round"/>
-          <path d="M12,88 L24,30 L38,30 L57.7,70 L66,30 L80,30 L68,88 L54,88 L34.3,48 L26,88 Z"
-                fill="url(#neSilver2)" stroke="#101410" stroke-width="2.6" stroke-linejoin="round"/>
-          <g stroke="#101410" stroke-width="2.4" stroke-linejoin="round">
-            <path d="M66,32 L114,32 L106,45 L58,45 Z" fill="url(#neGreen2)"/>
-            <path d="M62,54 L100,54 L92,67 L54,67 Z" fill="url(#neGreen2)"/>
-            <path d="M58,76 L106,76 L98,89 L50,89 Z" fill="url(#neGreen2)"/>
+          <path d="M9.4,48.3 A52,52 0 0 1 111.5,52.8" fill="none" stroke="#101410" stroke-width="8.6" stroke-linecap="round" opacity=".9"/>
+          <path d="M9.4,48.3 A52,52 0 0 1 111.5,52.8" fill="none" stroke="url(#neSilver2)" stroke-width="6" stroke-linecap="round"/>
+          <path d="M8.5,52.8 A52,52 0 1 0 108.9,42.2" fill="none" stroke="#101410" stroke-width="10.2" stroke-linecap="round" opacity=".9"/>
+          <path d="M8.5,52.8 A52,52 0 1 0 108.9,42.2" fill="none" stroke="url(#neGreen2)" stroke-width="7.4" stroke-linecap="round"/>
+          <path d="M12,85 L24,33 L38,33 L57.7,68.9 L66,33 L80,33 L68,85 L54,85 L34.3,49.1 L26,85 Z"
+                fill="url(#neSilver2)" stroke="#101410" stroke-width="1.9" stroke-linejoin="round"/>
+          <g stroke="#101410" stroke-width="1.7" stroke-linejoin="round">
+            <path d="M67,33 L114,33 L106,44.5 L59,44.5 Z" fill="url(#neGreen2)"/>
+            <path d="M62,53 L99,53 L91,63.5 L54,63.5 Z" fill="url(#neGreen2)"/>
+            <path d="M58,72.5 L104,72.5 L96,84 L50,84 Z" fill="url(#neGreen2)"/>
           </g>
         </svg>
       </div>
@@ -2003,16 +2008,16 @@
               <stop offset="1" stop-color="#0d7a2c"/>
             </linearGradient>
           </defs>
-          <path d="M9.4,48.3 A52,52 0 0 1 111.5,52.8" fill="none" stroke="#101410" stroke-width="12.5" stroke-linecap="round" opacity=".9"/>
-          <path d="M9.4,48.3 A52,52 0 0 1 111.5,52.8" fill="none" stroke="url(#neSilver)" stroke-width="9" stroke-linecap="round"/>
-          <path d="M8.5,52.8 A52,52 0 1 0 108.9,42.2" fill="none" stroke="#101410" stroke-width="13.5" stroke-linecap="round" opacity=".9"/>
-          <path d="M8.5,52.8 A52,52 0 1 0 108.9,42.2" fill="none" stroke="url(#neGreen)" stroke-width="10" stroke-linecap="round"/>
-          <path d="M12,88 L24,30 L38,30 L57.7,70 L66,30 L80,30 L68,88 L54,88 L34.3,48 L26,88 Z"
-                fill="url(#neSilver)" stroke="#101410" stroke-width="2.6" stroke-linejoin="round"/>
-          <g stroke="#101410" stroke-width="2.4" stroke-linejoin="round">
-            <path d="M66,32 L114,32 L106,45 L58,45 Z" fill="url(#neGreen)"/>
-            <path d="M62,54 L100,54 L92,67 L54,67 Z" fill="url(#neGreen)"/>
-            <path d="M58,76 L106,76 L98,89 L50,89 Z" fill="url(#neGreen)"/>
+          <path d="M9.4,48.3 A52,52 0 0 1 111.5,52.8" fill="none" stroke="#101410" stroke-width="8.6" stroke-linecap="round" opacity=".9"/>
+          <path d="M9.4,48.3 A52,52 0 0 1 111.5,52.8" fill="none" stroke="url(#neSilver)" stroke-width="6" stroke-linecap="round"/>
+          <path d="M8.5,52.8 A52,52 0 1 0 108.9,42.2" fill="none" stroke="#101410" stroke-width="10.2" stroke-linecap="round" opacity=".9"/>
+          <path d="M8.5,52.8 A52,52 0 1 0 108.9,42.2" fill="none" stroke="url(#neGreen)" stroke-width="7.4" stroke-linecap="round"/>
+          <path d="M12,85 L24,33 L38,33 L57.7,68.9 L66,33 L80,33 L68,85 L54,85 L34.3,49.1 L26,85 Z"
+                fill="url(#neSilver)" stroke="#101410" stroke-width="1.9" stroke-linejoin="round"/>
+          <g stroke="#101410" stroke-width="1.7" stroke-linejoin="round">
+            <path d="M67,33 L114,33 L106,44.5 L59,44.5 Z" fill="url(#neGreen)"/>
+            <path d="M62,53 L99,53 L91,63.5 L54,63.5 Z" fill="url(#neGreen)"/>
+            <path d="M58,72.5 L104,72.5 L96,84 L50,84 Z" fill="url(#neGreen)"/>
           </g>
         </svg>
       </span>NADO<span class="edge">EDGE</span></h1>
