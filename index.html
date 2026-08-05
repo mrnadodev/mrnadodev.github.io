@@ -1408,10 +1408,22 @@
     width:52px;height:52px;overflow:visible;border-radius:0}
   .auth-logo.ne-wrap{background:none !important;border:none !important;box-shadow:none !important;overflow:visible}
   .ne-mark{width:100%;height:100%;display:block;overflow:visible}
-  /* « EDGE » toujours en vert, thème sombre comme thème clair */
-  .brand h1 .edge, .auth-title .edge{color:#3fd46a}
+  /* « EDGE » toujours en vert, thème sombre comme thème clair.
+     Même dégradé que le bouton « Se connecter » : le nom et l'action
+     principale parlent d'une seule voix. La couleur pleine reste posée
+     avant le dégradé, comme repli si background-clip n'est pas supporté. */
+  .brand h1 .edge, .auth-title .edge, .ld-brand-t .edge{
+    color:var(--mint);
+    background:linear-gradient(140deg,#5cf0b6,var(--mint) 46%,#12b87a);
+    -webkit-background-clip:text;background-clip:text;
+    -webkit-text-fill-color:transparent}
   :root[data-theme="light"] .brand h1 .edge,
-  :root[data-theme="light"] .auth-title .edge{color:#128235}
+  :root[data-theme="light"] .auth-title .edge,
+  :root[data-theme="light"] .ld-brand-t .edge{
+    /* même famille que le bouton, assombrie : sur fond blanc le vert clair
+       tombait sous le seuil de contraste lisible. */
+    color:#0b8258;
+    background:linear-gradient(140deg,#12a678,#0b8258 46%,#076445)}
 
   /* ═══════════════════════════════════════════════════════════════════
      PAGE D'ACCUEIL (visiteur non connecté)
@@ -1460,8 +1472,7 @@
   .ld-brand{display:flex;align-items:center;gap:11px;flex:1;min-width:0}
   .ld-brand svg{width:34px;height:34px;flex:none}
   .ld-brand-t{font-weight:800;font-size:18px;letter-spacing:-.01em;line-height:1.05}
-  .ld-brand-t .edge{color:#3fd46a}
-  :root[data-theme="light"] .ld-brand-t .edge{color:#128235}
+  /* la couleur de « EDGE » est définie plus bas, avec celle du header et de la porte */
   .ld-brand-s{font-size:10.5px;color:var(--ink-faint);letter-spacing:.04em}
   .ld-nav-b{background:transparent;border:1px solid var(--line);color:var(--ink-dim);border-radius:10px;
     padding:8px 13px;font-size:12.5px;font-weight:600;cursor:pointer;transition:.15s;flex:none}
