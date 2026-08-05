@@ -113,6 +113,10 @@
   .brand{display:flex;flex-direction:column;gap:6px}
   .brand .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.35em;text-transform:uppercase;color:var(--mint)}
   .brand h1{font-size:30px;font-weight:700;letter-spacing:-.02em;line-height:1;display:flex;align-items:center;gap:12px}
+  /* Le titre est un conteneur flex : sans ce regroupement, « NADO » et
+     « EDGE » deviennent deux éléments flex distincts et le gap:12px
+     s'insère entre eux. Le mot doit rester d'un seul tenant. */
+  .brand h1 .wordmark{display:inline}
   .brand h1 .dot{width:9px;height:9px;border-radius:50%;background:var(--mint);box-shadow:0 0 14px var(--mint);animation:pulse 2s infinite}
   /* Logo animé du dashboard : ballons qui arrivent par la droite et atterrissent dans l'icône */
   .brand h1 .hlogo{position:relative;width:46px;height:46px;flex:none;border-radius:13px;
@@ -2020,7 +2024,7 @@
             <path d="M58,72.5 L104,72.5 L96,84 L50,84 Z" fill="url(#neGreen)"/>
           </g>
         </svg>
-      </span>NADO<span class="edge">EDGE</span></h1>
+      </span><span class="wordmark">NADO<span class="edge">EDGE</span></span></h1>
       <p data-i18n="brand.tag">Votre avantage sur chaque pari</p>
     </div>
     <div class="legend">
