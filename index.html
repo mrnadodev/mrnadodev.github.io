@@ -4165,11 +4165,28 @@
   function restoreAuthForm(){
     $('#authTabs').style.display='';
     $('#forgotRow') && ($('#forgotRow').style.display='');
-    document.querySelectorAll('.auth-field').forEach(f=>f.style.display='');
+    // Scopé à la carte : un .auth-field vit aussi dans le modal « choisir un
+    // pseudo », et il n'a rien à voir avec l'écran de connexion.
+    document.querySelectorAll('.auth-card .auth-field').forEach(f=>f.style.display='');
     $('#loginBtn').style.display='';
     const back=$('#accessLogout'); if(back)back.style.display='none';
     const home=$('#authBack'); if(home)home.style.display='';
     $('#authSub').textContent='Vos paris, synchronisés et sécurisés';
+    // La boucle ci-dessus réaffiche TOUS les champs, y compris le pseudo qui
+    // n'appartient qu'à l'inscription. On réapplique donc le mode courant,
+    // sinon la connexion se retrouve avec trois champs au lieu de deux.
+    applyAuthModeFields();
+  }
+  // Quels champs appartiennent à quel mode. Une seule source de vérité,
+  // appelée par setAuthMode et par restoreAuthForm.
+  // Le mode est lu sur l'onglet actif plutôt que sur la variable authMode :
+  // celle-ci est déclarée plus bas dans le fichier, et l'onglet est déjà à
+  // jour au moment où setAuthMode nous appelle.
+  function applyAuthModeFields(){
+    const tab=document.querySelector('.auth-tab.on');
+    const signup = tab ? tab.dataset.tab==='signup' : false;
+    const uf=$('#usernameField'); if(uf) uf.style.display = signup ? 'flex' : 'none';
+    const fr=$('#forgotRow');     if(fr) fr.style.display = signup ? 'none' : 'block';
   }
 
   async function enterApp(user){
@@ -6612,8 +6629,7 @@
     $$('.auth-tab').forEach(t=>t.classList.toggle('on',t.dataset.tab===m));
     $('#submitLabel').textContent = m==='login' ? 'Se connecter' : 'Créer mon compte';
     $('#authPass').setAttribute('autocomplete', m==='login'?'current-password':'new-password');
-    $('#forgotRow').style.display = m==='login' ? 'block' : 'none';
-    $('#usernameField').style.display = m==='login' ? 'none' : 'flex';
+    applyAuthModeFields();   // pseudo + \u00ab mot de passe oubli\u00e9 \u00bb : une seule source de v\u00e9rit\u00e9
     $('#authEmail').placeholder = m==='login' ? 'Email ou nom d\u2019utilisateur' : 'Adresse email';
     clearAuthError();
   }
