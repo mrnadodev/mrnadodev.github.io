@@ -1385,8 +1385,29 @@
      l'aller-retour Supabase devant une page blanche. Le petit script placé
      juste après le balisage la masque immédiatement si une session existe
      déjà, pour qu'un abonné qui revient ne voie aucun clignotement. */
-  #landing{display:block;background:var(--bg);min-height:100vh}
+  #landing{display:block;background:var(--bg);min-height:100vh;position:relative;isolation:isolate}
   #landing.off{display:none}
+
+  /* Lumière ambiante. Uniquement des dégradés CSS : aucune image, aucun
+     script — le coût en données est nul, ce qui compte en 3G. Le vert reste
+     la couleur du signal, l'or celle de l'argent ; les deux se croisent au
+     milieu de la page, là où se trouve le tarif. */
+  #landing::before{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;
+    background:
+      radial-gradient(900px 520px at 12% -8%,  rgba(39,227,154,.16), transparent 62%),
+      radial-gradient(760px 460px at 92% 22%,  rgba(242,193,78,.11), transparent 64%),
+      radial-gradient(1000px 620px at 50% 108%,rgba(39,227,154,.09), transparent 66%);}
+  /* voile qui respire, très lentement : la page ne semble pas figée */
+  #landing::after{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;
+    background:radial-gradient(680px 420px at 78% 68%, rgba(242,193,78,.10), transparent 68%);
+    animation:ldBreathe 14s ease-in-out infinite}
+  @keyframes ldBreathe{0%,100%{opacity:.45;transform:translate3d(0,0,0) scale(1)}
+                       50%{opacity:1;transform:translate3d(-3%,-2%,0) scale(1.12)}}
+  :root[data-theme="light"] #landing::before{
+    background:
+      radial-gradient(900px 520px at 12% -8%,  rgba(15,157,110,.13), transparent 62%),
+      radial-gradient(760px 460px at 92% 22%,  rgba(198,142,20,.10), transparent 64%);}
+  :root[data-theme="light"] #landing::after{opacity:.5}
   body.landing-open{overflow-x:hidden}
   /* La page d'accueil est dans le flux, pas en superposition : il faut donc
      retirer l'application elle-même tant qu'on la montre. */
@@ -1419,17 +1440,27 @@
   .ld-p{font-size:15px;color:var(--ink-dim);line-height:1.65;max-width:620px;margin:0}
 
   /* — hero — */
-  .ld-hero{padding:76px 0 66px;text-align:center}
-  .ld-h1{font-size:clamp(33px,6vw,60px);font-weight:800;letter-spacing:-.035em;line-height:1.05;margin:0 0 20px}
-  .ld-h1 .hl{color:var(--mint)}
+  .ld-hero{padding:76px 0 66px;text-align:center;position:relative}
+  .ld-h1{font-size:clamp(33px,6vw,60px);font-weight:800;letter-spacing:-.035em;line-height:1.05;margin:0 0 20px;
+    background:linear-gradient(178deg, var(--ink) 42%, color-mix(in srgb, var(--ink) 62%, transparent));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  /* « garanti » : le mot qui porte la promesse, donc le seul qui s'allume */
+  .ld-h1 .hl{color:var(--mint);-webkit-text-fill-color:var(--mint);
+    text-shadow:0 0 34px rgba(39,227,154,.42)}
   .ld-lead{font-size:clamp(15px,2vw,18px);color:var(--ink-dim);line-height:1.6;max-width:590px;margin:0 auto 32px}
   .ld-ctas{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:14px}
-  .ld-btn{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:12px;
-    padding:14px 26px;font-size:14.5px;font-weight:700;cursor:pointer;transition:.16s;text-decoration:none;display:inline-block}
+  .ld-btn{position:relative;overflow:hidden;border:1px solid var(--line);background:var(--panel);color:var(--ink);
+    border-radius:12px;padding:14px 26px;font-size:14.5px;font-weight:700;cursor:pointer;transition:.16s;
+    text-decoration:none;display:inline-block}
   .ld-btn:hover{border-color:var(--mint-dim);transform:translateY(-1px)}
-  .ld-btn.primary{background:var(--mint);border-color:var(--mint);color:#06110d;
-    box-shadow:0 12px 34px -12px rgba(39,227,154,.6)}
-  .ld-btn.primary:hover{filter:brightness(1.08)}
+  .ld-btn.primary{background:linear-gradient(140deg,#5cf0b6,var(--mint) 46%,#12b87a);border-color:transparent;color:#04120c;
+    box-shadow:0 14px 40px -12px rgba(39,227,154,.65), inset 0 1px 0 rgba(255,255,255,.35)}
+  .ld-btn.primary:hover{filter:brightness(1.07);box-shadow:0 18px 48px -12px rgba(39,227,154,.8), inset 0 1px 0 rgba(255,255,255,.35)}
+  /* reflet qui traverse le bouton principal : il attire l'œil sans clignoter */
+  .ld-btn.primary::after{content:'';position:absolute;top:0;left:-60%;width:45%;height:100%;pointer-events:none;
+    background:linear-gradient(100deg,transparent,rgba(255,255,255,.42),transparent);
+    transform:skewX(-18deg);animation:ldShine 4.5s ease-in-out infinite}
+  @keyframes ldShine{0%{left:-60%}42%,100%{left:130%}}
   .ld-note{font-size:12px;color:var(--ink-faint)}
 
   /* — bandeau de preuve : chiffres réels, détails masqués — */
@@ -1450,7 +1481,8 @@
 
   /* — démonstrateur jouable — */
   .ld-demo{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:34px;align-items:start}
-  .ld-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px}
+  .ld-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px;
+    box-shadow:0 22px 60px -34px rgba(0,0,0,.9)}
   .ld-fld{margin-bottom:15px}
   .ld-fld:last-child{margin-bottom:0}
   .ld-lab{display:flex;justify-content:space-between;align-items:baseline;gap:8px;
@@ -1459,7 +1491,12 @@
   .ld-fld input{width:100%;background:var(--panel-2);border:1px solid var(--line);color:var(--ink);
     border-radius:10px;padding:11px 13px;font-size:15px;font-family:var(--mono)}
   .ld-fld input:focus{outline:none;border-color:var(--mint);box-shadow:0 0 0 3px rgba(39,227,154,.12)}
-  .ld-res{background:var(--panel-2);border:1px solid var(--line);border-radius:16px;padding:24px}
+  .ld-res{position:relative;overflow:hidden;background:var(--panel-2);border:1px solid var(--line);
+    border-radius:16px;padding:24px;box-shadow:0 22px 60px -34px rgba(0,0,0,.9)}
+  /* liseré vert en haut du panneau de résultat quand il y a profit */
+  .ld-res::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;pointer-events:none;
+    background:linear-gradient(90deg,transparent,var(--mint),transparent);opacity:0;transition:opacity .45s}
+  .ld-res.win::before{opacity:.85}
   .ld-verdict{border-radius:12px;padding:15px 17px;margin-bottom:18px;border:1px solid transparent}
   .ld-verdict.win{background:rgba(39,227,154,.09);border-color:rgba(39,227,154,.32)}
   .ld-verdict.lose{background:rgba(255,90,103,.08);border-color:rgba(255,90,103,.3)}
@@ -1475,26 +1512,57 @@
   .ld-line span{color:var(--ink-dim)}
   .ld-line b{font-family:var(--mono);font-weight:700}
   .ld-line.big{font-size:15px;padding-top:12px;margin-top:6px;border-top:1px dashed var(--line)}
-  .ld-line.big b{font-size:20px;color:var(--mint)}
+  /* le profit est de l'argent : il est en or, pas en vert */
+  .ld-line.big b{font-size:21px;color:var(--gold);text-shadow:0 0 26px rgba(242,193,78,.4);
+    transition:color .3s,text-shadow .3s}
+  .ld-res:not(.win) .ld-line.big b{color:var(--red);text-shadow:none}
+  .ld-stake-v{transition:color .3s}
+  .ld-res.win .ld-stake-v{color:var(--ink)}
 
   /* — étapes — */
   .ld-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(224px,1fr));gap:18px;margin-top:34px}
-  .ld-step{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px;position:relative}
-  .ld-step-n{font-family:var(--mono);font-size:11px;color:var(--mint);font-weight:700;margin-bottom:12px}
+  .ld-step{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px;position:relative;
+    overflow:hidden;transition:border-color .3s,transform .3s}
+  /* halo qui s'allume au survol : la carte réagit, la page paraît vivante */
+  .ld-step::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .35s;
+    background:radial-gradient(320px 160px at 0% 0%, rgba(39,227,154,.14), transparent 68%)}
+  .ld-step:hover{border-color:var(--mint-dim);transform:translateY(-3px)}
+  .ld-step:hover::before{opacity:1}
+  .ld-step>*{position:relative}
+  .ld-step-n{font-family:var(--mono);font-size:24px;font-weight:800;margin-bottom:10px;letter-spacing:-.02em;
+    background:linear-gradient(160deg,var(--mint),rgba(39,227,154,.25));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
   .ld-step-t{font-weight:700;font-size:15.5px;margin-bottom:8px}
   .ld-step-d{font-size:13px;color:var(--ink-dim);line-height:1.6}
 
-  /* — bookmakers — */
+  /* — couverture + tarif côte à côte : où vous jouez, ce que ça coûte — */
+  .ld-duo{display:grid;grid-template-columns:1fr 400px;gap:44px;align-items:start}
   .ld-books{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
-  .ld-book{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 22px;
-    font-weight:700;font-size:14.5px}
+  .ld-book{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:14px 22px 14px 20px;font-weight:700;font-size:14.5px;display:flex;align-items:center;gap:10px;
+    transition:border-color .25s,transform .25s}
+  .ld-book:hover{border-color:var(--gold);transform:translateY(-2px)}
+  .ld-book-d{width:6px;height:6px;border-radius:50%;background:var(--gold);flex:none;
+    box-shadow:0 0 0 0 rgba(242,193,78,.55);animation:ldDot 3.2s ease-out infinite}
+  .ld-book:nth-child(2) .ld-book-d{animation-delay:.8s}
+  .ld-book:nth-child(3) .ld-book-d{animation-delay:1.6s}
+  .ld-book:nth-child(4) .ld-book-d{animation-delay:2.4s}
+  @keyframes ldDot{0%{box-shadow:0 0 0 0 rgba(242,193,78,.5)}70%,100%{box-shadow:0 0 0 9px rgba(242,193,78,0)}}
 
-  /* — prix — */
-  .ld-price-card{background:var(--panel);border:1px solid var(--mint-dim);border-radius:18px;padding:34px;
-    max-width:430px;margin-top:30px;position:relative;overflow:hidden}
-  .ld-price-card::before{content:'';position:absolute;inset:0;
-    background:radial-gradient(420px 200px at 50% 0%, rgba(39,227,154,.11), transparent 70%);pointer-events:none}
-  .ld-price-v{font-size:44px;font-weight:800;letter-spacing:-.03em;font-family:var(--mono)}
+  /* — prix : la carte est le point chaud de la page, donc c'est elle qui porte l'or — */
+  .ld-price-card{background:linear-gradient(170deg, color-mix(in srgb, var(--gold) 7%, var(--panel)), var(--panel) 55%);
+    border:1px solid rgba(242,193,78,.34);border-radius:18px;padding:32px;position:relative;overflow:hidden;
+    box-shadow:0 26px 70px -30px rgba(242,193,78,.4)}
+  .ld-price-card::before{content:'';position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(420px 220px at 50% -10%, rgba(242,193,78,.16), transparent 70%)}
+  /* filet lumineux qui balaie le haut de la carte */
+  .ld-price-card::after{content:'';position:absolute;top:0;left:-40%;width:40%;height:1px;pointer-events:none;
+    background:linear-gradient(90deg,transparent,var(--gold),transparent);animation:ldSweep 5s ease-in-out infinite}
+  @keyframes ldSweep{0%{left:-40%}55%,100%{left:110%}}
+  .ld-eyebrow.gold{color:var(--gold)}
+  .ld-price-v{font-size:46px;font-weight:800;letter-spacing:-.03em;font-family:var(--mono);
+    background:linear-gradient(150deg,#ffe9a8,var(--gold) 55%,#c9922a);
+    -webkit-background-clip:text;background-clip:text;color:transparent}
   .ld-price-u{font-size:14px;color:var(--ink-dim);margin-bottom:20px}
   .ld-price-l{list-style:none;padding:0;margin:0 0 24px}
   .ld-price-l li{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;color:var(--ink-dim);
@@ -1503,8 +1571,10 @@
 
   /* — honnêteté — */
   .ld-honest{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px;margin-top:30px}
-  .ld-hon{background:var(--panel-2);border:1px solid var(--line);border-left:3px solid var(--gold);
-    border-radius:0 12px 12px 0;padding:20px 22px}
+  .ld-hon{position:relative;background:linear-gradient(100deg, color-mix(in srgb, var(--gold) 5%, var(--panel-2)), var(--panel-2) 42%);
+    border:1px solid var(--line);border-left:3px solid var(--gold);
+    border-radius:0 12px 12px 0;padding:20px 22px;transition:transform .3s}
+  .ld-hon:hover{transform:translateX(3px)}
   .ld-hon-t{font-weight:700;font-size:14px;margin-bottom:7px;color:var(--gold)}
   .ld-hon-d{font-size:12.5px;color:var(--ink-dim);line-height:1.6}
 
@@ -1516,9 +1586,16 @@
   /* apparition au défilement — coupée si l'utilisateur préfère moins d'animation */
   .ld-rise{opacity:0;transform:translateY(20px);transition:opacity .6s ease,transform .6s ease}
   .ld-rise.seen{opacity:1;transform:none}
+  /* Choix de l'utilisateur d'abord : on coupe tout ce qui bouge, on garde la lumière. */
   @media(prefers-reduced-motion:reduce){
     .ld-rise{opacity:1;transform:none;transition:none}
-    .ld-live i{animation:none}
+    .ld-live i, #landing::after, .ld-book-d,
+    .ld-price-card::after, .ld-btn.primary::after{animation:none}
+    .ld-step:hover, .ld-hon:hover, .ld-book:hover, .ld-btn:hover{transform:none}
+  }
+  @media(max-width:980px){
+    .ld-duo{grid-template-columns:1fr;gap:34px}
+    .ld-price-card{max-width:460px}
   }
   @media(max-width:820px){
     .ld-demo{grid-template-columns:1fr}
@@ -1527,6 +1604,8 @@
     .ld-brand-s{display:none}
     .ld-proof-row{grid-template-columns:70px 1fr;row-gap:8px}
     .ld-proof-row .ld-lockpill{grid-column:1/-1}
+    /* les halos fixes coûtent cher à repeindre au défilement sur mobile */
+    #landing::after{animation:none;opacity:.6}
   }
 </style>
 </head>
@@ -1675,37 +1754,37 @@
     </div>
   </section>
 
-  <!-- BOOKMAKERS -->
+  <!-- COUVERTURE + TARIF : où vous jouez, et ce que ça coûte -->
   <section class="ld-sec">
     <div class="ld-wrap ld-rise">
-      <div class="ld-eyebrow" data-i18n="ld.books_eyebrow">Couverture</div>
-      <h2 class="ld-h2" data-i18n="ld.books_h2">Les bookmakers suivis</h2>
-      <p class="ld-p" data-i18n="ld.books_p">Il vous faut un compte approvisionné chez au moins deux d'entre eux : un surebet se joue toujours des deux côtés à la fois.</p>
-      <div class="ld-books">
-        <div class="ld-book">1xBet</div>
-        <div class="ld-book">Paryaj Lakay</div>
-        <div class="ld-book">Paryaj Pam</div>
-        <div class="ld-book">Golcash</div>
-      </div>
-    </div>
-  </section>
+      <div class="ld-duo">
 
-  <!-- PRIX -->
-  <section class="ld-sec">
-    <div class="ld-wrap ld-rise">
-      <div class="ld-eyebrow" data-i18n="ld.price_eyebrow">Tarif</div>
-      <h2 class="ld-h2" data-i18n="ld.price_h2">Un seul prix, affiché</h2>
-      <p class="ld-p" data-i18n="ld.price_p">Paiement par MonCash ou NatCash. Vous envoyez votre référence de transaction, un administrateur valide, et votre accès s'ouvre.</p>
-      <div class="ld-price-card">
-        <div class="ld-price-v" id="ldPrice">500 HTG</div>
-        <div class="ld-price-u" id="ldPriceU">7 jours d'accès, renouvelable</div>
-        <ul class="ld-price-l">
-          <li><span class="ck">✓</span><span data-i18n="ld.price_1">Tous les signaux d'arbitrage, en direct</span></li>
-          <li><span class="ck">✓</span><span data-i18n="ld.price_2">Calculateur de mise et suivi de votre caisse</span></li>
-          <li><span class="ck">✓</span><span data-i18n="ld.price_3">Salon de discussion réservé aux abonnés</span></li>
-          <li><span class="ck">✓</span><span data-i18n="ld.price_4">Sans reconduction automatique : vous renouvelez si vous voulez</span></li>
-        </ul>
-        <button class="ld-btn primary" id="ldPriceCta" style="width:100%" data-i18n="ld.price_cta">Créer mon compte</button>
+        <div class="ld-duo-l">
+          <div class="ld-eyebrow" data-i18n="ld.books_eyebrow">Couverture</div>
+          <h2 class="ld-h2" data-i18n="ld.books_h2">Les bookmakers suivis</h2>
+          <p class="ld-p" data-i18n="ld.books_p">Il vous faut un compte approvisionné chez au moins deux d'entre eux : un surebet se joue toujours des deux côtés à la fois.</p>
+          <div class="ld-books">
+            <div class="ld-book"><span class="ld-book-d"></span>1xBet</div>
+            <div class="ld-book"><span class="ld-book-d"></span>Paryaj Lakay</div>
+            <div class="ld-book"><span class="ld-book-d"></span>Paryaj Pam</div>
+            <div class="ld-book"><span class="ld-book-d"></span>Golcash</div>
+          </div>
+          <p class="ld-p" style="margin-top:22px;font-size:13.5px" data-i18n="ld.price_p">Paiement par MonCash ou NatCash. Vous envoyez votre référence de transaction, un administrateur valide, et votre accès s'ouvre.</p>
+        </div>
+
+        <div class="ld-price-card">
+          <div class="ld-eyebrow gold" data-i18n="ld.price_eyebrow">Tarif</div>
+          <div class="ld-price-v" id="ldPrice">500 HTG</div>
+          <div class="ld-price-u" id="ldPriceU">7 jours d'accès, renouvelable</div>
+          <ul class="ld-price-l">
+            <li><span class="ck">✓</span><span data-i18n="ld.price_1">Tous les signaux d'arbitrage, en direct</span></li>
+            <li><span class="ck">✓</span><span data-i18n="ld.price_2">Calculateur de mise et suivi de votre caisse</span></li>
+            <li><span class="ck">✓</span><span data-i18n="ld.price_3">Salon de discussion réservé aux abonnés</span></li>
+            <li><span class="ck">✓</span><span data-i18n="ld.price_4">Sans reconduction automatique : vous renouvelez si vous voulez</span></li>
+          </ul>
+          <button class="ld-btn primary" id="ldPriceCta" style="width:100%" data-i18n="ld.price_cta">Créer mon compte</button>
+        </div>
+
       </div>
     </div>
   </section>
@@ -3771,14 +3850,37 @@
     const fmt=n=>Math.round(n).toLocaleString('fr-FR')+' HTG';
     set('#ldStakeA',fmt(sa)); set('#ldStakeB',fmt(sbk));
     set('#ldRetA',fmt(ret));  set('#ldRetB',fmt(ret));
-    set('#ldProfit',(profit>=0?'+':'')+Math.round(profit).toLocaleString('fr-FR')+' HTG  ('+(profit>=0?'+':'')+roi.toFixed(2)+' %)');
+    ldTween($('#ldProfit'), profit, roi);
     const win=S<1, v=$('#ldVerdict');
     if(v){ v.classList.toggle('win',win); v.classList.toggle('lose',!win); }
+    const res=document.querySelector('.ld-res'); if(res) res.classList.toggle('win',win);
     set('#ldVerdictT', win?tOr('ld.win_t','Surebet — profit garanti'):tOr('ld.lose_t',"Pas d'arbitrage sur ces cotes"));
     set('#ldVerdictD', win?tOr('ld.win_d','Quelle que soit l\'issue, vous récupérez plus que votre mise.')
                           :tOr('ld.lose_d','L\'écart est trop faible : les deux bookmakers gardent leur marge.'));
   }
   ['#ldOddA','#ldOddB','#ldAmt'].forEach(s=>{ const e=$(s); if(e) e.addEventListener('input',ldCalc); });
+
+  // Le profit se déplace vers sa nouvelle valeur au lieu de sauter : on voit
+  // le chiffre réagir à la cote qu'on vient de changer. Coupé si l'utilisateur
+  // préfère moins d'animation.
+  let ldTweenId=null, ldFromP=0, ldFromR=0;
+  function ldTween(el, profit, roi){
+    if(!el) return;
+    const write=(p,r)=>{ el.textContent=(p>=0?'+':'')+Math.round(p).toLocaleString('fr-FR')+' HTG  ('
+                                       +(r>=0?'+':'')+r.toFixed(2)+' %)'; };
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+    if(reduce){ ldFromP=profit; ldFromR=roi; write(profit,roi); return; }
+    if(ldTweenId) cancelAnimationFrame(ldTweenId);
+    // Montant et pourcentage glissent ensemble : les voir se désynchroniser
+    // donnerait l'impression d'un bug plutôt que d'une animation.
+    const p0=ldFromP, r0=ldFromR, t0=performance.now(), dur=380;
+    (function step(now){
+      const k=Math.min(1,(now-t0)/dur), e=1-Math.pow(1-k,3);   // décélération
+      write(p0+(profit-p0)*e, r0+(roi-r0)*e);
+      if(k<1) ldTweenId=requestAnimationFrame(step);
+      else { ldTweenId=null; ldFromP=profit; ldFromR=roi; }
+    })(t0);
+  }
 
   // Prix et durée réels (pilotés depuis le tableau de bord admin).
   // Si la lecture est refusée à un visiteur anonyme, on retombe sur les
