@@ -75,3 +75,43 @@ async def test_two_way_leaves_c_columns_null(repo):
     assert rows[0].n_issues == 2
     assert rows[0].bookmaker_c is None
     assert rows[0].cote_c is None
+
+
+@pytest.mark.asyncio
+async def test_save_if_new_ignore_les_doublons(repo):
+    """Le scanner repasse sur les memes matchs : on ne veut pas cinquante lignes."""
+    scout = Scout(bankroll=50_000.0)
+    pool = [
+        _odd("Paryaj Lakay", "home", 3.55),
+        _odd("1xBet", "draw", 3.90),
+        _odd("Golcash", "away", 3.30),
+    ]
+    opp = scout.evaluate(pool)[0]
+
+    first = await repo.save_if_new(opp)
+    assert first is not None
+
+    # Meme detection, cycle suivant : rien de neuf.
+    again = scout.evaluate(pool)[0]
+    assert await repo.save_if_new(again) is None
+    assert len(await repo.list_recent()) == 1
+
+
+@pytest.mark.asyncio
+async def test_save_if_new_accepte_une_cote_qui_bouge(repo):
+    """Une cote differente, c'est une autre occasion : elle doit etre gardee."""
+    scout = Scout(bankroll=50_000.0)
+    opp = scout.evaluate([
+        _odd("Paryaj Lakay", "home", 3.55),
+        _odd("1xBet", "draw", 3.90),
+        _odd("Golcash", "away", 3.30),
+    ])[0]
+    await repo.save_if_new(opp)
+
+    bouge = scout.evaluate([
+        _odd("Paryaj Lakay", "home", 3.60),
+        _odd("1xBet", "draw", 3.90),
+        _odd("Golcash", "away", 3.30),
+    ])[0]
+    assert await repo.save_if_new(bouge) is not None
+    assert len(await repo.list_recent()) == 2

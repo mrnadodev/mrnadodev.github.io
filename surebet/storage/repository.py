@@ -50,6 +50,46 @@ class OpportunityRepository:
             await session.refresh(row)
             return row.id
 
+    async def exists(self, opp: Opportunity) -> bool:
+        """La meme opportunite est-elle deja en base ?
+
+        Le scanner repasse sur les memes matchs a chaque cycle. Sans ce
+        filtre, une opportunite qui reste ouverte dix minutes produit une
+        ligne par scan : la base finit par contenir cinquante fois la meme
+        chose, et le signal reel se perd dans les repetitions.
+
+        Deux detections sont identiques si le match, le marche et TOUTES
+        les cotes le sont. Une cote qui bouge, meme d'un centieme, est une
+        autre occasion avec un autre profit : elle n'est pas un doublon.
+        """
+        c = opportunity_to_row(opp)
+        async with self._session_factory() as session:
+            found = await session.execute(
+                select(OpportunityRow.id).where(
+                    OpportunityRow.match == c.match,
+                    OpportunityRow.n_issues == c.n_issues,
+                    OpportunityRow.event_a == c.event_a,
+                    OpportunityRow.cote_a == c.cote_a,
+                    OpportunityRow.bookmaker_a == c.bookmaker_a,
+                    OpportunityRow.event_b == c.event_b,
+                    OpportunityRow.cote_b == c.cote_b,
+                    OpportunityRow.bookmaker_b == c.bookmaker_b,
+                    OpportunityRow.event_c == c.event_c,
+                    OpportunityRow.cote_c == c.cote_c,
+                    OpportunityRow.bookmaker_c == c.bookmaker_c,
+                ).limit(1)
+            )
+            return found.scalar_one_or_none() is not None
+
+    async def save_if_new(self, opp: Opportunity) -> int | None:
+        """Enregistre l'opportunite, sauf si la meme est deja en base.
+
+        Retourne l'id insere, ou None si c'etait un doublon.
+        """
+        if await self.exists(opp):
+            return None
+        return await self.save(opp)
+
     async def list_recent(self, limit: int = 50) -> list[OpportunityRow]:
         async with self._session_factory() as session:
             result = await session.execute(

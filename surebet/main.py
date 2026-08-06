@@ -94,7 +94,17 @@ async def process_cycle(pool: list[Odd], scout: Scout, notifier: TelegramNotifie
     opportunities = scout.evaluate(fresh_pool)
     logger.info("%d opportunite(s) detectee(s)", len(opportunities))
 
+    doublons = 0
     for opp in opportunities:
+        # Doublon ecarte AVANT l'explication IA : une opportunite qui reste
+        # ouverte dix minutes revient a chaque cycle de scan. Sans ce filtre
+        # on paie un appel LLM et on renvoie une alerte Telegram identique a
+        # chaque passage — c'est ce qui a produit 893 lignes en base pour
+        # 17 opportunites reellement distinctes.
+        if repo is not None and await repo.exists(opp):
+            doublons += 1
+            continue
+
         opp.score_ia = score_opportunity(opp, ScoringContext())
         opp.explanation = await scout.explain(opp)
         if repo is not None:
@@ -103,6 +113,8 @@ async def process_cycle(pool: list[Odd], scout: Scout, notifier: TelegramNotifie
             sent = await notifier.send(opp)
             logger.info("Alerte %s (ROI %.2f%%, score %d) : envoi=%s",
                         opp.match_label, opp.roi_pct, opp.score_ia, sent)
+    if doublons:
+        logger.info("%d doublon(s) ignore(s) (deja vu(s) au cycle precedent)", doublons)
     return opportunities
 
 
