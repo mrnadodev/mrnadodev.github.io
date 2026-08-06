@@ -25,3 +25,7 @@ Thumbs.db
 
 # Vercel
 .vercel
+
+# Deploiement VPS : secrets et sauvegardes ne doivent jamais entrer ici
+deploiement/.env
+deploiement/sauvegardes/
