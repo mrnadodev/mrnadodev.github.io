@@ -120,3 +120,37 @@ class TestNotSurebet:
     def test_margin_above_one_returns_false(self):
         assert is_surebet([1.8, 1.9]) is False
         assert implied_margin([1.8, 1.9]) > 1.0
+
+
+class TestBookmakersDistincts:
+    """Un arbitrage se joue chez plusieurs books — meme regle que le dashboard."""
+
+    @staticmethod
+    def _odd(bk, selection, price):
+        from datetime import datetime, timedelta, timezone
+        from surebet.normalizer.schema import Odd, make_match_id
+        # Coup d'envoi toujours a venir : ne pas figer de date (cf. commentaire
+        # dans test_dashboard_live.py).
+        start = datetime.now(timezone.utc) + timedelta(days=2)
+        return Odd(
+            bookmaker=bk, sport="football", competition="C",
+            match_id=make_match_id("A", "B", start), home_team="A", away_team="B",
+            start_time=start, market_type="1x2", n_outcomes=3, selection=selection,
+            line=None, team_scope=None, odds=price, url=f"https://{bk}.test/e",
+            scraped_at=datetime.now(timezone.utc),
+        )
+
+    def test_refuse_un_seul_bookmaker(self):
+        from surebet.arbitrage.detector import find_three_way
+        pool = [self._odd("1xBet", "home", 3.55),
+                self._odd("1xBet", "draw", 3.90),
+                self._odd("1xBet", "away", 3.30)]
+        assert find_three_way(pool) == []
+
+    def test_accepte_deux_jambes_sur_trois_au_meme_book(self):
+        """Cas legitime observe en production : home+draw chez l'un, away chez l'autre."""
+        from surebet.arbitrage.detector import find_three_way
+        pool = [self._odd("1xBet", "home", 3.55),
+                self._odd("1xBet", "draw", 3.90),
+                self._odd("Paryaj Pam", "away", 3.30)]
+        assert len(find_three_way(pool)) == 1

@@ -51,6 +51,16 @@ def _make_opportunity(
     bankroll: float,
     min_roi: float,
 ) -> Opportunity | None:
+    # Un arbitrage se joue chez PLUSIEURS bookmakers. Si toutes les jambes
+    # viennent du meme, c'est soit une erreur de cote que le book annulera,
+    # soit un defaut de collecte : dans les deux cas ce n'est pas jouable.
+    # Prendre deux jambes sur trois au meme endroit reste normal — c'est le
+    # bookmaker UNIQUE qu'on refuse.
+    # Meme regle que dashboard/live.py, pour que les deux moteurs de
+    # detection decident a l'identique.
+    if len({o.bookmaker for o in legs_odds}) < 2:
+        return None
+
     odds_values = [o.odds for o in legs_odds]
     margin = implied_margin(odds_values)
     roi = roi_percent(odds_values)
