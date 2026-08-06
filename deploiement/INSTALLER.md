@@ -69,8 +69,17 @@ Invoke-WebRequest -Uri "https://raw.githubusercontent.com/mrnadodev/mrnadodev.gi
 
 Le script installe Python, Git, le code, Chromium, et configure le pare-feu.
 
+Il télécharge Python et Git depuis leurs sites officiels : `winget`
+n'existe pas sur Windows Server, c'est une application du Store et Server
+n'a pas de Store.
+
 Il s'arrêtera en réclamant le fichier de configuration : c'est normal, il
 ne peut pas deviner vos secrets. Passez à l'étape suivante.
+
+> Si le script vous dit que Python ou Git est « introuvable dans le PATH »
+> juste après l'avoir installé, c'est normal : une fenêtre PowerShell garde
+> le PATH qu'elle avait à son ouverture. Fermez-la, rouvrez-en une en
+> administrateur, relancez le script.
 
 ---
 

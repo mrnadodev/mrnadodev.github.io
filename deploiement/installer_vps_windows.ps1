@@ -1,4 +1,4 @@
-# ╔══════════════════════════════════════════════════════════════════════╗
+﻿# ╔══════════════════════════════════════════════════════════════════════╗
 # ║  NADOEDGE · Installation du scanner sur un VPS Windows Server 2022    ║
 # ║                                                                       ║
 # ║  À exécuter SUR LE VPS, dans PowerShell EN ADMINISTRATEUR :           ║
@@ -32,23 +32,46 @@ if (-not ([Security.Principal.WindowsPrincipal] `
     throw "Lancez PowerShell en tant qu'administrateur (clic droit > Exécuter en tant qu'administrateur)."
 }
 
+# ── 0. Réseau ─────────────────────────────────────────────────────────
+# TLS 1.2 explicite : Windows PowerShell 5.1 négocie parfois une version
+# refusée par python.org et github.com.
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+# Sans ça, Invoke-WebRequest passe l'essentiel de son temps à dessiner une
+# barre de progression : un téléchargement de 30 s en prend 5 minutes.
+$ProgressPreference = 'SilentlyContinue'
+
+function Rafraichir-Path {
+    $env:Path = [Environment]::GetEnvironmentVariable("Path","Machine") + ";" +
+                [Environment]::GetEnvironmentVariable("Path","User")
+}
+
+function Installer-Depuis-Web {
+    param([string]$Nom, [string]$Url, [string]$Arguments)
+    $fichier = Join-Path $env:TEMP (Split-Path $Url -Leaf)
+    Info "téléchargement de $Nom…"
+    Invoke-WebRequest -Uri $Url -OutFile $fichier -UseBasicParsing
+    Info "installation silencieuse…"
+    $p = Start-Process -FilePath $fichier -ArgumentList $Arguments -Wait -PassThru
+    Remove-Item $fichier -ErrorAction SilentlyContinue
+    if ($p.ExitCode -ne 0) { throw "$Nom : l'installation a échoué (code $($p.ExitCode))" }
+    Rafraichir-Path
+}
+
 # ── 1. Python ─────────────────────────────────────────────────────────
+# winget n'existe PAS sur Windows Server : c'est une application du Store,
+# et Server n'a pas de Store. On télécharge l'installeur officiel.
 Etape "Python"
 $python = $null
 try { $python = (Get-Command python -ErrorAction Stop).Source } catch {}
 if ($python) {
     Ok "déjà installé : $(python --version 2>&1)"
 } else {
-    Info "installation de Python 3.12 via winget…"
-    try {
-        winget install --id Python.Python.3.12 --silent --accept-source-agreements --accept-package-agreements
-    } catch {
-        throw "winget indisponible. Installez Python 3.11+ manuellement depuis python.org en cochant « Add Python to PATH », puis relancez ce script."
-    }
-    # winget ne rafraîchit pas le PATH de la session en cours.
-    $env:Path = [Environment]::GetEnvironmentVariable("Path","Machine") + ";" +
-                [Environment]::GetEnvironmentVariable("Path","User")
-    Ok "Python installé"
+    Installer-Depuis-Web -Nom "Python 3.12" `
+        -Url "https://www.python.org/ftp/python/3.12.7/python-3.12.7-amd64.exe" `
+        -Arguments "/quiet InstallAllUsers=1 PrependPath=1 Include_test=0 Include_launcher=1"
+    try { Get-Command python -ErrorAction Stop | Out-Null }
+    catch { throw "Python installé mais introuvable dans le PATH. Fermez cette fenêtre PowerShell, rouvrez-en une en administrateur, et relancez le script." }
+    Ok "Python installé : $(python --version 2>&1)"
 }
 
 # ── 2. Git ────────────────────────────────────────────────────────────
@@ -57,10 +80,11 @@ try {
     Get-Command git -ErrorAction Stop | Out-Null
     Ok "déjà installé"
 } catch {
-    Info "installation de Git…"
-    winget install --id Git.Git --silent --accept-source-agreements --accept-package-agreements
-    $env:Path = [Environment]::GetEnvironmentVariable("Path","Machine") + ";" +
-                [Environment]::GetEnvironmentVariable("Path","User")
+    Installer-Depuis-Web -Nom "Git" `
+        -Url "https://github.com/git-for-windows/git/releases/download/v2.47.0.windows.1/Git-2.47.0-64-bit.exe" `
+        -Arguments "/VERYSILENT /NORESTART /NOCANCEL /SP- /SUPPRESSMSGBOXES"
+    try { Get-Command git -ErrorAction Stop | Out-Null }
+    catch { throw "Git installé mais introuvable dans le PATH. Fermez cette fenêtre PowerShell, rouvrez-en une en administrateur, et relancez le script." }
     Ok "Git installé"
 }
 
