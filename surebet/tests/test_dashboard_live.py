@@ -12,7 +12,11 @@ from surebet.dashboard.live import (
 )
 from surebet.normalizer.schema import Odd, make_match_id
 
-START = datetime(2026, 7, 25, 18, 0, tzinfo=timezone.utc)
+# Le coup d'envoi doit rester DANS LE FUTUR : rank_cross_book ecarte les
+# matchs deja commences (prematch_only). Une date figee transforme donc ces
+# tests en bombe a retardement — ils ont passe jusqu'au 25 juillet 2026,
+# puis ont echoue en silence. On la calcule a chaque execution.
+START = datetime.now(timezone.utc) + timedelta(days=2)
 
 
 def odd(bk, sel, price, mtype="1x2", n=3, line=None, scope=None,
