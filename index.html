@@ -325,9 +325,15 @@
   .pay-status .ps-k{font-size:10.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-faint)}
   .pay-status .ps-v{font-family:var(--mono);font-size:15px;font-weight:700;color:var(--ink)}
   .pay-status.active .ps-v{color:var(--mint)} .pay-status.locked .ps-v{color:var(--red)}
+  /* Deux forfaits cliquables : le choix doit se voir sans lire. */
+  .pay-plans{display:grid;gap:10px;margin-bottom:16px}
   .pay-plan{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:14px 16px;
-    border-radius:12px;border:1px solid rgba(47,230,168,.3);
-    background:linear-gradient(135deg,rgba(47,230,168,.10),rgba(245,197,66,.05));margin-bottom:16px}
+    border-radius:12px;border:1px solid var(--line);background:var(--panel-2);
+    width:100%;text-align:left;cursor:pointer;font-family:inherit;transition:.16s}
+  .pay-plan:hover{border-color:var(--mint-dim)}
+  .pay-plan.on{border-color:rgba(47,230,168,.5);
+    background:linear-gradient(135deg,rgba(47,230,168,.10),rgba(245,197,66,.05));
+    box-shadow:0 0 0 3px rgba(39,227,154,.10)}
   .pay-plan .pp-name{font-size:14px;font-weight:700;color:var(--ink)}
   .pay-plan .pp-sub{font-size:11.5px;color:var(--ink-dim)}
   .pay-plan .pp-price{font-family:var(--mono);font-size:22px;font-weight:700;color:var(--gold);white-space:nowrap}
@@ -2483,9 +2489,20 @@
       <div class="pay-status" id="payStatus"><span class="ps-ic">🔒</span>
         <div><div class="ps-k" data-i18n="pay.access">Votre accès</div><div class="ps-v" id="payStatusV">—</div></div></div>
       <p class="pay-head-sub" data-i18n-html="pay.intro">Le panneau <b>Surebets</b> est réservé aux abonnés. Payez par MonCash ou NatCash, envoyez votre référence de transaction, et un administrateur débloque votre accès pour <b id="payDurTxt">7 jours</b>.</p>
-      <div class="pay-plan">
-        <div><div class="pp-name" id="payPlanName">Accès Surebets</div><div class="pp-sub" id="payPlanSub">7 jours renouvelables</div></div>
-        <div class="pp-price" id="payPrice">—</div>
+      <!-- Deux forfaits : la semaine pour essayer, le mois pour rester.
+           Le choix se répercute sur le montant à payer et sur la durée
+           débloquée par l'admin. -->
+      <div class="pay-plans" id="payPlans">
+        <button type="button" class="pay-plan on" data-plan="week">
+          <div><div class="pp-name" id="payPlanName">Accès Surebets</div>
+            <div class="pp-sub" id="payPlanSub">7 jours renouvelables</div></div>
+          <div class="pp-price" id="payPrice">—</div>
+        </button>
+        <button type="button" class="pay-plan" data-plan="month" id="payPlanMonthBtn">
+          <div><div class="pp-name" data-i18n="pay.plan_month">Accès Surebets — 1 mois</div>
+            <div class="pp-sub"><span id="payPlanDaysM">30 jours · </span><b id="paySave">—</b></div></div>
+          <div class="pp-price" id="payPriceM">—</div>
+        </button>
       </div>
       <div class="pay-chan-label" data-i18n="pay.step1">1 · Payez sur l'un de ces canaux</div>
       <div class="pay-chans" id="payChans"></div>
@@ -2525,9 +2542,14 @@
       <p class="adash-p">Modifiez le prix et la durée. La fenêtre de paiement des utilisateurs est mise à jour immédiatement.</p>
       <div class="adash-card">
         <div class="row2">
-          <label class="fld"><span class="lab">Prix affiché</span><input type="text" id="adPrice" placeholder="ex : 500 HTG"></label>
+          <label class="fld"><span class="lab">Prix — semaine</span><input type="text" id="adPrice" placeholder="ex : 500 HTG"></label>
           <label class="fld"><span class="lab">Durée (jours)</span><input type="number" id="adDuration" min="1" value="7"></label>
         </div>
+        <div class="row2" style="margin-top:12px">
+          <label class="fld"><span class="lab">Prix — mois <i style="color:var(--ink-faint);font-style:normal;font-weight:400">vide = forfait masqué</i></span><input type="text" id="adPriceM" placeholder="ex : 1800 HTG"></label>
+          <label class="fld"><span class="lab">Durée mensuelle (jours)</span><input type="number" id="adDurationM" min="1" value="30"></label>
+        </div>
+        <p class="adash-p" id="adEcoNote" style="margin:10px 0 0">—</p>
         <label class="fld" style="margin-top:12px"><span class="lab">Libellé du plan</span><input type="text" id="adPlanName" placeholder="Accès Surebets — 7 jours"></label>
         <div style="margin-top:14px"><button class="btn primary" id="adAboSave">Enregistrer</button></div>
       </div>
@@ -2894,6 +2916,7 @@
 
   /* ===== ABONNEMENT SUREBETS ===== */
   const SUB = Object.assign({ ENABLED:true, DURATION_DAYS:7, PLAN_LABEL:'Accès Surebets — 7 jours',
+    PRICE_MONTH:'', DURATION_DAYS_MONTH:30,
     PRICE:'', CHANNELS:[] }, cfg.SUBSCRIPTION||{});
   let currentSubExpires=null;   // Date | null (abonnement de l'utilisateur courant)
   let subTimer=null;            // rafraîchit l'affichage + reverrouille à l'expiration
@@ -4266,6 +4289,7 @@
     await loadHistory();
     await loadBankroll();
     renderHistory();
+    await claimDevice();              // limite d'appareils : avant de lire les signaux
     startPresence(user);
     startSignals(user);
     startChat(user);
@@ -4550,12 +4574,46 @@
       else showToast('Numéro : '+v);
     }));
   }
+  /* Forfaits : la semaine pour essayer, le mois pour rester. Le mois
+     n'apparaît que s'il est configuré — inutile d'afficher un tarif vide. */
+  let payPlan='week';
+  function payPlanDays(){ return payPlan==='month' ? SUB.DURATION_DAYS_MONTH : SUB.DURATION_DAYS; }
+  function payPlanPrice(){ return payPlan==='month' ? SUB.PRICE_MONTH : SUB.PRICE; }
+  // Économie du mensuel par rapport au même nombre de jours à la semaine.
+  function payMonthSaving(){
+    const pw=parseFloat(String(SUB.PRICE||'').replace(/[^\d.]/g,''));
+    const pm=parseFloat(String(SUB.PRICE_MONTH||'').replace(/[^\d.]/g,''));
+    const dw=SUB.DURATION_DAYS||7, dm=SUB.DURATION_DAYS_MONTH||30;
+    if(!(pw>0)||!(pm>0)||!(dw>0)) return null;
+    const equivalent=pw*(dm/dw);
+    if(equivalent<=pm) return null;
+    return Math.round((1-pm/equivalent)*100);
+  }
+  function setPayPlan(p){
+    payPlan = (p==='month' && SUB.PRICE_MONTH) ? 'month' : 'week';
+    $$('#payPlans .pay-plan').forEach(b=>b.classList.toggle('on', b.dataset.plan===payPlan));
+    const d=$('#payDurTxt'); if(d) d.textContent=payPlanDays()+' jours';
+  }
+  $$('#payPlans .pay-plan').forEach(b=>b.addEventListener('click',()=>setPayPlan(b.dataset.plan)));
+
   async function openPaywall(){
     await loadPayChansPublic();
     $('#payPlanName').textContent = SUB.PLAN_LABEL||'Accès Surebets';
     $('#payPlanSub').textContent = SUB.DURATION_DAYS+' jours renouvelables';
-    $('#payDurTxt').textContent = SUB.DURATION_DAYS+' jours';
     $('#payPrice').textContent = SUB.PRICE||'—';
+
+    const moisDispo=!!SUB.PRICE_MONTH;
+    const btnM=$('#payPlanMonthBtn');
+    if(btnM) btnM.style.display = moisDispo ? '' : 'none';
+    if(moisDispo){
+      $('#payPriceM').textContent = SUB.PRICE_MONTH;
+      const eco=payMonthSaving();
+      // L'économie est l'argument qui fait basculer : on la chiffre quand
+      // elle existe, on ne bluffe pas quand elle n'existe pas.
+      $('#paySave').textContent = eco!=null ? ('économisez '+eco+' %') : 'un seul paiement';
+      $('#payPlanDaysM').textContent = SUB.DURATION_DAYS_MONTH+' jours · ';
+    }
+    setPayPlan(payPlan);
     const st=$('#payStatus'), stv=$('#payStatusV');
     st.classList.remove('active','locked');
     if(hasActiveSub()){ st.classList.add('active'); stv.textContent='Actif · '+fmtSubLeft()+' restants'; st.querySelector('.ps-ic').textContent='✅'; }
@@ -4589,7 +4647,7 @@
     try{
       const {error}=await sb.from('payment_requests').insert({
         user_id:currentUser.id, email:currentUser.email, username:currentUsername||null,
-        plan:'week', amount:SUB.PRICE||null, channel, reference, status:'pending'
+        plan:payPlan, amount:payPlanPrice()||null, channel, reference, status:'pending'
       });
       if(error) throw error;
       showToast('Demande envoyée ✓ — en attente de validation');
@@ -4632,8 +4690,10 @@
       const when=r.created_at?new Date(r.created_at).toLocaleString('fr-FR'):'';
       const who=escapeHTML(r.username||r.email||'(inconnu)');
       const badgeCls=r.status==='approved'?'approved':(r.status==='pending'?'pending':'blocked');
+      // La durée débloquée suit le forfait demandé, pas un réglage global.
+      const jours = planDays(r.plan);
       const actions = r.status==='pending'
-        ? `<button class="u-btn ok" data-approve-pay="${r.id}">✓ Valider (${SUB.DURATION_DAYS}j)</button>
+        ? `<button class="u-btn ok" data-approve-pay="${r.id}">✓ Valider (${jours}j)</button>
            <button class="u-btn block" data-reject-pay="${r.id}">✕ Refuser</button>`
         : `<span class="u-badge ${badgeCls}">${labels[r.status]||r.status}</span>`;
       return `<div class="pay-req">
@@ -4646,10 +4706,13 @@
     $$('#payReqList [data-approve-pay]').forEach(b=>b.addEventListener('click',()=>approvePayment(b.dataset.approvePay)));
     $$('#payReqList [data-reject-pay]').forEach(b=>b.addEventListener('click',()=>rejectPayment(b.dataset.rejectPay)));
   }
+  // Duree d un forfait. Toute demande qui n est pas 'month' vaut la semaine :
+  // les anciennes lignes n avaient pas de plan, elles restent traitees.
+  function planDays(plan){ return plan==='month' ? (SUB.DURATION_DAYS_MONTH||30) : (SUB.DURATION_DAYS||7); }
   // Nouvelle expiration (renouvelable : prolonge si l'abonnement est encore actif)
-  function computeNewExpiry(current){
-    const base = (current && new Date(current).getTime()>Date.now()) ? new Date(current).getTime() : Date.now();
-    return new Date(base + SUB.DURATION_DAYS*86400000).toISOString();
+  function computeNewExpiry(current, plan){
+    const base = (current && new Date(current).getTime()>serverNow()) ? new Date(current).getTime() : serverNow();
+    return new Date(base + planDays(plan)*86400000).toISOString();
   }
   async function approvePayment(reqId){
     if(!sb||!isAdmin(currentUser))return;
@@ -4658,11 +4721,11 @@
       if(e1) throw e1;
       const req=reqs&&reqs[0]; if(!req){ showToast('Demande introuvable',true); return; }
       const {data:prof}=await sb.from('profiles').select('sub_expires_at').eq('id',req.user_id).single();
-      const newExp=computeNewExpiry(prof&&prof.sub_expires_at);
-      const {error:e2}=await sb.from('profiles').update({sub_expires_at:newExp, sub_plan:'week'}).eq('id',req.user_id);
+      const newExp=computeNewExpiry(prof&&prof.sub_expires_at, req.plan);
+      const {error:e2}=await sb.from('profiles').update({sub_expires_at:newExp, sub_plan:req.plan||'week'}).eq('id',req.user_id);
       if(e2) throw e2;
       await sb.from('payment_requests').update({status:'approved', reviewed_at:new Date().toISOString(), reviewed_by:currentUser.id}).eq('id',reqId);
-      showToast('Paiement validé ✓ — accès débloqué '+SUB.DURATION_DAYS+'j');
+      showToast('Paiement validé ✓ — accès débloqué '+planDays(req.plan)+'j');
       if(req.user_id===currentUser.id){ currentSubExpires=new Date(newExp); renderSubChip(); }
       loadPayments();
     }catch(err){ console.error(err); showToast('Validation impossible (droits admin ?)',true); }
@@ -4719,10 +4782,12 @@
   async function loadAppSettings(){
     if(!sb) return;
     try{
-      const {data}=await sb.from('app_settings').select('key,value').in('key',['sub_price','sub_duration_days','site_font']);
+      const {data}=await sb.from('app_settings').select('key,value').in('key',['sub_price','sub_duration_days','sub_price_month','sub_duration_days_month','site_font']);
       (data||[]).forEach(r=>{
         if(r.key==='sub_price' && r.value) SUB.PRICE=r.value;
         if(r.key==='sub_duration_days' && r.value){ const d=parseInt(r.value); if(d>0) SUB.DURATION_DAYS=d; }
+        if(r.key==='sub_price_month' && r.value) SUB.PRICE_MONTH=r.value;
+        if(r.key==='sub_duration_days_month' && r.value){ const d=parseInt(r.value); if(d>0) SUB.DURATION_DAYS_MONTH=d; }
         if(r.key==='site_font' && r.value) applyFont(r.value);
       });
     }catch(e){ /* tables absentes : on garde les valeurs par défaut */ }
@@ -4861,6 +4926,27 @@
   }
   $('#pcAdd') && $('#pcAdd').addEventListener('click',addPayChan);
 
+  /* ═══════════════ LIMITE D'APPAREILS ═══════════════
+     Un abonnement partagé entre dix personnes, ce sont neuf abonnements
+     perdus. Le serveur garde les deux sessions les plus récentes par
+     compte ; au-delà, la lecture des signaux est refusée.
+
+     Deux appareils, pas un : un utilisateur légitime a un téléphone et un
+     ordinateur, et en bloquer un génère du support pour rien.
+
+     Si la fonction n'est pas installée, ou si le jeton ne porte pas de
+     session_id, il ne se passe rien : personne n'est enfermé. */
+  async function claimDevice(){
+    if(!sb||!currentUser) return;
+    try{
+      const {data,error}=await sb.rpc('claim_device');
+      if(error) return;                       // migration non exécutée
+      if(Number(data)>0){
+        showToast('Connexion depuis un nouvel appareil — le plus ancien a été déconnecté');
+      }
+    }catch(e){ /* sans effet : l'accès reste ouvert */ }
+  }
+
   /* ═══════════════ SANTÉ DU SERVICE ═══════════════
      Le seul chiffre qui prédit un renouvellement, c'est le nombre de
      signaux reçus pendant la semaine payée. On l'affiche avant tout le
@@ -4958,15 +5044,48 @@
   $('#adminBtn') && $('#adminBtn').addEventListener('click',openAdminDash);
 
   // Abonnement (prix / durée / libellé)
-  function loadAboSettings(){ $('#adPrice').value=SUB.PRICE||''; $('#adDuration').value=SUB.DURATION_DAYS||7; $('#adPlanName').value=SUB.PLAN_LABEL||''; if($('#adFont')) $('#adFont').value=($('#adFont').value||'System'); }
+  function loadAboSettings(){
+    $('#adPrice').value=SUB.PRICE||''; $('#adDuration').value=SUB.DURATION_DAYS||7;
+    $('#adPriceM') && ($('#adPriceM').value=SUB.PRICE_MONTH||'');
+    $('#adDurationM') && ($('#adDurationM').value=SUB.DURATION_DAYS_MONTH||30);
+    $('#adPlanName').value=SUB.PLAN_LABEL||'';
+    if($('#adFont')) $('#adFont').value=($('#adFont').value||'System');
+    majEcoNote();
+  }
+  // Montre tout de suite l'effet du tarif mensuel : une remise trop faible
+  // ne convertit personne, une remise trop forte fait basculer à perte les
+  // abonnés hebdomadaires qui payaient déjà.
+  function majEcoNote(){
+    const n=$('#adEcoNote'); if(!n) return;
+    const pw=parseFloat(($('#adPrice').value||'').replace(/[^\d.]/g,''));
+    const pm=parseFloat((($('#adPriceM')&&$('#adPriceM').value)||'').replace(/[^\d.]/g,''));
+    const dw=parseInt($('#adDuration').value)||7;
+    const dm=parseInt(($('#adDurationM')&&$('#adDurationM').value))||30;
+    if(!(pm>0)){ n.textContent='Sans prix mensuel, seul le forfait hebdomadaire est proposé.'; return; }
+    if(!(pw>0)||!(dw>0)){ n.textContent='—'; return; }
+    const equiv=pw*(dm/dw);
+    const eco=Math.round((1-pm/equiv)*100);
+    n.innerHTML = eco>0
+      ? `${dm} jours à la semaine coûteraient <b>${Math.round(equiv)}</b> : la remise est de <b>${eco} %</b>.`
+      : `Attention : ce tarif mensuel est <b>plus cher</b> que ${dm} jours à la semaine (${Math.round(equiv)}).`;
+  }
+  ['#adPrice','#adDuration','#adPriceM','#adDurationM'].forEach(s=>{
+    const e=$(s); if(e) e.addEventListener('input',majEcoNote);
+  });
+
   async function saveAboSettings(){
     if(!sb||!isAdmin(currentUser))return;
     const price=($('#adPrice').value||'').trim(), dur=parseInt($('#adDuration').value)||7, plan=($('#adPlanName').value||'').trim();
+    const priceM=((($('#adPriceM')&&$('#adPriceM').value)||'')).trim();
+    const durM=parseInt(($('#adDurationM')&&$('#adDurationM').value))||30;
     const btn=$('#adAboSave'); btn.disabled=true;
     try{
       await sb.from('app_settings').upsert({key:'sub_price', value:price});
       await sb.from('app_settings').upsert({key:'sub_duration_days', value:String(dur)});
+      await sb.from('app_settings').upsert({key:'sub_price_month', value:priceM});
+      await sb.from('app_settings').upsert({key:'sub_duration_days_month', value:String(durM)});
       SUB.PRICE=price; SUB.DURATION_DAYS=dur; if(plan)SUB.PLAN_LABEL=plan;
+      SUB.PRICE_MONTH=priceM; SUB.DURATION_DAYS_MONTH=durM;
       renderSubChip(); showToast('Abonnement mis à jour ✓');
     }catch(e){ console.error(e); showToast('Échec de l’enregistrement (droits admin ?)',true); }
     finally{ btn.disabled=false; }
@@ -7193,6 +7312,7 @@
       "ld.final_p":"La création de compte prend moins d'une minute. Un administrateur valide votre accès après paiement.",
       "ld.foot":"NADOEDGE · Les cotes évoluent vite — vérifiez chez le bookmaker avant de miser<br>Interdit aux moins de 18 ans · Jouez de manière responsable",
 
+      "pay.plan_month":"Accès Surebets — 1 mois",
       "auth.back":"Accueil",
       "auth.sub":"Vos paris, synchronisés et sécurisés",
       "auth.login":"Connexion",
@@ -7392,6 +7512,7 @@
       "ld.final_p":"Creating an account takes under a minute. An administrator approves your access after payment.",
       "ld.foot":"NADOEDGE · Odds move fast — check at the bookmaker before staking<br>Strictly 18+ · Please gamble responsibly",
 
+      "pay.plan_month":"Surebets access — 1 month",
       "auth.back":"Home",
       "auth.sub":"Your bets, synced and secure",
       "auth.login":"Sign in",
