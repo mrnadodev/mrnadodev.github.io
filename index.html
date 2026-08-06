@@ -4691,35 +4691,52 @@
      de payment_channels (écriture réservée aux admins) — voir migration_v2.sql. */
   let payUnlocked=false, payChans=[];
 
-  async function getPayLockCode(){
+  // Le code n'est JAMAIS renvoyé au navigateur : la comparaison se fait côté
+  // serveur (check_pay_lock). Tant que securite_audit.sql n'est pas exécuté,
+  // on retombe sur l'ancienne lecture dans app_settings.
+  let payLockServerSide=null;   // null = inconnu, true/false = testé
+  async function payLockConfigured(){
     try{
       const {data}=await sb.from('app_settings').select('value').eq('key','pay_lock_code').maybeSingle();
-      return (data&&data.value)||'';
-    }catch(e){ return ''; }
+      return { legacy:true, code:(data&&data.value)||'' };
+    }catch(e){ return { legacy:false, code:'' }; }
+  }
+  async function payCodeMatches(entered){
+    // Chemin sûr : le serveur compare, rien ne transite.
+    try{
+      const {data,error}=await sb.rpc('check_pay_lock',{ code: entered||'' });
+      if(!error){ payLockServerSide=true; return !!data; }
+    }catch(e){ /* fonction absente : ancien chemin */ }
+    payLockServerSide=false;
+    const st=await payLockConfigured();
+    return !st.code || st.code===entered;
   }
   async function openPayChanSection(){
     if(!sb||!isAdmin(currentUser))return;
-    const code=await getPayLockCode();
-    // Aucun code configuré : on ouvre, et on invite à en poser un.
-    if(!code){ payUnlocked=true; }
-    showPayChan(payUnlocked, code);
+    // Aucun code configuré : la section s'ouvre, et on invite à en poser un.
+    // On le teste en soumettant une chaîne vide : le serveur répond « oui »
+    // uniquement s'il n'y a pas de code. Le code lui-même ne descend jamais.
+    const libre=await payCodeMatches('');
+    if(libre) payUnlocked=true;
+    showPayChan(payUnlocked, !libre);
     if(payUnlocked) loadPayChans();
   }
-  function showPayChan(unlocked, code){
+  // codeDefini : booléen, pas le code — il ne descend jamais au navigateur.
+  function showPayChan(unlocked, codeDefini){
     const lock=$('#payLockScreen'), body=$('#payChanBody');
     if(!lock||!body) return;
     lock.style.display = unlocked ? 'none' : '';
     body.style.display = unlocked ? '' : 'none';
     const msg=$('#payLockMsg');
-    if(msg && !code) msg.textContent="Aucun code n'est configuré. Définissez-en un plus bas pour protéger cette section.";
+    if(msg && !codeDefini) msg.textContent="Aucun code n'est configuré. Définissez-en un plus bas pour protéger cette section.";
     const err=$('#payLockErr'); if(err) err.style.display='none';
     const inp=$('#payLockInput'); if(inp) inp.value='';
   }
   async function tryUnlockPay(){
     const inp=$('#payLockInput'), err=$('#payLockErr');
-    const code=await getPayLockCode();
-    if(!code || (inp && inp.value===code)){
-      payUnlocked=true; showPayChan(true, code); loadPayChans();
+    const ok=await payCodeMatches(inp?inp.value:'');
+    if(ok){
+      payUnlocked=true; showPayChan(true, true); loadPayChans();
     }else{
       if(err){ err.textContent='Code incorrect.'; err.style.display=''; }
       if(inp){ inp.value=''; inp.focus(); }
@@ -4728,16 +4745,28 @@
   $('#payLockGo') && $('#payLockGo').addEventListener('click',tryUnlockPay);
   $('#payLockInput') && $('#payLockInput').addEventListener('keydown',e=>{ if(e.key==='Enter') tryUnlockPay(); });
   $('#pcRelock') && $('#pcRelock').addEventListener('click',async()=>{
-    payUnlocked=false; showPayChan(false, await getPayLockCode()); showToast('Section reverrouillée 🔒');
+    payUnlocked=false;
+    const libre=await payCodeMatches('');
+    showPayChan(false, !libre); showToast('Section reverrouillée 🔒');
   });
   $('#pcCodeSave') && $('#pcCodeSave').addEventListener('click',async()=>{
     if(!sb||!isAdmin(currentUser))return;
     const v=($('#pcNewCode').value||'').trim();
     try{
-      await sb.from('app_settings').upsert({key:'pay_lock_code', value:v});
+      // Chemin sûr : le code est stocké dans une table qu'aucune politique
+      // n'ouvre à l'API. Repli sur app_settings si le SQL d'audit n'est pas
+      // encore exécuté — mais il y est alors lisible par tout compte connecté.
+      const {error}=await sb.rpc('set_pay_lock',{ code:v });
+      if(error) throw error;
       $('#pcNewCode').value='';
       showToast(v?'Code enregistré ✓':'Code retiré — section libre');
-    }catch(e){ console.error(e); showToast('Échec (droits admin ?)',true); }
+    }catch(e){
+      try{
+        await sb.from('app_settings').upsert({key:'pay_lock_code', value:v});
+        $('#pcNewCode').value='';
+        showToast(v?'Code enregistré ✓ (exécutez securite_audit.sql)':'Code retiré');
+      }catch(e2){ console.error(e2); showToast('Échec (droits admin ?)',true); }
+    }
   });
 
   async function loadPayChans(){
