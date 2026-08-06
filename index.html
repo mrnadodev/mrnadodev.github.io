@@ -967,6 +967,22 @@
           padding:6px 13px;font-size:11.5px;font-weight:600;cursor:pointer;transition:.15s}
   .u-chip:hover{color:var(--ink);border-color:var(--mint-dim)}
   .u-chip.on{background:rgba(39,227,154,.12);border-color:var(--mint);color:var(--mint)}
+  /* Santé du service : les chiffres doivent se lire d'un coup d'œil */
+  .mx-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;max-width:900px}
+  .mx-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
+  .mx-k{font-size:10.5px;text-transform:uppercase;letter-spacing:.09em;color:var(--ink-faint);font-weight:700}
+  .mx-v{font-family:var(--mono);font-size:30px;font-weight:800;letter-spacing:-.02em;margin:8px 0 4px}
+  .mx-d{font-size:11.5px;color:var(--ink-dim);line-height:1.45}
+  .mx-v.ok{color:var(--mint)} .mx-v.warn{color:var(--gold)} .mx-v.bad{color:var(--red)}
+  .mx-row{display:flex;align-items:center;gap:14px;padding:11px 0;border-bottom:1px solid var(--line-soft)}
+  .mx-row:last-child{border-bottom:none}
+  .mx-who{flex:1;min-width:0}
+  .mx-who b{font-size:13.5px} .mx-who span{display:block;font-size:11.5px;color:var(--ink-faint)}
+  .mx-n{font-family:var(--mono);font-weight:700;font-size:15px;flex:none;width:44px;text-align:right}
+  .mx-verdict{font-size:11px;flex:none;padding:4px 10px;border-radius:999px;border:1px solid var(--line);color:var(--ink-dim)}
+  .mx-verdict.bad{color:var(--red);border-color:rgba(255,90,103,.4)}
+  .mx-verdict.warn{color:var(--gold);border-color:rgba(242,193,78,.4)}
+  .mx-verdict.ok{color:var(--mint);border-color:var(--mint-dim)}
   .paylock{text-align:center;padding:14px 4px}
   .paylock-ic{font-size:38px;margin-bottom:8px;opacity:.8}
   .paylock .adash-p{text-align:center}
@@ -2498,6 +2514,7 @@
     <button class="adash-nav" data-sec="appear">🎨 Apparence</button>
     <button class="adash-nav" data-sec="manage">👥 Comptes &amp; paiements</button>
     <button class="adash-nav" data-sec="paychan">🔐 Coordonnées de paiement</button>
+    <button class="adash-nav" data-sec="metrics">📈 Santé du service</button>
     <div style="flex:1"></div>
     <button class="adash-close" id="adashClose">✕ Fermer</button>
   </aside>
@@ -2692,6 +2709,29 @@
           </div>
         </div>
       </div>
+    </section>
+
+    <!-- Santé du service : les chiffres qui prédisent les renouvellements -->
+    <section class="adash-sec" data-sec="metrics" style="display:none">
+      <h2>Santé du service</h2>
+      <p class="adash-p">Un abonné renouvelle s'il a reçu assez de signaux pendant la semaine qu'il a payée. C'est ce chiffre-là qui décide, pas le prix.</p>
+
+      <div class="mx-grid" id="mxCards">
+        <div class="mx-card"><div class="mx-k">Signaux · 7 derniers jours</div><div class="mx-v" id="mx7">—</div><div class="mx-d" id="mx7d">—</div></div>
+        <div class="mx-card"><div class="mx-k">ROI moyen · 7 jours</div><div class="mx-v" id="mxRoi">—</div><div class="mx-d">sur les signaux publiés</div></div>
+        <div class="mx-card"><div class="mx-k">Abonnés actifs</div><div class="mx-v" id="mxAbo">—</div><div class="mx-d">accès non expiré</div></div>
+        <div class="mx-card"><div class="mx-k">Signaux par abonnement payé</div><div class="mx-v" id="mxParAbo">—</div><div class="mx-d" id="mxParAboD">moyenne sur toutes les périodes</div></div>
+        <div class="mx-card"><div class="mx-k">Taux de renouvellement</div><div class="mx-v" id="mxRenew">—</div><div class="mx-d" id="mxRenewD">clients ayant payé au moins deux fois</div></div>
+      </div>
+
+      <div class="adash-card" style="max-width:820px;margin-top:20px">
+        <div class="adash-lab">Valeur livrée, abonnement par abonnement</div>
+        <p class="adash-p" style="margin:0 0 12px">Toute ligne « aucun signal » est un client qui a payé pour rien. Le rembourser coûte moins cher que ce qu'il dira autour de lui.</p>
+        <div id="mxList"><div class="ad-empty">—</div></div>
+        <div style="margin-top:14px"><button class="btn ghost" id="mxRefresh">↻ Actualiser</button></div>
+      </div>
+
+      <p class="adash-p" style="margin-top:16px">Ces chiffres nécessitent <b>migration_metriques.sql</b>. Tant qu'il n'est pas exécuté, la section reste vide.</p>
     </section>
   </div>
 </div>
@@ -4821,6 +4861,77 @@
   }
   $('#pcAdd') && $('#pcAdd').addEventListener('click',addPayChan);
 
+  /* ═══════════════ SANTÉ DU SERVICE ═══════════════
+     Le seul chiffre qui prédit un renouvellement, c'est le nombre de
+     signaux reçus pendant la semaine payée. On l'affiche avant tout le
+     reste, et on nomme les abonnés qui n'ont rien eu — ce sont eux qui
+     partent, et qui en parlent. */
+  async function loadMetrics(){
+    if(!sb||!isAdmin(currentUser))return;
+    const set=(id,v,cls)=>{ const e=$(id); if(!e)return; e.textContent=v;
+      if(cls!==undefined){ e.classList.remove('ok','warn','bad'); if(cls) e.classList.add(cls); } };
+    try{
+      const {data,error}=await sb.rpc('metriques_resume');
+      if(error) throw error;
+      const r=Array.isArray(data)?data[0]:data;
+      if(!r) throw new Error('aucune donnée');
+
+      const n7=Number(r.signaux_7j)||0, nPrec=Number(r.signaux_7j_precedents)||0;
+      set('#mx7', n7, n7>=nPrec?'ok':'warn');
+      // La tendance compte plus que le niveau : une production qui baisse
+      // annonce les résiliations deux semaines plus tard.
+      const delta=n7-nPrec;
+      set('#mx7d', nPrec===0 ? 'aucun point de comparaison'
+        : (delta>=0?'+':'')+delta+' vs 7 jours précédents');
+
+      set('#mxRoi', r.roi_moyen_7j!=null ? '+'+Number(r.roi_moyen_7j).toFixed(2)+' %' : '—');
+      set('#mxAbo', Number(r.abonnes_actifs)||0);
+
+      const parAbo=r.signaux_moyens_par_abo!=null?Number(r.signaux_moyens_par_abo):null;
+      set('#mxParAbo', parAbo!=null?parAbo.toFixed(1):'—',
+          parAbo==null?'':(parAbo>=4?'ok':(parAbo>=2?'warn':'bad')));
+      set('#mxParAboD', parAbo!=null && parAbo<4
+        ? 'en dessous de 4, le renouvellement est improbable'
+        : 'moyenne sur toutes les périodes payées');
+
+      const tx=r.taux_renouvellement_pct!=null?Number(r.taux_renouvellement_pct):null;
+      set('#mxRenew', tx!=null?tx.toFixed(0)+' %':'—',
+          tx==null?'':(tx>=30?'ok':(tx>=15?'warn':'bad')));
+      set('#mxRenewD', tx!=null && tx<30
+        ? 'sous 30 %, le problème est le produit, pas l’acquisition'
+        : 'clients ayant payé au moins deux fois');
+    }catch(e){
+      ['#mx7','#mxRoi','#mxAbo','#mxParAbo','#mxRenew'].forEach(id=>set(id,'—',''));
+      set('#mx7d','exécutez migration_metriques.sql');
+    }
+    loadMetricsList();
+  }
+
+  async function loadMetricsList(){
+    const box=$('#mxList'); if(!box) return;
+    box.innerHTML='<div class="ad-empty">Chargement…</div>';
+    try{
+      const {data,error}=await sb.from('v_valeur_par_abonnement')
+        .select('*').order('debut',{ascending:false}).limit(30);
+      if(error) throw error;
+      if(!(data&&data.length)){ box.innerHTML='<div class="ad-empty">Aucun paiement validé pour l’instant.</div>'; return; }
+      box.innerHTML=data.map(r=>{
+        const n=Number(r.signaux_recus)||0;
+        const cls = n===0 ? 'bad' : (n<4 ? 'warn' : 'ok');
+        const verdict = n===0 ? 'a payé pour rien' : (n<4 ? 'trop peu' : 'correct');
+        return `<div class="mx-row">
+          <div class="mx-who"><b>${escapeHTML(r.username||'(sans pseudo)')}</b>
+            <span>${escapeHTML(r.email||'')} · depuis le ${escapeHTML(String(r.debut||''))}</span></div>
+          <div class="mx-n ${cls}">${n}</div>
+          <div class="mx-verdict ${cls}">${verdict}</div>
+        </div>`;
+      }).join('');
+    }catch(e){
+      box.innerHTML='<div class="ad-empty">Vue indisponible — exécutez <b>migration_metriques.sql</b>.</div>';
+    }
+  }
+  $('#mxRefresh') && $('#mxRefresh').addEventListener('click',loadMetrics);
+
   /* ===== TABLEAU DE BORD ADMIN (page séparée) ===== */
   function openAdminDash(){
     if(!isAdmin(currentUser))return;
@@ -4840,6 +4951,7 @@
     if(sec==='spons')   setSpKind(spKind);    // recharge la nature affichée
     if(sec==='chatmod') setAdRoom(adRoom);    // rafraîchit l'état du salon choisi
     if(sec==='paychan') openPayChanSection();
+    if(sec==='metrics') loadMetrics();
   }
   $$('#adminDash .adash-nav').forEach(b=>b.addEventListener('click',()=>adashSection(b.dataset.sec)));
   $('#adashClose') && $('#adashClose').addEventListener('click',closeAdminDash);
