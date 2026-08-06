@@ -1232,7 +1232,9 @@
   .lb-av{width:30px;height:30px;border-radius:9px;flex:none;display:grid;place-items:center;
     font-size:11px;font-weight:700;background:var(--panel-2);color:var(--ink)}
   .lb-nm{flex:1;font-size:13px;font-weight:600;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .lb-p{font-family:var(--mono);font-weight:700;color:var(--mint);font-size:13px;flex:none}
+  /* Palier, plus un montant : c'est du texte, pas un chiffre à aligner. */
+  .lb-p{font-weight:700;color:var(--mint);font-size:11.5px;flex:none;
+    border:1px solid var(--mint-dim);border-radius:999px;padding:3px 10px;white-space:nowrap}
   .lb-empty{font-size:12.5px;color:var(--ink-dim);padding:18px;text-align:center}
   /* en-tete du chat : salons a gauche, salon courant a droite (maquette) */
   #chatCard .card-h .chat-rooms{margin:0;border:none;padding:0}
@@ -2754,6 +2756,12 @@
         <p class="adash-p" style="margin:0 0 12px">Toute ligne « aucun signal » est un client qui a payé pour rien. Le rembourser coûte moins cher que ce qu'il dira autour de lui.</p>
         <div id="mxList"><div class="ad-empty">—</div></div>
         <div style="margin-top:14px"><button class="btn ghost" id="mxRefresh">↻ Actualiser</button></div>
+      </div>
+
+      <div class="adash-card" style="max-width:820px;margin-top:20px">
+        <div class="adash-lab">Comptes qui paient sans jamais jouer</div>
+        <p class="adash-p" style="margin:0 0 12px">Abonnés depuis plus d'une semaine, aucun pari enregistré. <b>Ce n'est pas une liste de suspects</b> : le cas le plus fréquent est un débutant intimidé. Écrivez-leur — si c'en est un, vous récupérez un abonné.</p>
+        <div id="mxPassifs"><div class="ad-empty">—</div></div>
       </div>
 
       <p class="adash-p" style="margin-top:16px">Ces chiffres nécessitent <b>migration_metriques.sql</b>. Tant qu'il n'est pas exécuté, la section reste vide.</p>
@@ -4994,6 +5002,7 @@
       set('#mx7d','exécutez migration_metriques.sql');
     }
     loadMetricsList();
+    loadPassifs();
   }
 
   async function loadMetricsList(){
@@ -5017,6 +5026,31 @@
       }).join('');
     }catch(e){
       box.innerHTML='<div class="ad-empty">Vue indisponible — exécutez <b>migration_metriques.sql</b>.</div>';
+    }
+  }
+  // Comptes qui paient sans jamais jouer. Un infiltré a cette signature —
+  // mais un débutant intimidé aussi, et c'est le cas le plus fréquent.
+  // On affiche donc une liste à contacter, pas une liste à exclure.
+  async function loadPassifs(){
+    const box=$('#mxPassifs'); if(!box||!sb) return;
+    box.innerHTML='<div class="ad-empty">Chargement…</div>';
+    try{
+      const {data,error}=await sb.rpc('comptes_passifs');
+      if(error) throw error;
+      if(!data||!data.length){
+        box.innerHTML='<div class="ad-empty">Aucun : tous vos abonnés jouent. C’est bon signe.</div>'; return;
+      }
+      box.innerHTML=data.map(r=>{
+        const muet = Number(r.messages)===0;
+        return `<div class="mx-row">
+          <div class="mx-who"><b>${escapeHTML(r.username||'(sans pseudo)')}</b>
+            <span>${escapeHTML(r.email||'')} · inscrit depuis ${Number(r.inscrit_depuis)||0} j</span></div>
+          <div class="mx-n ${muet?'bad':'warn'}">${Number(r.messages)||0}</div>
+          <div class="mx-verdict ${muet?'bad':'warn'}">${muet?'aucun message':'écrit mais ne joue pas'}</div>
+        </div>`;
+      }).join('');
+    }catch(e){
+      box.innerHTML='<div class="ad-empty">Fonction indisponible — exécutez <b>migration_classement_prive.sql</b>.</div>';
     }
   }
   $('#mxRefresh') && $('#mxRefresh').addEventListener('click',loadMetrics);
@@ -5327,25 +5361,36 @@
   function spPubGo(i){ spPubI=(i+spPubList.length)%spPubList.length; const t=$('#spPubTrack'); if(t)t.style.transform='translateX(-'+(spPubI*100)+'%)'; $$('#spPubDots .sp-dot').forEach((d,k)=>d.classList.toggle('on',k===spPubI)); }
   function restartSpPub(){ if(spPubTimer)clearInterval(spPubTimer); if(spPubList.length>1) spPubTimer=setInterval(()=>spPubGo(spPubI+1),6000); }
 
-  /* ===== CLASSEMENT (profit 7 jours) =====
-     Les paris sont prives (RLS) : le classement vient d une vue SQL
-     « leaderboard_7d » qui n expose que pseudo + profit agrege.
-     Si la vue n existe pas encore, on l indique sans casser la page. */
+  /* ===== CLASSEMENT (7 jours) =====
+     Les paris sont prives (RLS) : le classement vient de la vue SQL
+     « leaderboard_7d ».
+
+     Elle ne renvoie PLUS de montants. Un agent d un bookmaker infiltre
+     comme abonne n a qu a recouper les pseudos gagnants avec sa propre
+     base de comptes pour reperer qui limiter — et un compte ferme fait
+     partir l abonne pour de bon, la ou un surebet grille ne coute presque
+     rien. Le rang suffit a l emulation, le chiffre ne servait qu a lui.
+
+     Les paliers restent lisibles pour situer une performance sans la
+     chiffrer. Si la vue n existe pas encore, on l indique sans casser. */
+  const LB_PALIERS={ excellent:'Excellent', 'tres bon':'Très bon', bon:'Bon', positif:'Positif' };
   async function loadLeaderboard(){
     const box=$('#lbList'); if(!box||!sb) return;
     box.innerHTML='<div class="lb-empty">…</div>';
     try{
-      const {data,error}=await sb.from('leaderboard_7d').select('*').order('profit',{ascending:false}).limit(10);
+      const {data,error}=await sb.from('leaderboard_7d').select('*').order('rang',{ascending:true}).limit(10);
       if(error) throw error;
       if(!data||!data.length){ box.innerHTML='<div class="lb-empty">'+escapeHTML(tOr('lb.empty','Aucun résultat sur les 7 derniers jours.'))+'</div>'; return; }
       box.innerHTML=data.map((r,i)=>{
         const nm=r.username||'—';
         const me=currentUsername && nm===currentUsername;
-        return `<div class="lb-row${i<3?' top':''}">
-          <span class="lb-rk">${i+1}</span>
+        const rang=r.rang||(i+1);
+        const palier=LB_PALIERS[r.palier]||'';
+        return `<div class="lb-row${rang<=3?' top':''}">
+          <span class="lb-rk">${rang}</span>
           <div class="lb-av">${escapeHTML((nm[0]||'?').toUpperCase())}</div>
           <div class="lb-nm">${escapeHTML(me?tOr('lb.you','vous'):nm)}</div>
-          <div class="lb-p">${r.profit>=0?'+':''}${money(Number(r.profit)||0)}</div>
+          <div class="lb-p">${escapeHTML(palier)}</div>
         </div>`;
       }).join('');
     }catch(e){
