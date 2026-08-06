@@ -4323,9 +4323,12 @@
     try{
       // vérifie l'unicité (facultatif : si ça traîne ou échoue, on n'empêche pas l'enregistrement)
       try{
-        const {data:taken,error:qErr}=await withTimeout(
-          sb.from('profiles').select('id').ilike('username',username).limit(1), 4000, 'check');
-        if(!qErr && taken && taken.length && taken[0].id!==currentUser.id){
+        // Même remarque qu'à l'inscription : la RLS ne laisse voir que sa
+        // propre ligne, donc chercher dans profiles ne trouve jamais le
+        // pseudo de quelqu'un d'autre. Seul le serveur peut répondre.
+        const {data:libre,error:qErr}=await withTimeout(
+          sb.rpc('username_available',{ uname:username }), 4000, 'check');
+        if(!qErr && libre===false){
           return showErr('Ce nom d\u2019utilisateur est déjà pris.');
         }
       }catch(_){/* timeout ou colonne absente : on tente quand même l'enregistrement */}
@@ -6406,7 +6409,14 @@
       notifyTelegram();  // alerte Telegram (sans les détails)
       postSurebetToChat(title, roi, legs, note); // archive dans le salon Surebets
       closePublish();
-    }catch(err){ console.error(err); showToast('Échec de la publication',true); }
+    }catch(err){
+      console.error(err);
+      // Le serveur recalcule le ROI et refuse ce qui n'est pas un surebet.
+      // Son message dit précisément quoi corriger : on l'affiche tel quel
+      // plutôt qu'un « échec » qui n'apprend rien au publisher.
+      const m=(err&&err.message)||'';
+      showToast(m ? 'Publication refusée : '+m : 'Échec de la publication', true);
+    }
   }
 
   // Poste le surebet comme message spécial dans le salon "Surebets" (archive de la semaine)
@@ -6566,11 +6576,14 @@
     if(vErr) return authError(vErr);
     if(!email||!pass)return authError('Entrez un email et un mot de passe (min. 6 caractères).');
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return authError('Adresse email invalide.');
-    // Vérifie que le username n'est pas déjà pris
+    // Vérifie que le pseudo n'est pas déjà pris. On passe par une fonction
+    // serveur : interroger profiles directement ne marche pas ici — on n'est
+    // pas encore authentifié, la RLS renvoie toujours zéro ligne, et le
+    // contrôle laissait donc passer les pseudos déjà pris.
     try{
-      const {data:taken}=await sb.from('profiles').select('id').ilike('username',username).limit(1);
-      if(taken && taken.length) return authError('Ce nom d\u2019utilisateur est déjà pris.');
-    }catch(e){/* si la colonne n'existe pas encore, on continue */}
+      const {data:libre,error:eU}=await sb.rpc('username_available',{ uname:username });
+      if(!eU && libre===false) return authError('Ce nom d’utilisateur est déjà pris.');
+    }catch(e){/* fonction absente : l'index unique reste le filet de sécurité */}
     const {data,error}=await sb.auth.signUp({
       email, password:pass,
       options:{ data:{ username } }   // stocké dans user_metadata, survit à la confirmation

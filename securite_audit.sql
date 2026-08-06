@@ -66,15 +66,22 @@ language plpgsql
 security definer
 set search_path = public
 as $$
+declare _uname text;
 begin
+  _uname := nullif(new.raw_user_meta_data->>'username', '');
+
+  -- Un index unique protège le pseudo. S'il est déjà pris, on crée quand
+  -- même le compte sans pseudo : faire échouer l'inscription entière pour
+  -- ça laisserait l'utilisateur devant une erreur incompréhensible.
+  -- L'application lui redemandera un pseudo à la première connexion.
+  if _uname is not null and exists (
+       select 1 from public.profiles where lower(username) = lower(_uname)
+     ) then
+    _uname := null;
+  end if;
+
   insert into public.profiles (id, email, username, role, status)
-  values (
-    new.id,
-    new.email,
-    nullif(new.raw_user_meta_data->>'username', ''),
-    'user',
-    'pending'
-  )
+  values (new.id, new.email, _uname, 'user', 'pending')
   on conflict (id) do nothing;
   return new;
 end;
