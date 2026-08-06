@@ -2902,9 +2902,9 @@
   function hasActiveSub(){
     if(!SUB.ENABLED) return true;
     if(isPrivileged()) return true;
-    return !!(currentSubExpires && currentSubExpires.getTime() > Date.now());
+    return !!(currentSubExpires && currentSubExpires.getTime() > serverNow());
   }
-  function subMsLeft(){ return currentSubExpires ? currentSubExpires.getTime()-Date.now() : 0; }
+  function subMsLeft(){ return currentSubExpires ? currentSubExpires.getTime()-serverNow() : 0; }
   function fmtSubLeft(){
     const ms=subMsLeft(); if(ms<=0) return 'expiré';
     const d=Math.floor(ms/86400000), h=Math.floor((ms%86400000)/3600000), m=Math.floor((ms%3600000)/60000);
@@ -4458,7 +4458,7 @@
     signalsChannel = sb.channel('NADOEDGE_signals')
       .on('postgres_changes',{event:'INSERT',schema:'public',table:'signals'},payload=>{
         const s=payload.new;
-        if(s && new Date(s.expires_at).getTime()>Date.now()){
+        if(s && new Date(s.expires_at).getTime()>serverNow()){
           addSignal(s, true);
         }
       })
@@ -4680,7 +4680,7 @@
     if(!sb||!isAdmin(currentUser))return;
     try{
       const {data:prof}=await sb.from('profiles').select('sub_expires_at').eq('id',userId).single();
-      const base=(prof&&prof.sub_expires_at&&new Date(prof.sub_expires_at).getTime()>Date.now())?new Date(prof.sub_expires_at).getTime():Date.now();
+      const base=(prof&&prof.sub_expires_at&&new Date(prof.sub_expires_at).getTime()>serverNow())?new Date(prof.sub_expires_at).getTime():serverNow();
       const newExp=new Date(base+days*86400000).toISOString();
       const {error}=await sb.from('profiles').update({sub_expires_at:newExp, sub_plan:'week'}).eq('id',userId);
       if(error) throw error;
@@ -6087,7 +6087,7 @@
   }
   function sweepExpired(){
     const before=activeSignals.length;
-    activeSignals=activeSignals.filter(s=>new Date(s.expires_at).getTime()>Date.now());
+    activeSignals=activeSignals.filter(s=>new Date(s.expires_at).getTime()>serverNow());
     if(activeSignals.length!==before){ updateSignalPopup(); if($('#signalModal').style.display==='flex') renderSignals(); }
   }
   function unseenCount(){ return activeSignals.filter(s=>!signalsSeen[s.id]).length; }
@@ -6108,7 +6108,7 @@
       let legs=[];
       try{ legs=Array.isArray(s.legs)?s.legs:JSON.parse(s.legs||'[]'); }catch(e){ legs=[]; }
       const legsHtml=legs.map(l=>`<div class="sig-leg"><span>${(l.match||l.pick||'—')} <span class="sl-bk">· ${l.bk||''}</span></span><span class="sl-odd">${l.odd||''}</span></div>`).join('');
-      const mins=Math.max(0,Math.round((new Date(s.expires_at).getTime()-Date.now())/60000));
+      const mins=Math.max(0,Math.round((new Date(s.expires_at).getTime()-serverNow())/60000));
       const canUse=legs.filter(l=>parseFloat(l.odd)>1).length>=2;
       const used=signalsUsed[s.id];
       let btn='';
@@ -6316,7 +6316,7 @@
     return sameDay ? hm : (String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+' '+hm);
   }
   function sigLeft(s){
-    const ms=new Date(s.expires_at).getTime()-Date.now();
+    const ms=new Date(s.expires_at).getTime()-serverNow();
     const m=Math.max(0,Math.floor(ms/60000)), sec=Math.max(0,Math.floor((ms%60000)/1000));
     return String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0');
   }
@@ -6325,8 +6325,43 @@
   function sigAgeSec(s){
     const t=parseDbTime(s.created_at||s.inserted_at);
     if(!t) return 0;
-    return Math.max(0, Math.floor((Date.now()-t)/1000));
+    return Math.max(0, Math.floor((serverNow()-t)/1000));
   }
+  /* ═══════════════ HORLOGE ALIGNÉE SUR LE SERVEUR ═══════════════
+     created_at et expires_at sont posés par Postgres. Si l'horloge de
+     l'appareil dérive — et sur un téléphone d'entrée de gamme elle dérive
+     souvent de plusieurs minutes — l'âge affiché est faux d'autant. Or
+     l'âge est précisément l'indicateur de fiabilité vendu à l'abonné :
+     un signal annoncé « il y a 3 min » alors qu'il vient d'être publié
+     décrédibilise tout le service.
+
+     On mesure une fois l'écart entre l'horloge locale et celle du serveur,
+     puis tous les calculs de temps passent par serverNow(). */
+  let clockSkewMs = 0;          // horloge locale moins horloge serveur
+  function serverNow(){ return Date.now() - clockSkewMs; }
+
+  // L'heure doit arriver dans le CORPS de la réponse : en CORS, le
+  // navigateur n'a pas accès à l'en-tête HTTP « Date ». D'où la fonction
+  // server_now() côté base (voir migration_horloge.sql).
+  async function syncServerClock(){
+    if(!sb) return;
+    try{
+      const t0=Date.now();
+      const {data,error}=await sb.rpc('server_now');
+      const t1=Date.now();
+      if(error||!data) return;                 // fonction absente : horloge locale
+      const srv=parseDbTime(data);
+      if(!srv) return;
+      // Milieu de l'aller-retour : compense la moitié de la latence réseau.
+      const local=t0+(t1-t0)/2;
+      clockSkewMs = local - srv;
+      if(Math.abs(clockSkewMs) > 60000){
+        console.warn('Horloge de cet appareil décalée de '
+          +Math.round(clockSkewMs/60000)+' min sur le serveur — corrigé à l’affichage.');
+      }
+    }catch(e){ /* hors ligne : on garde l'horloge locale */ }
+  }
+
   // Postgres peut renvoyer un horodatage SANS fuseau ("2026-07-26T12:34:56").
   // Le navigateur le lirait alors comme heure LOCALE, d'ou un age fausse.
   // On force l'interpretation en UTC quand le fuseau est absent.
@@ -6362,8 +6397,8 @@
         <span class="tk-odd">${escapeHTML(String(l.odd||''))}</span></div>`).join('');
     const canUse=legs.filter(l=>parseFloat(l.odd)>1).length>=2;
     const used=signalsUsed[s.id];
-    const total=Math.max(1,(new Date(s.expires_at).getTime()-(new Date(s.created_at||Date.now()).getTime())));
-    const left=Math.max(0,new Date(s.expires_at).getTime()-Date.now());
+    const total=Math.max(1,(new Date(s.expires_at).getTime()-(new Date(s.created_at||serverNow()).getTime())));
+    const left=Math.max(0,new Date(s.expires_at).getTime()-serverNow());
     const pct=Math.max(3,Math.min(100,left/total*100));
     host.innerHTML=`<article class="ticket${used?' used':''}">
       <div class="tk-head">
@@ -6829,7 +6864,7 @@
   // Liste complète conservée en mémoire : les filtres et la recherche
   // travaillent dessus sans relancer de requête.
   let allUsers=[], userFilter='all', userQuery='';
-  const subActive = u => !!(u.sub_expires_at && new Date(u.sub_expires_at).getTime()>Date.now());
+  const subActive = u => !!(u.sub_expires_at && new Date(u.sub_expires_at).getTime()>serverNow());
   const subExpired= u => !!(u.sub_expires_at && !subActive(u));
 
   async function loadUsers(){
@@ -6899,7 +6934,7 @@
             : '<button class="u-btn mod" data-role="moderator:'+u.id+'">🛡 Modo</button>';
           // Abonnement surebets : prolonger / révoquer
           actions += '<button class="u-btn ok" data-extend="'+u.id+'">＋'+SUB.DURATION_DAYS+'j surebets</button>';
-          if(u.sub_expires_at && new Date(u.sub_expires_at).getTime()>Date.now())
+          if(u.sub_expires_at && new Date(u.sub_expires_at).getTime()>serverNow())
             actions += '<button class="u-btn block" data-revoke="'+u.id+'">✕ Abo</button>';
         }
       }
@@ -6909,7 +6944,7 @@
       // il doit se lire directement sur la ligne.
       let subBadge='';
       if(subActive(u)){
-        const d=Math.max(0,Math.ceil((new Date(u.sub_expires_at).getTime()-Date.now())/86400000));
+        const d=Math.max(0,Math.ceil((new Date(u.sub_expires_at).getTime()-serverNow())/86400000));
         subBadge='<span class="u-badge approved" title="Abonnement surebets actif">🎯 '+d+'j</span>';
       }else if(u.sub_expires_at){
         subBadge='<span class="u-badge blocked" title="Abonnement expiré">🎯 expiré</span>';
@@ -7047,6 +7082,9 @@
   // Démarrage : init Supabase + reprise de session éventuelle
   (async()=>{
     const ok=initSupabase();
+    // Avant tout affichage de durée : on cale l'horloge sur celle du
+    // serveur, sinon un appareil qui dérive affiche des âges faux.
+    await syncServerClock();
     if(!ok){ // pas configuré : on affiche la porte avec l'avertissement
       showGate();
       $('#authSub').textContent='Configuration requise avant utilisation';
