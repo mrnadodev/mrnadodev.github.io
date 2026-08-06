@@ -6,6 +6,9 @@
 <title>NADOEDGE — Tableau de bord</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Calcul d'arbitrage : un seul endroit, teste par outils/arbitrage.test.js.
+     Servi depuis la meme origine, donc pas de dependance exterieure. -->
+<script src="arbitrage.js"></script>
 <script>
   /* ╔══════════════════════════════════════════════════════════════════╗
      ║  ⬇⬇⬇  REMPLISSEZ VOS 3 VALEURS ICI  ⬇⬇⬇                            ║
@@ -3212,22 +3215,21 @@
       lastCalc=null;$('#saveBtn').disabled=true;return;
     }
     const odds=getOdds();
-    const S=odds.reduce((s,o)=>s+1/o,0);const isSure=S<1;const amount=parseFloat($('#amount').value)||0;
-    let stakes=[],total=0;
-    if(mode==='equal'){total=amount;stakes=odds.map(o=>total*(1/o)/S);}
-    else{const fi=Math.min(parseInt($('#fixedLeg').value),legs-1);const target=amount*odds[fi];stakes=odds.map(o=>target/o);total=stakes.reduce((s,x)=>s+x,0);}
+    const S=ARB.margin(odds); const isSure=ARB.isSurebet(odds);
+    const amount=parseFloat($('#amount').value)||0;
+    let stakes = (mode==='equal')
+      ? ARB.stakesForTotal(amount, odds)
+      : ARB.stakesFromFixed(amount, Math.min(parseInt($('#fixedLeg').value), legs-1), odds);
 
-    // Arrondi des mises (optionnel) — puis recalcul du profit RÉEL sur mises arrondies
+    // Arrondi des mises (optionnel) — le profit est ensuite recalculé sur les
+    // mises RÉELLEMENT placées : un arrondi trop grossier peut l'annuler.
     const step=parseFloat($('#roundStep').value)||0;
-    let rounded=false;
-    if(step>0){
-      stakes=stakes.map(s=>Math.round(s/step)*step);
-      total=stakes.reduce((s,x)=>s+x,0);
-      rounded=true;
-    }
+    const rounded = step>0;
+    if(rounded) stakes = ARB.roundStakes(stakes, step);
 
-    const returns=stakes.map((s,i)=>s*odds[i]);const guaranteedReturn=Math.min(...returns);
-    const profit=guaranteedReturn-total;const roi=total>0?profit/total*100:0;
+    const res=ARB.outcome(stakes, odds);
+    const total=res.total, returns=res.returns;
+    const guaranteedReturn=res.guaranteedReturn, profit=res.profit, roi=res.roi;
     const labels=['1','2','3'];const fi=mode==='fixed'?Math.min(parseInt($('#fixedLeg').value),legs-1):-1;
     const bks=getBks();
     const win=isSure&&profit>0;
@@ -3978,14 +3980,15 @@
     const amt=parseFloat(($('#ldAmt')||{}).value);
     const set=(id,v)=>{ const e=$(id); if(e) e.textContent=v; };
     if(!(oa>1)||!(ob>1)||!(amt>=0)){ set('#ldStakeA','—'); set('#ldStakeB','—'); return; }
-    const S=1/oa+1/ob;
-    const sa=amt*(1/oa)/S, sbk=amt*(1/ob)/S;
-    const ret=amt/S, profit=ret-amt, roi=amt>0?(profit/amt*100):0;
+    const cotes=[oa,ob];
+    const mises=ARB.stakesForTotal(amt, cotes);
+    const r=ARB.outcome(mises, cotes);
+    const ret=r.guaranteedReturn, profit=r.profit, roi=amt>0?(profit/amt*100):0;
     const fmt=n=>Math.round(n).toLocaleString('fr-FR')+' HTG';
-    set('#ldStakeA',fmt(sa)); set('#ldStakeB',fmt(sbk));
+    set('#ldStakeA',fmt(mises[0])); set('#ldStakeB',fmt(mises[1]));
     set('#ldRetA',fmt(ret));  set('#ldRetB',fmt(ret));
     ldTween($('#ldProfit'), profit, roi);
-    const win=S<1, v=$('#ldVerdict');
+    const win=ARB.isSurebet(cotes), v=$('#ldVerdict');
     if(v){ v.classList.toggle('win',win); v.classList.toggle('lose',!win); }
     const res=document.querySelector('.ld-res'); if(res) res.classList.toggle('win',win);
     set('#ldVerdictT', win?tOr('ld.win_t','Surebet — profit garanti'):tOr('ld.lose_t',"Pas d'arbitrage sur ces cotes"));
@@ -6635,8 +6638,8 @@
     const odds=$$('#pubLegs .pl-odd').map(el=>parseFloat(el.value)).filter(o=>o>1);
     const field=$('#pubRoi');
     if(odds.length<2){ field.value=''; field.dataset.roi=''; return; }
-    const S=odds.reduce((s,o)=>s+1/o,0);
-    const roi=(1-S)/S*100;
+    // Même formule que le trigger serveur, qui recalculera et fera foi.
+    const roi=ARB.roiPercent(odds);
     if(roi>0){ field.value='+'+roi.toFixed(2)+' %'; field.style.color='var(--mint)'; }
     else { field.value=roi.toFixed(2)+' % (pas un surebet)'; field.style.color='var(--red)'; }
     field.dataset.roi=roi.toFixed(2);
