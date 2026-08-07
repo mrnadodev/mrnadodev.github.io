@@ -81,6 +81,32 @@ class OpportunityRepository:
             )
             return found.scalar_one_or_none() is not None
 
+    async def match_deja_signale(self, opp: Opportunity) -> bool:
+        """Ce MATCH a-t-il deja donne lieu a une alerte ?
+
+        Distinct de exists(), qui compare les cotes. Ici on ignore et les
+        cotes et le marche : un seul signal par match, meme si une cote
+        bouge, meme si un autre marche du meme match devient interessant.
+
+        Pourquoi cette regle plus large : une cote qui derive d'un centieme
+        est techniquement une autre occasion, mais l'abonne recoit le
+        sentiment du meme surebet repete. Trois alertes pour un seul match
+        usent la confiance plus qu'elles n'apportent d'information.
+
+        On continue en revanche d'ENREGISTRER chaque evolution : l'historique
+        des cotes sert au carnet de bord et ne coute rien. Seul l'envoi est
+        limite.
+        """
+        c = opportunity_to_row(opp)
+        async with self._session_factory() as session:
+            found = await session.execute(
+                select(OpportunityRow.id).where(
+                    OpportunityRow.match == c.match,
+                    OpportunityRow.sport == c.sport,
+                ).limit(1)
+            )
+            return found.scalar_one_or_none() is not None
+
     async def save_if_new(self, opp: Opportunity) -> int | None:
         """Enregistre l'opportunite, sauf si la meme est deja en base.
 

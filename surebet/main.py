@@ -95,26 +95,45 @@ async def process_cycle(pool: list[Odd], scout: Scout, notifier: TelegramNotifie
     logger.info("%d opportunite(s) detectee(s)", len(opportunities))
 
     doublons = 0
+    silencieuses = 0
     for opp in opportunities:
-        # Doublon ecarte AVANT l'explication IA : une opportunite qui reste
-        # ouverte dix minutes revient a chaque cycle de scan. Sans ce filtre
-        # on paie un appel LLM et on renvoie une alerte Telegram identique a
-        # chaque passage — c'est ce qui a produit 893 lignes en base pour
-        # 17 opportunites reellement distinctes.
+        # Cotes STRICTEMENT identiques : rien de neuf, on n'enregistre meme
+        # pas. C'est ce qui produisait 893 lignes en base pour 17 opportunites.
         if repo is not None and await repo.exists(opp):
             doublons += 1
             continue
 
+        # Ce MATCH a-t-il deja donne lieu a une alerte ? Une seule par match,
+        # meme si une cote bouge, meme sur un autre marche. Une cote qui
+        # derive d'un centieme est techniquement une autre occasion, mais
+        # l'abonne y voit le meme surebet repete — et trois alertes pour un
+        # match usent la confiance plus qu'elles n'informent.
+        deja_signale = repo is not None and await repo.match_deja_signale(opp)
+
         opp.score_ia = score_opportunity(opp, ScoringContext())
-        opp.explanation = await scout.explain(opp)
+        # L'explication IA ne sert qu'a l'alerte : inutile de la payer pour
+        # une evolution qu'on n'enverra pas.
+        if not deja_signale:
+            opp.explanation = await scout.explain(opp)
+
+        # On enregistre quand meme : l'historique des cotes sert au carnet
+        # de bord, et il ne coute rien. Seul l'envoi est limite.
         if repo is not None:
             await repo.save(opp)
+
+        if deja_signale:
+            silencieuses += 1
+            continue
+
         if should_alert(opp, settings.min_roi_alert_pct, settings.min_score_alert):
             sent = await notifier.send(opp)
             logger.info("Alerte %s (ROI %.2f%%, score %d) : envoi=%s",
                         opp.match_label, opp.roi_pct, opp.score_ia, sent)
     if doublons:
-        logger.info("%d doublon(s) ignore(s) (deja vu(s) au cycle precedent)", doublons)
+        logger.info("%d doublon(s) ignore(s) (cotes identiques)", doublons)
+    if silencieuses:
+        logger.info("%d evolution(s) enregistree(s) sans alerte (match deja signale)",
+                    silencieuses)
     return opportunities
 
 

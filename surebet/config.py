@@ -34,7 +34,10 @@ class Settings(BaseSettings):
     telegram_chat_id: str | None = None
 
     # Seuils d'alerte (spec MISSION §8)
-    min_roi_alert_pct: float = 2.0
+    # 3 % : en dessous, la fenetre se referme souvent avant d'avoir place les
+    # deux mises, et le gain ne couvre pas le temps passe. MIN_ROI_ALERT_PCT
+    # dans .env a la priorite sur cette valeur.
+    min_roi_alert_pct: float = 3.0
     min_score_alert: int = 70
     default_bankroll: float = 50_000.0
 

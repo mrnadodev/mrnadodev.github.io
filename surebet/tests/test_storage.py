@@ -115,3 +115,59 @@ async def test_save_if_new_accepte_une_cote_qui_bouge(repo):
     ])[0]
     assert await repo.save_if_new(bouge) is not None
     assert len(await repo.list_recent()) == 2
+
+
+@pytest.mark.asyncio
+async def test_match_deja_signale_ignore_les_cotes(repo):
+    """Une alerte par match, meme si les cotes bougent.
+
+    Cas reel vecu : trois messages Telegram pour un seul match, dont deux
+    ne differaient que par une cote passee de 2.52 a 2.58. Deux occasions
+    distinctes techniquement, mais l'abonne y voit le meme surebet repete.
+    """
+    scout = Scout(bankroll=50_000.0)
+    premiere = scout.evaluate([
+        _odd("Paryaj Lakay", "home", 3.55),
+        _odd("1xBet", "draw", 3.90),
+        _odd("Golcash", "away", 3.30),
+    ])[0]
+    assert await repo.match_deja_signale(premiere) is False
+    await repo.save(premiere)
+
+    bouge = scout.evaluate([
+        _odd("Paryaj Lakay", "home", 3.60),
+        _odd("1xBet", "draw", 3.90),
+        _odd("Golcash", "away", 3.30),
+    ])[0]
+    assert await repo.exists(bouge) is False             # a enregistrer
+    assert await repo.match_deja_signale(bouge) is True  # mais pas a alerter
+
+
+@pytest.mark.asyncio
+async def test_un_autre_match_reste_signalable(repo):
+    """Le filtre ne doit pas etouffer les autres matchs."""
+    from surebet.normalizer.schema import Odd as O
+
+    scout = Scout(bankroll=50_000.0)
+    await repo.save(scout.evaluate([
+        _odd("Paryaj Lakay", "home", 3.55),
+        _odd("1xBet", "draw", 3.90),
+        _odd("Golcash", "away", 3.30),
+    ])[0])
+
+    def autre(bookmaker, selection, odds):
+        return O(
+            bookmaker=bookmaker, sport="football", competition="Amical",
+            match_id="m-autre", home_team="Lyon", away_team="Nice",
+            start_time=datetime(2026, 7, 23, 18, 0, tzinfo=timezone.utc),
+            market_type="1x2", n_outcomes=3, selection=selection, line=None,
+            team_scope=None, odds=odds, url=f"https://{bookmaker}.example/b",
+            scraped_at=datetime.now(timezone.utc),
+        )
+
+    ailleurs = scout.evaluate([
+        autre("Paryaj Lakay", "home", 3.55),
+        autre("1xBet", "draw", 3.90),
+        autre("Golcash", "away", 3.30),
+    ])[0]
+    assert await repo.match_deja_signale(ailleurs) is False
