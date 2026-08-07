@@ -305,9 +305,14 @@
   .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 
   /* Tour guidé (onboarding) */
-  .tour-modal{position:fixed;inset:0;z-index:130;display:flex;align-items:center;justify-content:center;padding:20px}
-  .tour-backdrop{position:absolute;inset:0;background:rgba(4,8,10,.8);backdrop-filter:blur(3px)}
-  .tour-box{position:relative;width:100%;max-width:460px;background:linear-gradient(180deg,var(--panel),var(--panel-2));
+  /* align-items:flex-start + margin:auto sur la boîte, et non align-items:center :
+     centrer par le flex rogne le HAUT du contenu dès qu'il dépasse la fenêtre,
+     et le défilement ne permet pas d'y revenir. Avec margin:auto, la boîte reste
+     centrée quand il y a la place et se laisse faire défiler sinon — le cas d'un
+     petit écran, ou d'un téléphone dont le clavier occupe la moitié de la hauteur. */
+  .tour-modal{position:fixed;inset:0;z-index:130;display:flex;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto}
+  .tour-backdrop{position:fixed;inset:0;background:rgba(4,8,10,.8);backdrop-filter:blur(3px)}
+  .tour-box{position:relative;margin:auto;width:100%;max-width:460px;background:linear-gradient(180deg,var(--panel),var(--panel-2));
     border:1px solid var(--line);border-radius:18px;box-shadow:0 30px 80px -20px rgba(0,0,0,.75);
     padding:28px 26px 22px;animation:cardIn .35s cubic-bezier(.16,1,.3,1)}
   .tour-skip{position:absolute;top:14px;right:16px;background:none;border:none;color:var(--ink-faint);
@@ -4391,22 +4396,22 @@
   /* ===== TOUR GUIDÉ ===== */
   const TOUR_SLIDES=[
     { art:`<svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="54" cy="54" r="34" stroke="var(--mint)" stroke-width="5"/><line x1="78" y1="78" x2="100" y2="100" stroke="var(--mint)" stroke-width="6" stroke-linecap="round"/><path d="M42 54h24M54 42v24" stroke="var(--gold)" stroke-width="4" stroke-linecap="round"/></svg>`,
-      title:'Bienvenue sur NADOEDGE 👋', desc:'Votre outil pour détecter et calculer les surebets (paris sûrs). Voici un tour rapide des fonctions principales.' },
-    { art:`<svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="52" cy="52" r="30" stroke="var(--mint)" stroke-width="5"/><line x1="74" y1="74" x2="96" y2="96" stroke="var(--mint)" stroke-width="6" stroke-linecap="round"/><text x="52" y="60" font-size="26" fill="var(--gold)" text-anchor="middle" font-family="monospace" font-weight="bold">%</text></svg>`,
-      title:'1 · Détecteur', desc:'Entrez la cote que vous avez repérée, et le détecteur vous dit quelle cote adverse chercher pour garantir un profit.' },
+      title:'Bienvenue sur NADOEDGE 👋', desc:'Quand deux bookmakers ne sont pas d\'accord sur les cotes d\'un même match, il existe une façon de répartir votre mise pour encaisser un profit quel que soit le résultat. NADOEDGE surveille 1xBet, Paryaj Lakay, Paryaj Pam et Golcash, et vous dit exactement combien miser où.' },
+    { art:`<svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="18" y="26" width="84" height="22" rx="7" stroke="var(--mint)" stroke-width="4"/><rect x="18" y="56" width="84" height="22" rx="7" stroke="var(--mint)" stroke-width="4"/><rect x="18" y="86" width="84" height="22" rx="7" stroke="var(--mint)" stroke-width="4" opacity=".35"/><circle cx="32" cy="37" r="5" fill="var(--gold)"/><circle cx="32" cy="67" r="5" fill="var(--gold)"/><path d="M48 37h34M48 67h24" stroke="var(--mint)" stroke-width="4" stroke-linecap="round"/></svg>`,
+      title:'1 · Les signaux en direct', desc:'L\'onglet <b>Surebets</b> est le cœur de la plateforme : les occasions détectées s\'y affichent au fur et à mesure, avec leur ROI et le temps qu\'il reste avant le coup d\'envoi. Un clic les charge dans le calculateur, prêtes à jouer.' },
+    { art:`<svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="32" y="56" width="56" height="44" rx="10" stroke="var(--mint)" stroke-width="5"/><path d="M52 56V42a14 14 0 0 1 28 0v6" stroke="var(--gold)" stroke-width="5" stroke-linecap="round"/><circle cx="60" cy="74" r="6" fill="var(--gold)"/><path d="M60 80v9" stroke="var(--gold)" stroke-width="4" stroke-linecap="round"/></svg>`,
+      title:'2 · Débloquer les signaux', desc:'Le calculateur et les outils sont libres d\'accès. Les signaux, eux, demandent un abonnement — 7 ou 30 jours, réglé par MonCash ou NatCash. Votre accès est lié à un nombre limité d\'appareils : ne partagez pas vos identifiants, vous seriez déconnecté.' },
     { art:`<svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="34" y="20" width="52" height="80" rx="8" stroke="var(--mint)" stroke-width="5"/><rect x="44" y="30" width="32" height="16" rx="3" fill="var(--gold)"/><circle cx="48" cy="60" r="4" fill="var(--mint)"/><circle cx="60" cy="60" r="4" fill="var(--mint)"/><circle cx="72" cy="60" r="4" fill="var(--mint)"/><circle cx="48" cy="74" r="4" fill="var(--mint)"/><circle cx="60" cy="74" r="4" fill="var(--mint)"/><circle cx="72" cy="74" r="4" fill="var(--mint)"/></svg>`,
-      title:'2 · Calculateur', desc:'Entrez vos cotes et votre montant : NADOEDGE calcule les mises exactes pour chaque bookmaker et votre profit garanti. Vous pouvez arrondir les mises.' },
+      title:'3 · Le calculateur de mises', desc:'Entrez vos cotes et le montant total : NADOEDGE calcule la mise exacte à placer chez chaque bookmaker, et affiche le profit garanti <b>avant</b> que vous misiez. Les mises peuvent être arrondies — des montants ronds attirent moins l\'attention.' },
+    { art:`<svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="52" cy="52" r="30" stroke="var(--mint)" stroke-width="5"/><line x1="74" y1="74" x2="96" y2="96" stroke="var(--mint)" stroke-width="6" stroke-linecap="round"/><text x="52" y="60" font-size="26" fill="var(--gold)" text-anchor="middle" font-family="monospace" font-weight="bold">%</text></svg>`,
+      title:'4 · Détecteur et convertisseur', desc:'Vous avez repéré une cote vous-même ? Le détecteur vous dit quelle cote adverse chercher pour atteindre le profit visé. Le convertisseur, lui, traduit les cotes décimales, fractionnaires et américaines.' },
     { art:`<svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="24" y="40" width="72" height="48" rx="8" stroke="var(--gold)" stroke-width="5"/><path d="M24 54h72" stroke="var(--gold)" stroke-width="5"/><circle cx="80" cy="66" r="6" fill="var(--mint)"/><path d="M40 34l24-10 24 10" stroke="var(--mint)" stroke-width="4" stroke-linecap="round"/></svg>`,
-      title:'3 · Caisse (bankroll)', desc:'Suivez votre capital : dépôts, retraits, solde et croissance. Vous voyez toujours combien vous avez et votre performance.' },
-    { art:`<svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M28 40h64M28 56h64M28 72h44" stroke="var(--mint)" stroke-width="5" stroke-linecap="round"/><circle cx="94" cy="80" r="16" stroke="var(--gold)" stroke-width="4"/><path d="M94 72v8l5 5" stroke="var(--gold)" stroke-width="4" stroke-linecap="round"/></svg>`,
-      title:'4 · Historique', desc:'Tous vos paris sont sauvegardés et synchronisés. Filtrez, ajoutez des notes, exportez en Excel, et voyez vos stats par mois et par bookmaker.' },
-    { art:`<svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M30 34h60a8 8 0 0 1 8 8v30a8 8 0 0 1-8 8H54l-18 14v-14h-6a8 8 0 0 1-8-8V42a8 8 0 0 1 8-8z" stroke="var(--mint)" stroke-width="5" stroke-linejoin="round"/><circle cx="48" cy="57" r="3.5" fill="var(--gold)"/><circle cx="60" cy="57" r="3.5" fill="var(--gold)"/><circle cx="72" cy="57" r="3.5" fill="var(--gold)"/></svg>`,
-      title:'5 · Chat & alertes', desc:'Discutez avec les autres parieurs en direct. Quand un surebet est publié, une alerte apparaît — cliquez pour voir les détails et les charger dans le calculateur.' },
+      title:'5 · Caisse et historique', desc:'L\'onglet <b>Caisse</b> suit votre capital : dépôts, retraits, solde et croissance. Chaque pari enregistré alimente votre historique — filtrable, annotable, exportable en Excel, avec vos statistiques par mois et par bookmaker.' },
     { art:`<svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="60" cy="60" r="42" fill="rgba(47,230,168,.08)" stroke="var(--mint)" stroke-width="4"/><path d="M38 60l40-15-13 40-9-13-10 8 1-12z" fill="var(--mint)"/><path d="M56 68l22-23-30 18" stroke="var(--bg)" stroke-width="1.5"/></svg>`,
-      title:'📢 Abonnez-vous à Telegram !', desc:'<b>Important :</b> pour recevoir une notification sur votre téléphone dès qu\'un surebet est détecté (même dashboard fermé), abonnez-vous à notre canal Telegram. Les détails restent visibles uniquement ici, sur votre dashboard.',
+      title:'6 · Communauté et alertes', desc:'L\'onglet <b>Communauté</b> réunit les parieurs dans le salon général ; les abonnés disposent en plus d\'un salon dédié. Pour être prévenu même dashboard fermé, rejoignez le canal Telegram : il annonce, les détails restent ici.',
       cta:{ label:'📲 Rejoindre @NADOEDGE_surebets', url:'https://t.me/NADOEDGE_surebets' } },
     { art:`<svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="60" cy="60" r="40" stroke="var(--mint)" stroke-width="5"/><path d="M42 60l12 12 24-26" stroke="var(--gold)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
-      title:'C\u2019est parti ! 🎯', desc:'Vous êtes prêt à utiliser NADOEDGE. Vérifiez toujours les cotes chez le bookmaker avant de miser. Bonne chance !' }
+      title:'C\u2019est parti ! 🎯', desc:'Une dernière chose : les cotes bougent vite. Vérifiez-les chez le bookmaker juste avant de miser, et n\'engagez que ce que vous pouvez immobiliser le temps du match. Bonne chance !' }
   ];
   let tourIdx=0;
   // Traduction avec repli : si la clé n'existe pas, on garde le texte d'origine
@@ -5543,15 +5548,21 @@
   function updateChatFab(){
     const fab=$('#chatFab'), badge=$('#chatFabBadge');
     if(!fab)return;
-    // la bulle s'affiche seulement si l'utilisateur est connecté et le chat pas visible
-    if(!currentUser || chatInView()){ fab.style.display='none'; fab.classList.remove('has-unread'); return; }
-    fab.style.display='grid';
-    if(chatUnread>0){
-      badge.style.display='grid';
-      badge.textContent=chatUnread>99?'99+':chatUnread;
-      fab.classList.add('has-unread');   // attire l'œil
+    /* La bulle ne sort que s'il y a quelque chose à signaler : un message non
+       lu, l'utilisateur connecté, et le chat hors de l'écran. Sans message en
+       attente elle n'annonçait rien et occupait en permanence un coin de
+       l'écran — sur téléphone, juste au-dessus de la barre de navigation.
+       L'accès au chat ne dépend pas d'elle : l'onglet Communauté y mène. */
+    if(!currentUser || chatInView() || chatUnread<=0){
+      fab.style.display='none';
+      fab.classList.remove('has-unread');
+      if(badge) badge.style.display='none';
+      return;
     }
-    else { badge.style.display='none'; fab.classList.remove('has-unread'); }
+    fab.style.display='grid';
+    badge.style.display='grid';
+    badge.textContent=chatUnread>99?'99+':chatUnread;
+    fab.classList.add('has-unread');   // attire l'œil
   }
   function goToChat(){
     const card=$('#chatCard'); if(!card)return;
@@ -7556,22 +7567,22 @@
       "tour.skip":"Passer ✕","tour.dontshow":"Ne plus afficher","tour.prev":"Précédent",
       "tour.next":"Suivant","tour.finish":"Terminer",
       "tour.s1_title":"Bienvenue sur NADOEDGE 👋",
-      "tour.s1_desc":"Votre outil pour détecter et calculer les surebets (paris sûrs). Voici un tour rapide des fonctions principales.",
-      "tour.s2_title":"1 · Détecteur",
-      "tour.s2_desc":"Entrez la cote que vous avez repérée, et le détecteur vous dit quelle cote adverse chercher pour garantir un profit.",
-      "tour.s3_title":"2 · Calculateur",
-      "tour.s3_desc":"Entrez vos cotes et votre montant : NADOEDGE calcule les mises exactes pour chaque bookmaker et votre profit garanti. Vous pouvez arrondir les mises.",
-      "tour.s4_title":"3 · Caisse (bankroll)",
-      "tour.s4_desc":"Suivez votre capital : dépôts, retraits, solde et croissance. Vous voyez toujours combien vous avez et votre performance.",
-      "tour.s5_title":"4 · Historique",
-      "tour.s5_desc":"Tous vos paris sont sauvegardés et synchronisés. Filtrez, ajoutez des notes, exportez en Excel, et voyez vos stats par mois et par bookmaker.",
-      "tour.s6_title":"5 · Chat & alertes",
-      "tour.s6_desc":"Discutez avec les autres parieurs en direct. Quand un surebet est publié, une alerte apparaît — cliquez pour voir les détails et les charger dans le calculateur.",
-      "tour.s7_title":"📢 Abonnez-vous à Telegram !",
-      "tour.s7_desc":"<b>Important :</b> pour recevoir une notification sur votre téléphone dès qu'un surebet est détecté (même dashboard fermé), abonnez-vous à notre canal Telegram. Les détails restent visibles uniquement ici, sur votre dashboard.",
+      "tour.s1_desc":"Quand deux bookmakers ne sont pas d'accord sur les cotes d'un même match, il existe une façon de répartir votre mise pour encaisser un profit quel que soit le résultat. NADOEDGE surveille 1xBet, Paryaj Lakay, Paryaj Pam et Golcash, et vous dit exactement combien miser où.",
+      "tour.s2_title":"1 · Les signaux en direct",
+      "tour.s2_desc":"L'onglet <b>Surebets</b> est le cœur de la plateforme : les occasions détectées s'y affichent au fur et à mesure, avec leur ROI et le temps qu'il reste avant le coup d'envoi. Un clic les charge dans le calculateur, prêtes à jouer.",
+      "tour.s3_title":"2 · Débloquer les signaux",
+      "tour.s3_desc":"Le calculateur et les outils sont libres d'accès. Les signaux, eux, demandent un abonnement — 7 ou 30 jours, réglé par MonCash ou NatCash. Votre accès est lié à un nombre limité d'appareils : ne partagez pas vos identifiants, vous seriez déconnecté.",
+      "tour.s4_title":"3 · Le calculateur de mises",
+      "tour.s4_desc":"Entrez vos cotes et le montant total : NADOEDGE calcule la mise exacte à placer chez chaque bookmaker, et affiche le profit garanti <b>avant</b> que vous misiez. Les mises peuvent être arrondies — des montants ronds attirent moins l'attention.",
+      "tour.s5_title":"4 · Détecteur et convertisseur",
+      "tour.s5_desc":"Vous avez repéré une cote vous-même ? Le détecteur vous dit quelle cote adverse chercher pour atteindre le profit visé. Le convertisseur, lui, traduit les cotes décimales, fractionnaires et américaines.",
+      "tour.s6_title":"5 · Caisse et historique",
+      "tour.s6_desc":"L'onglet <b>Caisse</b> suit votre capital : dépôts, retraits, solde et croissance. Chaque pari enregistré alimente votre historique — filtrable, annotable, exportable en Excel, avec vos statistiques par mois et par bookmaker.",
+      "tour.s7_title":"6 · Communauté et alertes",
+      "tour.s7_desc":"L'onglet <b>Communauté</b> réunit les parieurs dans le salon général ; les abonnés disposent en plus d'un salon dédié. Pour être prévenu même dashboard fermé, rejoignez le canal Telegram : il annonce, les détails restent ici.",
       "tour.s7_cta":"📲 Rejoindre @NADOEDGE_surebets",
       "tour.s8_title":"C'est parti ! 🎯",
-      "tour.s8_desc":"Vous êtes prêt à utiliser NADOEDGE. Vérifiez toujours les cotes chez le bookmaker avant de miser. Bonne chance !"
+      "tour.s8_desc":"Une dernière chose : les cotes bougent vite. Vérifiez-les chez le bookmaker juste avant de miser, et n'engagez que ce que vous pouvez immobiliser le temps du match. Bonne chance !"
     },
     en: {
       /* ── Landing page (signed-out visitor) ── */
@@ -7756,22 +7767,22 @@
       "tour.skip":"Skip ✕","tour.dontshow":"Don't show again","tour.prev":"Previous",
       "tour.next":"Next","tour.finish":"Finish",
       "tour.s1_title":"Welcome to NADOEDGE 👋",
-      "tour.s1_desc":"Your tool to detect and calculate surebets (guaranteed bets). Here is a quick tour of the main features.",
-      "tour.s2_title":"1 · Detector",
-      "tour.s2_desc":"Enter the odds you spotted, and the detector tells you which opposing odds to look for to guarantee a profit.",
-      "tour.s3_title":"2 · Calculator",
-      "tour.s3_desc":"Enter your odds and your amount: NADOEDGE computes the exact stake for each bookmaker and your guaranteed profit. You can round the stakes.",
-      "tour.s4_title":"3 · Bankroll",
-      "tour.s4_desc":"Track your capital: deposits, withdrawals, balance and growth. You always see how much you have and how you perform.",
-      "tour.s5_title":"4 · History",
-      "tour.s5_desc":"All your bets are saved and synced. Filter them, add notes, export to Excel, and view your stats by month and by bookmaker.",
-      "tour.s6_title":"5 · Chat & alerts",
-      "tour.s6_desc":"Talk with other bettors live. When a surebet is published, an alert appears — click it to see the details and load them into the calculator.",
-      "tour.s7_title":"📢 Subscribe on Telegram!",
-      "tour.s7_desc":"<b>Important:</b> to get a notification on your phone as soon as a surebet is detected (even with the dashboard closed), subscribe to our Telegram channel. The details stay visible only here, on your dashboard.",
+      "tour.s1_desc":"When two bookmakers disagree on the odds for the same match, there is a way to split your stake so you profit whatever the result. NADOEDGE watches 1xBet, Paryaj Lakay, Paryaj Pam and Golcash, and tells you exactly how much to stake where.",
+      "tour.s2_title":"1 · Live signals",
+      "tour.s2_desc":"The <b>Surebets</b> tab is the heart of the platform: detected opportunities appear as they come, with their ROI and the time left before kick-off. One tap loads them into the calculator, ready to play.",
+      "tour.s3_title":"2 · Unlocking the signals",
+      "tour.s3_desc":"The calculator and the tools are free to use. The signals require a subscription — 7 or 30 days, paid by MonCash or NatCash. Your access is tied to a limited number of devices: do not share your credentials, you would be logged out.",
+      "tour.s4_title":"3 · The stake calculator",
+      "tour.s4_desc":"Enter your odds and the total amount: NADOEDGE computes the exact stake for each bookmaker and shows the guaranteed profit <b>before</b> you bet. Stakes can be rounded — round amounts draw less attention.",
+      "tour.s5_title":"4 · Detector and converter",
+      "tour.s5_desc":"Spotted an odd yourself? The detector tells you which opposing odd to look for to reach the profit you want. The converter translates decimal, fractional and American odds.",
+      "tour.s6_title":"5 · Bankroll and history",
+      "tour.s6_desc":"The <b>Bankroll</b> tab tracks your capital: deposits, withdrawals, balance and growth. Every saved bet feeds your history — filter it, annotate it, export it to Excel, with stats by month and by bookmaker.",
+      "tour.s7_title":"6 · Community and alerts",
+      "tour.s7_desc":"The <b>Community</b> tab gathers bettors in the general room; subscribers also get a dedicated room. To be notified even with the dashboard closed, join the Telegram channel: it announces, the details stay here.",
       "tour.s7_cta":"📲 Join @NADOEDGE_surebets",
       "tour.s8_title":"You're all set! 🎯",
-      "tour.s8_desc":"You are ready to use NADOEDGE. Always check the odds at the bookmaker before staking. Good luck!"
+      "tour.s8_desc":"One last thing: odds move fast. Check them at the bookmaker right before you stake, and only commit what you can tie up for the length of the match. Good luck!"
     }
   };
   let LANG='fr';
@@ -7803,114 +7814,6 @@
   var btn=document.getElementById('langBtn');
   if(btn) btn.addEventListener('click', function(){ setLang(LANG==='fr'?'en':'fr'); });
   apply();
-})();
-</script>
-
-<script>
-/* ╔══════════════════════════════════════════════════════════════════════╗
-   ║  DIAGNOSTIC D'AFFICHAGE — temporaire, à retirer une fois la cause    ║
-   ║  identifiée.                                                         ║
-   ║                                                                      ║
-   ║  Ne s'active QUE sur nadoedge.com/?diag : sans ce paramètre, rien    ║
-   ║  n'est lu, rien n'est écrit, aucun élément n'est créé.               ║
-   ║                                                                      ║
-   ║  Ce qu'il mesure : la fenêtre de mise en page (ce que voit le CSS)   ║
-   ║  et la zone réellement visible (ce que montre l'écran). Quand les    ║
-   ║  deux diffèrent, l'affichage est agrandi — et aucune modification    ║
-   ║  du CSS ne peut y changer quoi que ce soit.                          ║
-   ╚══════════════════════════════════════════════════════════════════════╝ */
-(function(){
-  if(!/[?&]diag\b/.test(location.search)) return;
-
-  var boite=document.createElement('div');
-  boite.style.cssText='position:fixed;left:0;top:0;right:0;z-index:2147483647;'+
-    'background:#06100c;color:#e8efeb;font:13px/1.5 ui-monospace,Menlo,monospace;'+
-    'padding:12px 14px;border-bottom:2px solid #2fe6a8;box-shadow:0 8px 24px rgba(0,0,0,.5)';
-  document.body.appendChild(boite);
-
-  /* Même construction que la barre du bas de l'application : left:0 et
-     right:0 en position:fixed occupent TOUTE la fenêtre de mise en page.
-     Si la troisième cellule n'apparaît pas, l'écran n'en montre qu'une part. */
-  var barre=document.createElement('div');
-  barre.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:2147483647;'+
-    'display:grid;grid-template-columns:repeat(3,1fr);'+
-    'font:700 12px/1 ui-monospace,Menlo,monospace;background:#06100c;border-top:2px solid #2fe6a8';
-  barre.innerHTML='<div style="padding:13px 2px;text-align:center;color:#2fe6a8">1 GAUCHE</div>'+
-                  '<div style="padding:13px 2px;text-align:center;color:#e8efeb">2 MILIEU</div>'+
-                  '<div style="padding:13px 2px;text-align:center;color:#f2c14e">3 DROITE</div>';
-  document.body.appendChild(barre);
-
-  /* Nomme les elements fautifs. Un debordement se propage a tous les
-     ancetres : le coupable est le plus PROFOND a depasser, pas le premier.
-     On ignore donc tout element qui a un descendant fautif. */
-  function coupables(largeur){
-    var tous=[], i, e, r;
-    var liste=document.querySelectorAll('body *');
-    for(i=0;i<liste.length;i++){
-      e=liste[i];
-      if(e===boite||e===barre||boite.contains(e)||barre.contains(e)) continue;
-      /* Un element fixe en left:0/right:0 s'etire a la largeur du document
-         des qu'il y a debordement : il en est la consequence, jamais la
-         cause. L'inclure masquerait le vrai coupable. */
-      if(getComputedStyle(e).position==='fixed') continue;
-      /* Les formes internes d'un SVG (rect, path...) sont decoupees par leur
-         <svg> mais leur boite de mesure reste large : bruit, jamais cause. */
-      if(e.ownerSVGElement) continue;
-      r=e.getBoundingClientRect();
-      if(r.width>0 && r.right>largeur+1) tous.push({e:e,r:r});
-    }
-    var feuilles=tous.filter(function(o){
-      return !tous.some(function(p){ return p.e!==o.e && o.e.contains(p.e); });
-    });
-    feuilles.sort(function(a,b){ return b.r.right-a.r.right; });
-    return feuilles.slice(0,3).map(function(o){
-      var c=(o.e.className&&o.e.className.baseVal!==undefined?o.e.className.baseVal:o.e.className||'').toString();
-      return (o.e.id?'#'+o.e.id:'')+(c?'.'+c.trim().split(/\s+/).slice(0,2).join('.'):o.e.tagName.toLowerCase())+
-             ' → '+Math.round(o.r.right)+'px';
-    });
-  }
-
-  var dernier='';
-  function mesurer(){
-    var vv=window.visualViewport;
-    var miseEnPage=document.documentElement.clientWidth;
-    var visible=vv?Math.round(vv.width):miseEnPage;
-    var pourcent=Math.round((vv&&vv.scale?vv.scale:miseEnPage/visible)*100);
-    var manque=miseEnPage-visible;
-    var deborde=document.documentElement.scrollWidth-miseEnPage;
-    var onglet=document.querySelector('.botnav button.on');
-
-    var verdict, couleur, details='';
-    if(deborde>2){
-      verdict='DEBORDEMENT '+deborde+'px — defaut de la page'; couleur='#f2c14e';
-      details='<div style="margin-top:7px;color:#f2c14e">coupable :<br>'+
-              coupables(miseEnPage).join('<br>')+'</div>';
-    } else if(pourcent>105){
-      verdict='AGRANDI '+pourcent+'% — reglage du navigateur'; couleur='#ff5a67';
-    } else {
-      verdict='NORMAL — rien de coupe'; couleur='#2fe6a8';
-    }
-
-    var html=
-      '<div style="color:'+couleur+';font-weight:700;margin-bottom:7px">'+verdict+'</div>'+
-      'onglet .......... <b>'+(onglet?onglet.innerText.replace(/\s+/g,' ').trim():'?')+'</b><br>'+
-      'mise en page .... <b>'+miseEnPage+' px</b><br>'+
-      'zone visible .... <b style="color:'+(manque>4?'#ff5a67':'#2fe6a8')+'">'+visible+' px</b><br>'+
-      'debordement ..... <b>'+deborde+' px</b><br>'+
-      'ecran ........... <b>'+screen.width+'x'+screen.height+'</b> densite <b>'+
-        (window.devicePixelRatio||1).toFixed(2)+'x</b>'+details;
-    if(html!==dernier){ boite.innerHTML=html; dernier=html; }
-  }
-
-  mesurer();
-  addEventListener('resize',mesurer);
-  if(window.visualViewport){
-    visualViewport.addEventListener('resize',mesurer);
-    visualViewport.addEventListener('scroll',mesurer);
-  }
-  /* Le changement d'onglet ne declenche aucun evenement de fenetre :
-     sans cette boucle, le panneau resterait fige sur la premiere vue. */
-  setInterval(mesurer,700);
 })();
 </script>
 </body>
