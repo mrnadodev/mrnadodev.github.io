@@ -169,3 +169,70 @@ def test_meilleure_cote_retenue_quand_plusieurs_books_couvrent():
     jambe_tirs = next(l for l in opp.legs if "shots" in l.event_label)
     assert jambe_tirs.bookmaker == "Paryaj Pam"
     assert jambe_tirs.odds == 8.0
+
+
+# ── Le piege releve sur les Funbets reels ────────────────────────────────
+
+def test_refuse_une_condition_qui_nomme_une_equipe_sans_etre_rattachee():
+    """Cas reel capture chez Paryaj Lakay, juillet 2026.
+
+    « Otelul reussit 8 tirs cadres ou + » ressort du parseur avec
+    team=None : il est donc lu comme un TOTAL DE MATCH. Le couvrir par
+    « moins de 8 tirs dans le match » porterait sur un autre evenement.
+
+    Le detecteur doit refuser plutot que de fabriquer cette fausse
+    couverture — meme si des cotes inverses existent.
+    """
+    from surebet.funbet.parser import parse_funbet
+
+    fb = parse_funbet(
+        "UTA Arad - ASC Otelul Galati",
+        "Otelul reussit 8 tirs cadres ou + & obtient 8 corners ou + (source: Opta)",
+        45,
+    )
+    # Les conditions sont bien analysees, mais sans equipe rattachee.
+    assert fb.is_parsable
+    assert all(c.team is None for c in fb.conditions)
+
+    pool = [
+        odd("1xBet",   "shots_on_target_total", "under", 3.0, line=7.5),
+        odd("Golcash", "corners_total",         "under", 3.0, line=7.5),
+    ]
+    assert find_funbet_arbitrage(fb, pool, bankroll=10_000.0) is None
+
+
+def test_un_total_de_match_reel_reste_couvrable():
+    """Non-regression : une condition qui ne nomme AUCUNE equipe passe."""
+    fb = funbet(1.60, [seuil("corners", 4, team=None)],
+                description="Le match compte 5 corners ou plus")
+    pool = [odd("1xBet", "corners_total", "under", 8.0, line=4)]
+    opp = find_funbet_arbitrage(fb, pool, bankroll=10_000.0)
+    assert opp is not None
+    assert opp.n_outcomes == 2
+
+
+def test_diagnostic_explique_le_refus():
+    """Un refus muet n'apprend rien : le diagnostic doit nommer la cause."""
+    from surebet.funbet.arbitrage import diagnostiquer_funbet
+    from surebet.funbet.parser import parse_funbet
+
+    fb = parse_funbet(
+        "Viborg FF - Odense Boldklub",
+        "Viborg gagne & les deux equipes marquent & chaque equipe obtient 6 corners ou +",
+        20,
+    )
+    raison = diagnostiquer_funbet(fb, [])
+    assert "victoire" in raison
+
+
+def test_diagnostic_chiffre_la_marge_quand_tout_est_couvrable():
+    """Quand la structure convient, on veut savoir a quelle distance on est."""
+    from surebet.funbet.arbitrage import diagnostiquer_funbet
+
+    fb = funbet(1.20, [seuil("shots", 3), seuil("fouls", 5)])
+    pool = [
+        odd("1xBet",   "shots_team", "under", 3.0, line=3, scope="home"),
+        odd("Golcash", "fouls_team", "under", 3.0, line=5, scope="home"),
+    ]
+    raison = diagnostiquer_funbet(fb, pool)
+    assert "marge" in raison and "il manque" in raison

@@ -71,6 +71,37 @@ from .pricing import STAT_TO_MARKET, _which_side
 MAX_CONDITIONS = 3
 
 
+def _mots_significatifs(nom: str | None) -> set[str]:
+    """Mots d'un nom d'equipe utilisables pour la reconnaitre dans un texte.
+
+    On ecarte les mots trop courts et les prefixes de club, qui
+    apparaissent partout et ne designent personne.
+    """
+    if not nom:
+        return set()
+    bruit = {"fc", "ac", "sc", "asc", "cf", "club", "de", "la", "le", "les",
+             "du", "des", "united", "city", "real", "sporting", "athletic"}
+    return {m for m in nom.lower().replace("-", " ").split()
+            if len(m) > 3 and m not in bruit}
+
+
+def _condition_nomme_une_equipe(cond: Condition, funbet: FunBet) -> bool:
+    """Le libelle designe-t-il UNE equipe alors que le parseur n'en a attache aucune ?
+
+    Cas reel releve sur Paryaj Lakay : « Otelul reussit 8 tirs cadres ou + »
+    ressort avec team=None, donc comme un total de match. Couvrir cela par
+    « moins de 8 tirs dans le match » porterait sur un AUTRE evenement — une
+    fausse couverture, precisement ce qu'il faut eviter.
+
+    En cas de doute, on refuse.
+    """
+    texte = (cond.raw or "").lower()
+    for nom in (funbet.home_team, funbet.away_team):
+        if any(mot in texte for mot in _mots_significatifs(nom)):
+            return True
+    return False
+
+
 def _complement(cond: Condition, pool: list[Odd], exclu: str) -> Odd | None:
     """Cote inverse d'une condition, chez un bookmaker autre que `exclu`.
 
@@ -139,6 +170,11 @@ def find_funbet_arbitrage(
     offreur = "Paryaj Lakay"
     couvertures: list[Odd] = []
     for cond in funbet.conditions:
+        # Le parseur laisse parfois team=None sur une condition qui nomme
+        # pourtant une equipe : la couvrir par un total de match porterait
+        # sur un autre evenement.
+        if cond.team is None and _condition_nomme_une_equipe(cond, funbet):
+            return None
         c = _complement(cond, pool, exclu=offreur)
         if c is None:
             return None                  # une seule jambe manquante annule tout
@@ -199,4 +235,55 @@ def find_funbet_arbitrage(
     )
 
 
-__all__ = ["find_funbet_arbitrage", "MAX_CONDITIONS"]
+def diagnostiquer_funbet(funbet: FunBet, pool: list[Odd]) -> str:
+    """Explique en une phrase pourquoi un Funbet n'est pas couvrable.
+
+    Un refus silencieux n'apprend rien. Sur les deux Funbets reels captures
+    chez Paryaj Lakay — cotes 45 et 20 — aucun n'etait couvrable, et sans
+    ce diagnostic on ne saurait pas si c'est structurel ou conjoncturel.
+
+    La marge chiffree dit a quelle distance on se trouve : si elle tourne
+    toujours autour de 1.7, la couverture des Funbets n'arrivera jamais et
+    la fonctionnalite ne merite pas d'etre gardee. Si elle approche 1.05,
+    cela vaut la peine de continuer a regarder.
+    """
+    if not funbet.is_parsable:
+        return "libelle non analysable"
+    if not funbet.conditions:
+        return "aucune condition reconnue"
+    if not (funbet.boosted_odds and funbet.boosted_odds > 1):
+        return "cote absente ou invalide"
+    if len(funbet.conditions) > MAX_CONDITIONS:
+        return f"{len(funbet.conditions)} conditions : trop pour une couverture utile"
+
+    manquantes: list[str] = []
+    couvertures: list[Odd] = []
+    for cond in funbet.conditions:
+        if cond.kind == "win":
+            manquantes.append("une condition de victoire (son inverse demande 2 paris)")
+            continue
+        if cond.each_team:
+            manquantes.append("un « chaque equipe » (inverse non unitaire)")
+            continue
+        if cond.team is None and _condition_nomme_une_equipe(cond, funbet):
+            manquantes.append(f"« {cond.raw.strip()[:34]} » nomme une equipe "
+                              "mais est lue comme un total de match")
+            continue
+        c = _complement(cond, pool, exclu="Paryaj Lakay")
+        if c is None:
+            manquantes.append(f"pas de cote inverse pour « {cond.raw.strip()[:40]} »")
+        else:
+            couvertures.append(c)
+
+    if manquantes:
+        return "; ".join(manquantes[:2])
+
+    marge = 1.0 / funbet.boosted_odds + sum(1.0 / c.odds for c in couvertures)
+    if marge < 1.0:
+        return f"COUVRABLE : marge {marge:.3f}"
+    manque = marge - 1.0
+    return (f"marge {marge:.3f} (il manque {manque:.3f}) : "
+            f"les couvertures coutent trop cher pour une cote de {funbet.boosted_odds:g}")
+
+
+__all__ = ["find_funbet_arbitrage", "diagnostiquer_funbet", "MAX_CONDITIONS"]
