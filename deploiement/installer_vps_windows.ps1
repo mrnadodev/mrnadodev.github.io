@@ -169,16 +169,17 @@ Ok "scanner démarré"
 # run_collector_loop ne traite qu'un sport à la fois : le basketball a donc
 # sa propre tâche, avec sa propre session navigateur.
 #
-# Elle est enregistrée mais VOLONTAIREMENT DÉSACTIVÉE. Deux raisons :
-#   · pendant la semaine de mesure du football, deux sports en parallèle
-#     mélangeraient les résultats et le bilan ne voudrait plus rien dire ;
-#   · un second Chromium double la mémoire consommée — à vérifier sur cette
-#     machine avant de le laisser tourner en continu.
+# Elle démarre avec la machine, comme celle du football : un surebet de
+# basket pendant la semaine ne doit pas être manqué.
 #
-# Pour l'activer, une fois le bilan football rendu :
-#     Enable-ScheduledTask -TaskName NADOEDGE-Scanner-Basket
-#     Start-ScheduledTask  -TaskName NADOEDGE-Scanner-Basket
-Etape "Basketball (préparé, désactivé)"
+# Ma réserve initiale portait sur le mélange des mesures. Elle est levée :
+# le carnet accepte désormais --sport, donc chaque bilan reste propre.
+#     python outils\journal_scanner.py --rapport --sport football
+#     python outils\journal_scanner.py --rapport --sport basketball
+#
+# Reste un point à surveiller : un second Chromium double la mémoire
+# consommée. Le choix 3 du menu Scanner affiche processus et mémoire.
+Etape "Basketball"
 $tacheBasket = "NADOEDGE-Scanner-Basket"
 if (Get-ScheduledTask -TaskName $tacheBasket -ErrorAction SilentlyContinue) {
     Unregister-ScheduledTask -TaskName $tacheBasket -Confirm:$false
@@ -189,9 +190,9 @@ Register-ScheduledTask -TaskName $tacheBasket `
              -WorkingDirectory $Dossier) `
     -Trigger $declencheur -Settings $reglages `
     -User "SYSTEM" -RunLevel Highest `
-    -Description "NADOEDGE - surveillance basketball (desactivee par defaut)" | Out-Null
-Disable-ScheduledTask -TaskName $tacheBasket | Out-Null
-Ok "tâche « $tacheBasket » prête, désactivée jusqu'au bilan football"
+    -Description "NADOEDGE - surveillance continue des bookmakers (basketball)" | Out-Null
+Start-ScheduledTask -TaskName $tacheBasket
+Ok "tâche « $tacheBasket » enregistrée et démarrée"
 
 # ── 7. Pare-feu ───────────────────────────────────────────────────────
 # Le tableau de bord n'a AUCUNE authentification : publié sur internet, il

@@ -57,10 +57,22 @@ def _conn() -> sqlite3.Connection:
     return c
 
 
-def _distinctes(c: sqlite3.Connection, seulement_non_pointees: bool) -> list[sqlite3.Row]:
+def _distinctes(c: sqlite3.Connection, seulement_non_pointees: bool,
+                sport: str | None = None) -> list[sqlite3.Row]:
     """Une ligne par opportunite reelle : la base contient des repetitions
-    pour les detections anterieures a la deduplication."""
-    filtre = "where statut = 'detected'" if seulement_non_pointees else ""
+    pour les detections anterieures a la deduplication.
+
+    `sport` filtre le resultat. C'est indispensable des que deux sports
+    tournent en parallele : sans lui, le bilan football compterait les
+    detections de basket et ne mesurerait plus rien de precis.
+    """
+    conditions, params = [], []
+    if seulement_non_pointees:
+        conditions.append("statut = 'detected'")
+    if sport:
+        conditions.append("sport = ?")
+        params.append(sport)
+    filtre = ("where " + " and ".join(conditions)) if conditions else ""
     return list(c.execute(f"""
         select min(id) as id, min(date_detection) as vu, match, sport,
                bookmaker_a, event_a, cote_a,
@@ -71,12 +83,12 @@ def _distinctes(c: sqlite3.Connection, seulement_non_pointees: bool) -> list[sql
         {filtre}
         group by match, event_a, cote_a, event_b, cote_b, cote_c
         order by min(date_detection)
-    """))
+    """, params))
 
 
-def pointer() -> int:
+def pointer(sport: str | None = None) -> int:
     c = _conn()
-    lignes = _distinctes(c, True)
+    lignes = _distinctes(c, True, sport)
     if not lignes:
         print("Rien a pointer : toutes les detections ont deja un verdict.")
         return 0
@@ -114,7 +126,7 @@ def pointer() -> int:
     return 0
 
 
-def rapport(jours: int) -> int:
+def rapport(jours: int, sport: str | None = None) -> int:
     c = _conn()
     # date_detection est ecrit avec datetime.now(timezone.utc) puis stocke
     # SANS fuseau : c'est de l'UTC. Comparer avec datetime.now(), qui rend
@@ -122,7 +134,7 @@ def rapport(jours: int) -> int:
     # machine — 4 heures depuis Haiti, davantage depuis un VPS mal regle.
     maintenant_utc = datetime.now(timezone.utc).replace(tzinfo=None)
     depuis = (maintenant_utc - timedelta(days=jours)).isoformat(sep=" ")
-    lignes = [r for r in _distinctes(c, False) if (r["vu"] or "") >= depuis]
+    lignes = [r for r in _distinctes(c, False, sport) if (r["vu"] or "") >= depuis]
 
     if not lignes:
         print(f"Aucune detection sur les {jours} derniers jours.")
@@ -133,7 +145,10 @@ def rapport(jours: int) -> int:
     pointees = [r for r in lignes if r["statut"] != "detected"]
     n = len(lignes)
 
-    print(f"CARNET DU SCANNER - {jours} derniers jours\n")
+    entete = f"CARNET DU SCANNER - {jours} derniers jours"
+    entete += f" - {sport.upper()}" if sport else " - TOUS SPORTS"
+    print(entete)
+    print()
     print(f"  Detections distinctes : {n}")
     print(f"  Pointees              : {len(pointees)}")
     if len(pointees) < n:
@@ -183,8 +198,10 @@ def main() -> int:
     p = argparse.ArgumentParser(description="Carnet de bord du scanner")
     p.add_argument("--rapport", action="store_true", help="afficher le bilan")
     p.add_argument("--jours", type=int, default=7, help="fenetre du bilan (defaut 7)")
+    p.add_argument("--sport", choices=["football", "basketball"],
+                   help="ne garder qu un sport (indispensable si les deux tournent)")
     a = p.parse_args()
-    return rapport(a.jours) if a.rapport else pointer()
+    return rapport(a.jours, a.sport) if a.rapport else pointer(a.sport)
 
 
 if __name__ == "__main__":

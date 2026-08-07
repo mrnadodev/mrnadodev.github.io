@@ -144,19 +144,25 @@ les détections deux fois.
 
 ## Le basketball
 
-Une seconde tâche, `NADOEDGE-Scanner-Basket`, est créée mais **désactivée**.
+Une seconde tâche, `NADOEDGE-Scanner-Basket`, tourne en parallèle.
 `run_collector_loop` ne traite qu'un sport à la fois, il faut donc deux
-tâches distinctes.
+tâches distinctes, chacune avec sa session navigateur.
 
-Elle reste éteinte volontairement pour deux raisons : pendant la semaine de
-mesure du football, deux sports en parallèle mélangeraient les résultats et
-le bilan ne voudrait plus rien dire ; et un second Chromium double la
-mémoire consommée, ce qui doit être vérifié sur la machine avant de le
-laisser tourner en continu.
+**Les bilans se lisent par sport, jamais mélangés.** Deux sports dans le
+même chiffre ne mesurent plus rien de précis. Le raccourci **Carnet**
+propose le bilan football, le bilan basketball, ou les deux ensemble.
 
-Pour l'activer une fois le bilan football rendu : raccourci **Scanner**,
-choix `7`. Puis surveillez le choix `3` — il affiche le nombre de processus
-Chromium et leur mémoire.
+En ligne de commande :
+
+```powershell
+python outils\journal_scanner.py --rapport --sport football
+python outils\journal_scanner.py --rapport --sport basketball
+```
+
+**Le point à surveiller** : un second Chromium double la mémoire consommée.
+Le raccourci **Scanner**, choix `3`, affiche le nombre de processus Chromium
+et leur mémoire totale. Si ça dérape, le choix `8` arrête le basketball
+sans toucher au football.
 
 ---
 

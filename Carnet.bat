@@ -26,13 +26,23 @@ if errorlevel 1 (
 echo.
 echo   ================================================================
 echo     1 = pointer les detections du jour  (2 minutes)
-echo     2 = voir le bilan de la semaine
+echo.
+echo     2 = bilan FOOTBALL
+echo     3 = bilan BASKETBALL
+echo     4 = bilan des deux sports melanges
 echo   ================================================================
 echo.
-set /p CHOIX="   Votre choix (1 ou 2) : "
+echo   Les deux sports tournent en parallele : un bilan par sport, sinon
+echo   les chiffres se melangent et ne mesurent plus rien de precis.
+echo.
+set /p CHOIX="   Votre choix : "
 
 echo.
 if "%CHOIX%"=="2" (
+    python outils\journal_scanner.py --rapport --jours 7 --sport football
+) else if "%CHOIX%"=="3" (
+    python outils\journal_scanner.py --rapport --jours 7 --sport basketball
+) else if "%CHOIX%"=="4" (
     python outils\journal_scanner.py --rapport --jours 7
 ) else (
     python outils\journal_scanner.py

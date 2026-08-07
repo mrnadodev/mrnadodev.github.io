@@ -32,8 +32,8 @@ echo     4 = Scan manuel (Ctrl+C pour sortir)
 echo     5 = Controle de sante complet
 echo     6 = Sauvegarder la base maintenant
 echo.
-echo     7 = Activer le BASKETBALL (apres le bilan football)
-echo     8 = Desactiver le basketball
+echo     7 = Demarrer le BASKETBALL
+echo     8 = Arreter le basketball
 echo     0 = Quitter
 echo.
 set /p CHOIX="   Votre choix : "
@@ -75,7 +75,7 @@ powershell -NoProfile -Command ^
   "'Derniere execution : ' + $i.LastRunTime;" ^
   "'Dernier resultat   : ' + $i.LastTaskResult + '  (0 = normal)';" ^
   "$b = Get-ScheduledTask -TaskName '%TACHE%-Basket' -ErrorAction SilentlyContinue;" ^
-  "if ($b) { 'Basketball      : ' + $b.State + $(if ($b.State -eq 'Disabled') { '  (normal avant le bilan football)' } else { '' }) } else { 'Basketball      : tache absente' };" ^
+  "if ($b) { 'Basketball      : ' + $b.State } else { 'Basketball      : tache absente' };" ^
   "$c = Get-Process chrome*,chromium* -ErrorAction SilentlyContinue;" ^
   "if ($c) { 'Chromium        : ' + $c.Count + ' processus, ' + [math]::Round(($c | Measure-Object WorkingSet64 -Sum).Sum/1GB,1) + ' Go' } else { 'Chromium        : aucun processus' }"
 echo.
@@ -105,7 +105,7 @@ goto menu
 :basketon
 echo   Le basketball a sa propre tache : run_collector_loop ne traite
 echo   qu'un sport a la fois. Un second Chromium double la memoire
-echo   consommee — surveillez l'etat apres activation (choix 3).
+echo   consommee : surveillez l'etat ensuite (choix 3).
 echo.
 powershell -NoProfile -Command ^
   "Enable-ScheduledTask -TaskName '%TACHE%-Basket' | Out-Null; Start-ScheduledTask -TaskName '%TACHE%-Basket'; Start-Sleep 2; 'Basket : ' + (Get-ScheduledTask -TaskName '%TACHE%-Basket').State"
