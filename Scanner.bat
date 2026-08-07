@@ -34,6 +34,8 @@ echo     6 = Sauvegarder la base maintenant
 echo.
 echo     7 = Demarrer le BASKETBALL
 echo     8 = Arreter le basketball
+echo.
+echo     9 = Ouvrir le tableau de bord (liste visuelle des surebets)
 echo     0 = Quitter
 echo.
 set /p CHOIX="   Votre choix : "
@@ -47,6 +49,7 @@ if "%CHOIX%"=="5" goto sante
 if "%CHOIX%"=="6" goto sauver
 if "%CHOIX%"=="7" goto basketon
 if "%CHOIX%"=="8" goto basketoff
+if "%CHOIX%"=="9" goto tableau
 if "%CHOIX%"=="0" exit /b
 goto menu
 
@@ -98,6 +101,27 @@ goto menu
 
 :sauver
 python outils\sauvegarder_scanner.py
+echo.
+pause
+goto menu
+
+:tableau
+REM Le tableau de bord n'a AUCUNE authentification : il n'ecoute donc que
+REM sur 127.0.0.1 et son port est bloque au pare-feu. Il est accessible
+REM depuis CETTE machine uniquement — ce qui suffit en Bureau a distance.
+REM
+REM Il lit la meme base que le scanner : les detections y apparaissent
+REM sans qu'il soit necessaire de relancer quoi que ce soit.
+tasklist /FI "IMAGENAME eq python.exe" /FO CSV 2>nul | find /I "python.exe" >nul
+echo   Demarrage du tableau de bord sur http://127.0.0.1:8000
+echo   (laissez la fenetre ouverte ; fermez-la pour l'arreter)
+echo.
+start "NADOEDGE - tableau de bord" cmd /c "python -m uvicorn surebet.dashboard.app:app --host 127.0.0.1 --port 8000 --log-level warning"
+timeout /t 3 /nobreak >nul
+start "" "http://127.0.0.1:8000"
+echo   Si la page ne s'ouvre pas, tapez l'adresse a la main dans un
+echo   navigateur DU SERVEUR. Depuis votre PC, elle restera injoignable :
+echo   c'est voulu, la page listerait vos surebets sans mot de passe.
 echo.
 pause
 goto menu
