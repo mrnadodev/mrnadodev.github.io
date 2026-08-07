@@ -32,7 +32,7 @@ import argparse
 import sqlite3
 import sys
 from collections import Counter
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 BASE = Path(__file__).resolve().parent.parent / "surebet.db"
@@ -116,7 +116,12 @@ def pointer() -> int:
 
 def rapport(jours: int) -> int:
     c = _conn()
-    depuis = (datetime.now() - timedelta(days=jours)).isoformat(sep=" ")
+    # date_detection est ecrit avec datetime.now(timezone.utc) puis stocke
+    # SANS fuseau : c'est de l'UTC. Comparer avec datetime.now(), qui rend
+    # l'heure LOCALE, decalait donc la fenetre du decalage horaire de la
+    # machine — 4 heures depuis Haiti, davantage depuis un VPS mal regle.
+    maintenant_utc = datetime.now(timezone.utc).replace(tzinfo=None)
+    depuis = (maintenant_utc - timedelta(days=jours)).isoformat(sep=" ")
     lignes = [r for r in _distinctes(c, False) if (r["vu"] or "") >= depuis]
 
     if not lignes:
