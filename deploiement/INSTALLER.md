@@ -142,6 +142,24 @@ les détections deux fois.
 
 ---
 
+## Le basketball
+
+Une seconde tâche, `NADOEDGE-Scanner-Basket`, est créée mais **désactivée**.
+`run_collector_loop` ne traite qu'un sport à la fois, il faut donc deux
+tâches distinctes.
+
+Elle reste éteinte volontairement pour deux raisons : pendant la semaine de
+mesure du football, deux sports en parallèle mélangeraient les résultats et
+le bilan ne voudrait plus rien dire ; et un second Chromium double la
+mémoire consommée, ce qui doit être vérifié sur la machine avant de le
+laisser tourner en continu.
+
+Pour l'activer une fois le bilan football rendu : raccourci **Scanner**,
+choix `7`. Puis surveillez le choix `3` — il affiche le nombre de processus
+Chromium et leur mémoire.
+
+---
+
 ## Les sauvegardes
 
 **Sur le VPS**, une tâche copie la base chaque nuit à 4 h dans

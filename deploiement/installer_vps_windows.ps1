@@ -165,6 +165,34 @@ Ok "tâche « $Tache » enregistrée (démarrage machine, relance auto)"
 Start-ScheduledTask -TaskName $Tache
 Ok "scanner démarré"
 
+# ── 6 bis. Basketball ─────────────────────────────────────────────────
+# run_collector_loop ne traite qu'un sport à la fois : le basketball a donc
+# sa propre tâche, avec sa propre session navigateur.
+#
+# Elle est enregistrée mais VOLONTAIREMENT DÉSACTIVÉE. Deux raisons :
+#   · pendant la semaine de mesure du football, deux sports en parallèle
+#     mélangeraient les résultats et le bilan ne voudrait plus rien dire ;
+#   · un second Chromium double la mémoire consommée — à vérifier sur cette
+#     machine avant de le laisser tourner en continu.
+#
+# Pour l'activer, une fois le bilan football rendu :
+#     Enable-ScheduledTask -TaskName NADOEDGE-Scanner-Basket
+#     Start-ScheduledTask  -TaskName NADOEDGE-Scanner-Basket
+Etape "Basketball (préparé, désactivé)"
+$tacheBasket = "NADOEDGE-Scanner-Basket"
+if (Get-ScheduledTask -TaskName $tacheBasket -ErrorAction SilentlyContinue) {
+    Unregister-ScheduledTask -TaskName $tacheBasket -Confirm:$false
+}
+Register-ScheduledTask -TaskName $tacheBasket `
+    -Action (New-ScheduledTaskAction -Execute (Get-Command python).Source `
+             -Argument "-m surebet.main --collector --sport basketball" `
+             -WorkingDirectory $Dossier) `
+    -Trigger $declencheur -Settings $reglages `
+    -User "SYSTEM" -RunLevel Highest `
+    -Description "NADOEDGE - surveillance basketball (desactivee par defaut)" | Out-Null
+Disable-ScheduledTask -TaskName $tacheBasket | Out-Null
+Ok "tâche « $tacheBasket » prête, désactivée jusqu'au bilan football"
+
 # ── 7. Pare-feu ───────────────────────────────────────────────────────
 # Le tableau de bord n'a AUCUNE authentification : publié sur internet, il
 # donnerait vos surebets à qui trouve l'adresse IP. On bloque le port.

@@ -25,11 +25,15 @@ echo   ================================================================
 echo     NADOEDGE - scanner
 echo   ================================================================
 echo.
-echo     1 = Demarrer le scanner
-echo     2 = Arreter le scanner
+echo     1 = Demarrer le scanner (football)
+echo     2 = Arreter le scanner (football)
 echo     3 = Etat (tourne-t-il ?)
-echo     4 = Journal en direct (Ctrl+C pour sortir)
+echo     4 = Scan manuel (Ctrl+C pour sortir)
 echo     5 = Controle de sante complet
+echo     6 = Sauvegarder la base maintenant
+echo.
+echo     7 = Activer le BASKETBALL (apres le bilan football)
+echo     8 = Desactiver le basketball
 echo     0 = Quitter
 echo.
 set /p CHOIX="   Votre choix : "
@@ -40,6 +44,9 @@ if "%CHOIX%"=="2" goto arreter
 if "%CHOIX%"=="3" goto etat
 if "%CHOIX%"=="4" goto journal
 if "%CHOIX%"=="5" goto sante
+if "%CHOIX%"=="6" goto sauver
+if "%CHOIX%"=="7" goto basketon
+if "%CHOIX%"=="8" goto basketoff
 if "%CHOIX%"=="0" exit /b
 goto menu
 
@@ -64,9 +71,11 @@ powershell -NoProfile -Command ^
   "$t = Get-ScheduledTask -TaskName '%TACHE%' -ErrorAction SilentlyContinue;" ^
   "if (-not $t) { 'Tache absente : relancez installer_vps_windows.ps1'; exit }" ^
   "$i = $t | Get-ScheduledTaskInfo;" ^
-  "'Etat            : ' + $t.State;" ^
+  "'Football        : ' + $t.State;" ^
   "'Derniere execution : ' + $i.LastRunTime;" ^
   "'Dernier resultat   : ' + $i.LastTaskResult + '  (0 = normal)';" ^
+  "$b = Get-ScheduledTask -TaskName '%TACHE%-Basket' -ErrorAction SilentlyContinue;" ^
+  "if ($b) { 'Basketball      : ' + $b.State + $(if ($b.State -eq 'Disabled') { '  (normal avant le bilan football)' } else { '' }) } else { 'Basketball      : tache absente' };" ^
   "$c = Get-Process chrome*,chromium* -ErrorAction SilentlyContinue;" ^
   "if ($c) { 'Chromium        : ' + $c.Count + ' processus, ' + [math]::Round(($c | Measure-Object WorkingSet64 -Sum).Sum/1GB,1) + ' Go' } else { 'Chromium        : aucun processus' }"
 echo.
@@ -83,6 +92,30 @@ goto menu
 
 :sante
 python outils\controle_sante.py
+echo.
+pause
+goto menu
+
+:sauver
+python outils\sauvegarder_scanner.py
+echo.
+pause
+goto menu
+
+:basketon
+echo   Le basketball a sa propre tache : run_collector_loop ne traite
+echo   qu'un sport a la fois. Un second Chromium double la memoire
+echo   consommee — surveillez l'etat apres activation (choix 3).
+echo.
+powershell -NoProfile -Command ^
+  "Enable-ScheduledTask -TaskName '%TACHE%-Basket' | Out-Null; Start-ScheduledTask -TaskName '%TACHE%-Basket'; Start-Sleep 2; 'Basket : ' + (Get-ScheduledTask -TaskName '%TACHE%-Basket').State"
+echo.
+pause
+goto menu
+
+:basketoff
+powershell -NoProfile -Command ^
+  "Stop-ScheduledTask -TaskName '%TACHE%-Basket' -ErrorAction SilentlyContinue; Disable-ScheduledTask -TaskName '%TACHE%-Basket' | Out-Null; 'Basket : desactive'"
 echo.
 pause
 goto menu
