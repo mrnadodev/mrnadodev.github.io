@@ -32,6 +32,30 @@ RESULT_1X2_RE = re.compile(
     re.I,
 )
 
+# ── BASKETBALL ───────────────────────────────────────────────────────────
+# Le vainqueur au basket est un marche a DEUX issues : il n'y a pas de nul,
+# la prolongation departage. Traiter ce marche comme un 1X2 a trois issues
+# ferait chercher un triplet qui n'existe pas, et aucune detection ne
+# sortirait jamais sur le marche principal.
+WINNER_2WAY_RE = re.compile(
+    r"vainqueur|gagnant|winner|money\s*line|moneyline|\b12\b|kiles?\s*k[ap]\s*genyen",
+    re.I,
+)
+
+# LE PIEGE A EVITER. Certains bookmakers proposent AUSSI un marche « temps
+# reglementaire », ou le nul existe (3 issues) parce que la prolongation
+# n'est pas comptee. Apparier une cote « prolongations comprises » avec une
+# cote « temps reglementaire » donne un faux surebet PARFAIT : le calcul est
+# juste, mais si le match part en prolongation on perd les deux paris.
+#
+# Les deux variantes recoivent donc des market_type differents, ce qui les
+# empeche structurellement de se retrouver dans le meme groupe.
+REGULAR_TIME_RE = re.compile(
+    r"temps\s*r[ée]glementaire|regular\s*time|sans\s*prolongation|"
+    r"hors\s*prolongation|excluding\s*overtime|without\s*ot\b",
+    re.I,
+)
+
 # Variantes promotionnelles : EXCLUES de l'arbitrage.
 #
 # Releve en test live sur Paryaj Lakay, un meme match expose simultanement :
@@ -139,15 +163,48 @@ def normalize_market_label(
     selection_label: str,
     home_team: str,
     away_team: str,
+    sport: str = "football",
 ) -> MarketMatch | None:
     """Tente une normalisation deterministe. Retourne None si aucune regle ne matche
     (fallback IA obligatoire), ou un MarketMatch avec confidence < 0.9 si ambigu.
+
+    `sport` vaut « football » par defaut : le comportement existant est
+    inchange tant qu'on ne le precise pas.
     """
     label = f"{market_label} {selection_label}".strip()
 
     # --- Variantes promotionnelles : exclues de l'arbitrage (voir PROMO_VARIANT_RE) ---
     if PROMO_VARIANT_RE.search(label):
         return None
+
+    # --- Vainqueur au basket : DEUX issues, la prolongation departage ---
+    if sport == "basketball" and not HANDICAP_RE.search(market_label):
+        est_resultat = (WINNER_2WAY_RE.search(market_label)
+                        or RESULT_1X2_RE.search(market_label))
+        if est_resultat:
+            reglementaire = bool(REGULAR_TIME_RE.search(market_label))
+            selection = None
+            if SELECTION_HOME_RE.search(selection_label):
+                selection = "home"
+            elif SELECTION_AWAY_RE.search(selection_label):
+                selection = "away"
+            elif SELECTION_DRAW_RE.search(selection_label):
+                # Un nul n'existe qu'en temps reglementaire. Annonce ailleurs,
+                # c'est que le libelle a ete mal compris : on refuse plutot
+                # que de fabriquer une issue impossible.
+                if not reglementaire:
+                    return None
+                selection = "draw"
+            if selection is None:
+                return None
+            if reglementaire:
+                # Trois issues, et un market_type distinct : cette variante ne
+                # doit JAMAIS etre appariee avec celle qui inclut les
+                # prolongations, sous peine de faux surebet parfait.
+                return MarketMatch("bb_result_reg" + _period_suffix(market_label),
+                                   selection, 3, None, None, 0.96)
+            return MarketMatch("bb_moneyline" + _period_suffix(market_label),
+                               selection, 2, None, None, 0.97)
 
     # --- BTTS : verifier avant "goals" (le mot "marquent" ne contient pas "but") ---
     if BTTS_RE.search(market_label):

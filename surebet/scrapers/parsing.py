@@ -65,7 +65,7 @@ def raw_markets_to_odds(markets: list[RawMarket], meta: MatchMeta) -> list[Odd]:
             odds_value = parse_odds_value(sel.odds_text)
             if odds_value is None:
                 continue
-            match = normalize_market_label(market.title, sel.label, meta.home_team, meta.away_team)
+            match = normalize_market_label(market.title, sel.label, meta.home_team, meta.away_team, meta.sport)
             if match is None or match.confidence < 0.9:
                 continue
             try:

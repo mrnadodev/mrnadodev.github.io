@@ -68,9 +68,21 @@ class InMemoryNormalizationCache:
         self._store[key] = value
 
 
-def cache_key(market_label: str, selection_label: str, home_team: str, away_team: str) -> str:
+def cache_key(market_label: str, selection_label: str, home_team: str, away_team: str,
+              sport: str = "football") -> str:
+    """Cle de cache d'une normalisation.
+
+    Le sport en fait partie : « Resultat du match » vaut TROIS issues au
+    football et DEUX au basket. Sans lui, une entree mise en cache pour
+    l'un servirait a l'autre — et le cas n'est pas theorique, le Real
+    Madrid et Barcelone ont une equipe dans les deux disciplines.
+
+    Ce changement invalide les entrees existantes : elles seront
+    recalculees une fois, puis remises en cache.
+    """
     return "|".join(
-        s.strip().lower() for s in (market_label, selection_label, home_team, away_team)
+        s.strip().lower()
+        for s in (sport, market_label, selection_label, home_team, away_team)
     )
 
 
@@ -150,11 +162,11 @@ class AiNormalizer:
         away_team: str,
         sport: str = "football",
     ) -> MarketMatch | None:
-        rule_result = normalize_market_label(market_label, selection_label, home_team, away_team)
+        rule_result = normalize_market_label(market_label, selection_label, home_team, away_team, sport)
         if rule_result is not None and rule_result.confidence >= self.confidence_threshold:
             return rule_result
 
-        key = cache_key(market_label, selection_label, home_team, away_team)
+        key = cache_key(market_label, selection_label, home_team, away_team, sport)
         cached = self.cache.get(key)
         if cached is not None:
             return cached
