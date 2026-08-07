@@ -207,6 +207,48 @@ def verifier_tests() -> None:
         dire(ALERTE, "Tests du scanner", resume.strip()[:70])
 
 
+def verifier_tache_scanner() -> None:
+    """Le scanner tourne-t-il vraiment ?
+
+    C'est LA panne silencieuse du VPS : tout le reste peut etre vert
+    pendant que la tache planifiee est arretee, et personne ne le voit
+    avant de constater l'absence d'alertes pendant des jours.
+
+    Sur une machine sans la tache (un PC de developpement), on ne dit rien
+    d'alarmant : la tache n'y a simplement pas lieu d'exister.
+    """
+    if os.name != "nt":
+        return
+    tache = "NADOEDGE-Scanner"
+    try:
+        p = subprocess.run(
+            ["powershell", "-NoProfile", "-Command",
+             f"$t = Get-ScheduledTask -TaskName '{tache}' -ErrorAction SilentlyContinue; "
+             f"if (-not $t) {{ 'ABSENTE' }} else {{ "
+             f"$i = $t | Get-ScheduledTaskInfo; "
+             f"\"$($t.State)|$($i.LastTaskResult)|$($i.LastRunTime)\" }}"],
+            capture_output=True, text=True, timeout=60,
+        )
+    except Exception as e:
+        dire(INFO, "Tache du scanner", f"non verifiable ({str(e)[:40]})")
+        return
+
+    sortie = (p.stdout or "").strip()
+    if not sortie or sortie == "ABSENTE":
+        dire(INFO, "Tache du scanner",
+             "absente sur cette machine (normale sur un PC, anormale sur le VPS)")
+        return
+
+    etat, code, derniere = (sortie.split("|") + ["", "", ""])[:3]
+    if etat == "Running":
+        dire(OK, "Tache du scanner", f"en cours d'execution (depuis {derniere[:16]})")
+    elif etat == "Ready":
+        dire(ALERTE, "Tache du scanner",
+             f"ARRETEE - aucune detection en cours (dernier code {code})")
+    else:
+        dire(ALERTE, "Tache du scanner", f"etat inattendu : {etat}")
+
+
 def main() -> int:
     print(f"Controle de sante NADOEDGE - "
           f"{datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}\n")
@@ -217,6 +259,7 @@ def main() -> int:
     verifier_base(url, key)
     verifier_signaux(url)
     verifier_telegram()
+    verifier_tache_scanner()
     verifier_tests()
 
     print()
