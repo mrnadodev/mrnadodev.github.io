@@ -4,18 +4,28 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- Bascule vers le domaine. Le même fichier est publié sur GitHub Pages et
-     sur Cloudflare : la vérification porte donc sur le nom d'hôte. Laisser
-     deux adresses servir l'application, c'est en avoir une qui prend du
-     retard sans que personne s'en aperçoive — et des liens partagés qui
-     pointent vers la mauvaise. On redirige avant tout chargement, en
-     conservant chemin et paramètres. replace() plutôt que href : l'ancienne
-     adresse ne reste pas dans l'historique du navigateur. -->
+<!-- Une seule adresse vivante. Le même fichier est publié sur GitHub Pages et
+     sur Cloudflare, qui lui donne aussi une adresse technique en .workers.dev :
+     trois portes d'entrée pour une application. Ce n'est pas tenable. L'une
+     finit par prendre du retard sans qu'on le voie, les liens partagés
+     pointent vers la mauvaise, et surtout les adresses non déclarées dans les
+     « Redirect URLs » de Supabase donnent des connexions qui échouent à
+     moitié. On liste donc les hôtes légitimes plutôt que les indésirables :
+     une future adresse de prévisualisation sera couverte sans rien changer.
+
+     L'échappatoire « ?direct » existe pour un cas précis : si nadoedge.com
+     devient injoignable — panne, ou filtre réseau qui bloque un domaine
+     récent — elle permet d'atteindre l'application par l'adresse Cloudflare.
+     Elle tient le temps de l'onglet, pas au-delà. -->
 <script>
 (function(){
-  if(location.hostname==='mrnadodev.github.io'){
-    location.replace('https://nadoedge.com'+location.pathname+location.search+location.hash);
-  }
+  var h=location.hostname;
+  if(h==='nadoedge.com'||h==='www.nadoedge.com'||h==='localhost'||h==='127.0.0.1'||h==='') return;
+  try{
+    if(/[?&]direct\b/.test(location.search)) sessionStorage.setItem('ne_direct','1');
+    if(sessionStorage.getItem('ne_direct')==='1') return;
+  }catch(e){}
+  location.replace('https://nadoedge.com'+location.pathname+location.search+location.hash);
 })();
 </script>
 
