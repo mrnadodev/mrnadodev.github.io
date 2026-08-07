@@ -11,14 +11,17 @@ POURQUOI CE SCRIPT
 UTILISATION
     python outils/controle_sante.py
 
-    Sans configuration, il verifie ce qu'il peut (base publique, tests).
-    Avec les variables ci-dessous, il verifie tout :
+    Aucune configuration necessaire : l'URL et la cle publique sont lues
+    dans index.html, le token Telegram dans surebet/.env.
 
-      SUPABASE_URL              (sinon lu dans index.html)
-      SUPABASE_ANON_KEY         (sinon lu dans index.html)
-      SUPABASE_SERVICE_ROLE_KEY (facultatif : compte les signaux recents)
+    AUCUN SECRET N'EST REQUIS. Les verifications qui touchent a des donnees
+    protegees passent par des fonctions serveur qui ne renvoient que des
+    agregats. La cle service_role, qui contourne toute la RLS, n'a rien a
+    faire sur une machine exposee a internet — surtout pour connaitre une
+    date.
 
-    Le token Telegram est lu dans surebet/.env.
+      SUPABASE_URL       (facultatif : sinon lu dans index.html)
+      SUPABASE_ANON_KEY  (facultatif : sinon lu dans index.html)
 
 A PLANIFIER une fois par jour. Code de sortie 1 si quelque chose cloche,
 pour qu'un planificateur puisse alerter.
@@ -110,33 +113,46 @@ def verifier_base(url: str, key: str) -> None:
             dire(ALERTE, f"Fonction {nom}", str(e)[:60])
 
 
-def verifier_signaux(url: str) -> None:
-    """Depuis combien de temps rien n'a ete publie ? Demande la cle service_role."""
-    key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
-    if not key:
-        dire(INFO, "Derniere publication",
-             "definissez SUPABASE_SERVICE_ROLE_KEY pour verifier")
+def verifier_signaux(url: str, key: str) -> None:
+    """Depuis combien de temps rien n'a ete publie pour les abonnes ?
+
+    C'est l'alerte la plus utile : elle previent qu'un client qui paie ne
+    recoit rien. Elle passe par une fonction serveur qui ne renvoie que
+    deux nombres — pas par la cle service_role, qui contourne toute la RLS
+    et n'a rien a faire sur une machine exposee a internet.
+    """
+    if not url or not key:
         return
-    entetes = {"apikey": key, "Authorization": f"Bearer {key}"}
+    entetes = {"apikey": key, "Authorization": f"Bearer {key}",
+               "Content-Type": "application/json"}
     try:
-        r = httpx.get(f"{url}/rest/v1/signals",
-                      params={"select": "created_at", "order": "created_at.desc",
-                              "limit": 1},
-                      headers=entetes, timeout=15)
-        r.raise_for_status()
-        lignes = r.json()
-        if not lignes:
-            dire(ALERTE, "Aucun signal en base", "vos abonnes n'ont rien recu")
+        r = httpx.post(f"{url}/rest/v1/rpc/derniere_publication",
+                       headers=entetes, json={}, timeout=15)
+        if r.status_code == 404:
+            dire(INFO, "Derniere publication",
+                 "executez migration_derniere_publication.sql")
             return
-        dernier = datetime.fromisoformat(lignes[0]["created_at"].replace("Z", "+00:00"))
-        heures = (datetime.now(timezone.utc) - dernier).total_seconds() / 3600
+        r.raise_for_status()
+        d = r.json()
+        d = d[0] if isinstance(d, list) and d else d
+        if not d or d.get("publie_le") is None:
+            dire(ALERTE, "Aucun signal publie", "vos abonnes n'ont jamais rien recu")
+            return
+        heures = float(d.get("heures_depuis") or 0)
+        sept_j = d.get("signaux_7j") or 0
         if heures > 48:
             dire(ALERTE, "Derniere publication",
                  f"il y a {heures/24:.1f} jour(s) : un abonne qui paie ne recoit rien")
+        elif sept_j < 4:
+            # Sous 4 signaux par semaine, l'abonnement ne se renouvelle pas :
+            # c'est le seuil constate dans les metriques du tableau de bord.
+            dire(ALERTE, "Volume de publication",
+                 f"{sept_j} signal(aux) sur 7 jours : trop peu pour fideliser")
         else:
-            dire(OK, "Derniere publication", f"il y a {heures:.1f} h")
+            dire(OK, "Derniere publication",
+                 f"il y a {heures:.1f} h ({sept_j} sur 7 jours)")
     except Exception as e:
-        dire(ALERTE, "Lecture des signaux", str(e)[:70])
+        dire(ALERTE, "Lecture des publications", str(e)[:70])
 
 
 def verifier_telegram() -> None:
@@ -257,7 +273,7 @@ def main() -> int:
     key = os.environ.get("SUPABASE_ANON_KEY") or _depuis_index("SUPABASE_ANON_KEY")
 
     verifier_base(url, key)
-    verifier_signaux(url)
+    verifier_signaux(url, key)
     verifier_telegram()
     verifier_tache_scanner()
     verifier_tests()
