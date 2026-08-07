@@ -32,3 +32,10 @@ deploiement/sauvegardes/
 
 # Sauvegardes locales du scanner : jamais dans le depot
 sauvegardes/
+
+# Dossier fabrique au deploiement (les 3 fichiers publics du site)
+dist/
+
+# Documents de compte (factures, pages de securite exportees). Le depot est
+# public : ces fichiers ne doivent pas y entrer, meme par un « git add -A ».
+*.pdf
