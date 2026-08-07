@@ -1,0 +1,33 @@
+# ╔══════════════════════════════════════════════════════════════════════╗
+# ║  NADOEDGE · En-têtes HTTP (Cloudflare Pages)                          ║
+# ║                                                                       ║
+# ║  Remplace vercel.json. GitHub Pages ne permettait aucun en-tête       ║
+# ║  personnalisé : ni protection contre l'encadrement de la page de      ║
+# ║  connexion, ni maîtrise du cache après une mise en ligne.             ║
+# ╚══════════════════════════════════════════════════════════════════════╝
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
+  # frame-ancestors remplace X-Frame-Options, qu'il rend inutile :
+  # sans lui, votre écran de connexion peut être encadré dans une page
+  # tierce qui capte les frappes au clavier.
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https:; connect-src 'self' https://pemcdjrciskqhqfimrxo.supabase.co wss://pemcdjrciskqhqfimrxo.supabase.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
+
+# ── Le fichier de l'application ────────────────────────────────────────
+# must-revalidate : le navigateur redemande la page à chaque visite et ne
+# la retélécharge que si elle a changé. Sans cela, après une mise en
+# ligne, une partie des utilisateurs garde l'ancienne version — et sur
+# GitHub Pages ce délai n'était pas réglable.
+/
+  Cache-Control: public, max-age=0, must-revalidate
+
+/index.html
+  Cache-Control: public, max-age=0, must-revalidate
+
+# ── Le module de calcul ────────────────────────────────────────────────
+# Même règle : une version périmée de arbitrage.js afficherait de mauvaises
+# mises. C'est du code où une erreur coûte de l'argent à l'utilisateur.
+/arbitrage.js
+  Cache-Control: public, max-age=0, must-revalidate

@@ -1,0 +1,100 @@
+# ╔══════════════════════════════════════════════════════════════════════╗
+# ║  NADOEDGE · Scanner sur VPS                                           ║
+# ║                                                                       ║
+# ║  Version durcie de surebet/docker-compose.yml, qui n'était prévu que  ║
+# ║  pour une machine locale. Trois différences, toutes de sécurité :     ║
+# ║                                                                       ║
+# ║  1. Postgres n'est plus publié sur l'hôte. Dans le fichier d'origine, ║
+# ║     « ports: 5432:5432 » exposait la base à INTERNET avec le mot de   ║
+# ║     passe « surebet ». Les robots trouvent un 5432 ouvert en quelques ║
+# ║     heures. Ici, seuls les conteneurs s'y connectent.                 ║
+# ║                                                                       ║
+# ║  2. Le mot de passe vient de .env, plus du fichier.                   ║
+# ║                                                                       ║
+# ║  3. Le tableau de bord n'écoute que sur 127.0.0.1. Il n'a aucune      ║
+# ║     authentification : publié en clair, il donnerait vos surebets     ║
+# ║     gratuitement à qui trouve l'adresse IP. On y accède par un tunnel ║
+# ║     SSH (voir INSTALLER.md).                                          ║
+# ╚══════════════════════════════════════════════════════════════════════╝
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: surebet
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?definissez POSTGRES_PASSWORD dans .env}
+      POSTGRES_DB: surebet
+    # Pas de section « ports » : la base reste sur le reseau interne Docker.
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U surebet"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  app:
+    build:
+      context: ..
+      dockerfile: surebet/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://surebet:${POSTGRES_PASSWORD}@postgres:5432/surebet
+    # Mode collector : sessions navigateur persistantes, recommande en
+    # production par l'aide du programme.
+    command: ["python", "-m", "surebet.main", "--collector", "--sport", "football"]
+    restart: unless-stopped
+    # Chromium a besoin de memoire partagee ; 64 Mo par defaut ne suffisent pas
+    # et le navigateur plante au bout de quelques heures.
+    shm_size: "512mb"
+    logging:
+      driver: "json-file"
+      options: { max-size: "10m", max-file: "5" }
+
+  dashboard:
+    build:
+      context: ..
+      dockerfile: surebet/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://surebet:${POSTGRES_PASSWORD}@postgres:5432/surebet
+    command: ["python", "-m", "uvicorn", "surebet.dashboard.app:app", "--host", "0.0.0.0", "--port", "8000"]
+    # 127.0.0.1 devant le port : joignable depuis le VPS seulement.
+    ports:
+      - "127.0.0.1:8000:8000"
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options: { max-size: "10m", max-file: "5" }
+
+  # Sauvegarde quotidienne de la base du scanner, gardee 14 jours.
+  # Le VPS peut disparaitre ; l'historique des detections, non.
+  sauvegarde:
+    image: postgres:16-alpine
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./sauvegardes:/sauvegardes
+    entrypoint: >
+      sh -c 'while true; do
+        f=/sauvegardes/surebet-$$(date +%Y-%m-%d-%H%M).sql.gz;
+        pg_dump -h postgres -U surebet surebet | gzip > "$$f" && echo "sauvegarde $$f";
+        find /sauvegardes -name "surebet-*.sql.gz" -mtime +14 -delete;
+        sleep 86400;
+      done'
+    restart: unless-stopped
+
+volumes:
+  pgdata:

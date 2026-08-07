@@ -1,0 +1,139 @@
+# Démarrage rapide — usage quotidien
+
+## Installer le lanceur sur le Bureau (une seule fois)
+
+1. Ouvrir le dossier `surebet` de ce projet.
+2. Clic droit sur **`Surebet.bat`** → **Envoyer vers** → **Bureau (créer un raccourci)**.
+3. Renommer le raccourci « Surebet » si vous le souhaitez.
+
+Le premier lancement installe automatiquement les dépendances (2–3 minutes).
+Les suivants démarrent en quelques secondes.
+
+## Utilisation
+
+**Double-cliquer le raccourci.** Le programme :
+
+1. interroge les 4 bookmakers (≈ 60–90 s, Paryaj Lakay étant le plus lent) ;
+2. affiche un rapport dans la console ;
+3. ouvre le tableau de bord dans votre navigateur ;
+4. écrit un `surebet_opportunites.xlsx` si des opportunités existent.
+
+Exemple de rapport :
+
+```
+==================================================================
+  SCAN SUREBET — 24/07/2026 07:30 — football
+==================================================================
+  [OK]     Golcash          2858 cotes
+  [OK]     Paryaj Pam      11117 cotes
+  [OK]     1xBet             522 cotes
+  [OK]     Paryaj Lakay      612 cotes
+
+  Total collecte : 15109 cotes
+------------------------------------------------------------------
+  Aucune opportunite d'arbitrage pour le moment.
+==================================================================
+```
+
+Fermer la fenêtre pour tout arrêter.
+
+### Le tableau de bord
+
+Le dashboard affiche les **cotes de chaque issue** par bookmaker, façon
+« Arbitrage Scanner Pro ». Par défaut il interroge les 3 books à API rapide
+(1xBet, Golcash, Paryaj Pam) — réponse en quelques secondes. Cochez
+**« Inclure Paryaj Lakay »** pour l'ajouter : il passe par un navigateur, donc
+le scan devient plus lent (~1 min), mais c'est le book à cotation la plus
+indépendante, celui qui crée le plus d'occasions d'arbitrage. Le bouton
+« ↻ Scanner » relance à la demande ; le filtre « Profit minimum » masque les
+combinaisons sous le seuil.
+
+## À quoi s'attendre, honnêtement
+
+**La plupart des scans ne trouveront rien.** C'est normal et attendu :
+
+- une fenêtre d'arbitrage dure quelques **minutes** ;
+- un scan unique le matin a peu de chances de tomber dedans ;
+- sur le marché haïtien, les marges des books sont élevées (5–13 %).
+
+Un scan qui ne trouve rien **n'est pas une panne** — c'est le résultat correct.
+Ce que le scan garantit, c'est que si une opportunité existe à cet instant,
+elle est détectée, chiffrée et vérifiée.
+
+Pour réellement attraper les fenêtres, laissez tourner la surveillance continue :
+
+```bash
+python -m surebet.main --collector
+```
+
+## Surveillance continue (recommandé pour attraper les surebets)
+
+Un scan matinal ne prend qu'une **photo** ; les fenêtres d'arbitrage durent
+quelques minutes. Pour ne rien rater, laissez tourner la **surveillance
+continue** : elle collecte les 4 bookmakers en boucle et envoie chaque surebet
+détecté sur Telegram.
+
+### Option A — manuelle (une fenêtre qu'on laisse ouverte)
+
+Double-cliquer **« Surebet - Surveillance »** sur le Bureau (ou
+`surebet\Surveillance.bat`). Laisser la fenêtre ouverte. Elle **redémarre
+automatiquement** si le collector s'arrête. Fermer la fenêtre = arrêter.
+
+### Option B — automatique (démarre avec Windows) ⭐
+
+Pour que la surveillance tourne **toute seule à chaque ouverture de session**,
+sans y penser :
+
+1. Clic droit sur `surebet\installer_surveillance.ps1` → **Exécuter avec
+   PowerShell**.
+2. Répondre **O** pour démarrer tout de suite.
+
+La tâche est enregistrée dans le Planificateur Windows :
+- démarre au logon,
+- se relance automatiquement si elle échoue,
+- tourne en tâche de fond (les alertes partent sur `@NADOTOBET`).
+
+Pour **désinstaller** :
+```
+powershell -ExecutionPolicy Bypass -File surebet\installer_surveillance.ps1 -Remove
+```
+
+> Les alertes n'arrivent que si le bot **@Nadobetbot** est administrateur du
+> canal (permission « Publier des messages »). Vérifiez-le une fois.
+
+## Alertes Telegram (optionnel)
+
+Sans configuration, aucune alerte n'est envoyée (le scan affiche simplement le
+rapport). Pour recevoir les opportunités sur Telegram :
+
+1. Créer un bot via [@BotFather](https://t.me/BotFather) → il donne un token.
+2. Écrire à votre bot, puis récupérer votre `chat_id`.
+3. Copier `.env.example` en `.env` et renseigner :
+
+```
+TELEGRAM_BOT_TOKEN=votre_token
+TELEGRAM_CHAT_ID=votre_chat_id
+```
+
+Une alerte part dès qu'une opportunité atteint **ROI ≥ 2 %** et **score ≥ 70**.
+
+## Avant de miser de l'argent réel
+
+Le système est un outil d'aide à la décision, pas une garantie :
+
+- **Vérifiez toujours** que les deux paris portent sur le **même match** et le
+  **même marché** avant de miser. Cinq types de faux appariements ont déjà été
+  identifiés et bloqués (voir README), mais un bookmaker peut en introduire un
+  nouveau à tout moment.
+- Une cote peut changer entre la détection et votre mise.
+- L'arbitrage entraîne des **limitations de compte** chez les bookmakers.
+- Ce projet ne constitue pas un conseil financier.
+
+## En cas de problème
+
+| Symptôme | Cause probable |
+|---|---|
+| « Python est introuvable » | Installer Python 3.11+ en cochant « Add Python to PATH » |
+| Un book en `[ECHEC]` | Site momentanément indisponible ou structure modifiée — les autres continuent |
+| Scan très lent (> 3 min) | Paryaj Lakay charge ses pages une par une (Playwright) |
+| Aucune alerte Telegram | `.env` absent ou non renseigné |

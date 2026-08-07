@@ -1,0 +1,28 @@
+// ╔══════════════════════════════════════════════════════════════════════╗
+// ║  NADOEDGE · Configuration de deploiement Cloudflare                   ║
+// ║                                                                       ║
+// ║  Cloudflare a fusionne Pages dans Workers : un site statique se       ║
+// ║  deploie desormais par « npx wrangler deploy », qui lit ce fichier.   ║
+// ╚══════════════════════════════════════════════════════════════════════╝
+{
+  "name": "nadoedge",
+  "compatibility_date": "2026-08-07",
+
+  // Pas de cle "main" : aucun code serveur. Cloudflare sert uniquement les
+  // fichiers du dossier ci-dessous, depuis son reseau.
+  //
+  // « ./dist » et non « ./ » : le depot contient le scanner Python, les
+  // migrations SQL et la documentation de deploiement. Publier la racine
+  // rendrait securite_audit.sql telechargeable depuis nadoedge.com —
+  // c'est-a-dire la structure des tables, les politiques RLS et le nom des
+  // fonctions, servis a cote du produit qu'ils protegent.
+  //
+  // Le dossier est fabrique a chaque build par la commande configuree dans
+  // Cloudflare (« Build command ») :
+  //     mkdir -p dist && cp index.html arbitrage.js _headers dist/
+  // Il n'est pas versionne : ajouter un fichier public au site demande donc
+  // de l'ajouter AUSSI a cette commande, sans quoi il ne partira jamais.
+  "assets": {
+    "directory": "./dist"
+  }
+}

@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+*.db
+*.sqlite3
+.pytest_cache/
+*.xlsx
+surebet.db
+.browser-profiles/
+
+# Sauvegardes de .env : ne doivent jamais entrer dans le depot
+.env.backup*
+.env.bak
+.env.*.bak
