@@ -194,13 +194,74 @@ def rapport(jours: int, sport: str | None = None) -> int:
     return 0
 
 
+def repetitions(heures: int) -> int:
+    """Pourquoi la meme opportunite est-elle alertee plusieurs fois ?
+
+    La deduplication compare le match, le marche et TOUTES les cotes. Elle
+    laisse donc passer une opportunite dont une cote a bouge d'un centieme
+    — volontairement, puisque le profit n'est plus le meme.
+
+    Mais du point de vue de l'abonne, c'est le meme surebet qui revient. Ce
+    diagnostic distingue les deux cas :
+
+      · cotes IDENTIQUES qui reviennent  -> la deduplication ne marche pas
+        (code pas a jour, ou deux scanners en parallele) ;
+      · cotes qui DERIVENT               -> la deduplication fait son
+        travail, c'est le seuil de tolerance qui est trop strict.
+    """
+    c = _conn()
+    depuis = (datetime.now(timezone.utc).replace(tzinfo=None)
+              - timedelta(hours=heures)).isoformat(sep=" ")
+    lignes = list(c.execute("""
+        select match, sport, event_a, event_b,
+               bookmaker_a, bookmaker_b,
+               count(*)                       as alertes,
+               count(distinct cote_a || '/' || cote_b) as jeux_de_cotes,
+               min(date_detection) as premiere, max(date_detection) as derniere,
+               group_concat(distinct cote_a || '/' || cote_b) as cotes
+        from opportunities
+        where date_detection >= ?
+        group by match, event_a, event_b, bookmaker_a, bookmaker_b
+        having count(*) > 1
+        order by count(*) desc
+    """, (depuis,)))
+
+    print(f"REPETITIONS - {heures} dernieres heures\n")
+    if not lignes:
+        print("  Aucune opportunite alertee plus d'une fois. Rien a signaler.")
+        return 0
+
+    for r in lignes:
+        print(f"  {r['match']} ({r['sport']})")
+        print(f"    {r['bookmaker_a']} / {r['bookmaker_b']} - {r['event_a']} vs {r['event_b']}")
+        print(f"    {r['alertes']} alertes, {r['jeux_de_cotes']} jeu(x) de cotes distinct(s)")
+        print(f"    de {str(r['premiere'])[:16]} a {str(r['derniere'])[:16]}")
+        print(f"    cotes vues : {str(r['cotes'])[:90]}")
+        if r["jeux_de_cotes"] == 1:
+            print("    >>> COTES IDENTIQUES : la deduplication n'a pas fonctionne.")
+            print("        Verifiez que le VPS a bien fait « git pull origin dev »,")
+            print("        et qu'un second scanner ne tourne pas sur votre PC.")
+        else:
+            print("    >>> Les cotes ont bouge : chaque alerte est une occasion")
+            print("        differente, avec un profit different. Techniquement")
+            print("        correct, mais penible a recevoir.")
+        print()
+    return 0
+
+
 def main() -> int:
     p = argparse.ArgumentParser(description="Carnet de bord du scanner")
     p.add_argument("--rapport", action="store_true", help="afficher le bilan")
+    p.add_argument("--repetitions", action="store_true",
+                   help="pourquoi la meme opportunite revient plusieurs fois")
     p.add_argument("--jours", type=int, default=7, help="fenetre du bilan (defaut 7)")
+    p.add_argument("--heures", type=int, default=24,
+                   help="fenetre des repetitions (defaut 24 h)")
     p.add_argument("--sport", choices=["football", "basketball"],
                    help="ne garder qu un sport (indispensable si les deux tournent)")
     a = p.parse_args()
+    if a.repetitions:
+        return repetitions(a.heures)
     return rapport(a.jours, a.sport) if a.rapport else pointer(a.sport)
 
 
