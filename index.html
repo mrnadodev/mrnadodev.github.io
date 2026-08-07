@@ -1468,9 +1468,14 @@
      Même dégradé que le bouton « Se connecter » : le nom et l'action
      principale parlent d'une seule voix. La couleur pleine reste posée
      avant le dégradé, comme repli si background-clip n'est pas supporté. */
+  /* background-IMAGE et non background : le raccourci « background »
+     réinitialise background-clip à border-box. En thème clair, la règle
+     ci-dessous ne redéfinissait que la couleur et le dégradé — et remettait
+     donc le découpage à zéro, pendant que text-fill-color:transparent
+     restait actif. Résultat : un rectangle vert plein à la place de « EDGE ». */
   .brand h1 .edge, .auth-title .edge, .ld-brand-t .edge{
     color:var(--mint);
-    background:linear-gradient(140deg,#5cf0b6,var(--mint) 46%,#12b87a);
+    background-image:linear-gradient(140deg,#5cf0b6,var(--mint) 46%,#12b87a);
     -webkit-background-clip:text;background-clip:text;
     -webkit-text-fill-color:transparent}
   :root[data-theme="light"] .brand h1 .edge,
@@ -1479,7 +1484,9 @@
     /* même famille que le bouton, assombrie : sur fond blanc le vert clair
        tombait sous le seuil de contraste lisible. */
     color:#0b8258;
-    background:linear-gradient(140deg,#12a678,#0b8258 46%,#076445)}
+    background-image:linear-gradient(140deg,#12a678,#0b8258 46%,#076445);
+    -webkit-background-clip:text;background-clip:text;
+    -webkit-text-fill-color:transparent}
 
   /* ═══════════════════════════════════════════════════════════════════
      PAGE D'ACCUEIL (visiteur non connecté)
