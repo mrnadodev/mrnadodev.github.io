@@ -936,6 +936,11 @@
   /* ===== MOBILE ===== */
   @media(max-width:640px){
     body{padding:16px 12px 44px}
+    /* Les 32 px de .wrap servent au bureau, ou la page est large. Sur
+       telephone ils s'ajoutent aux 12 px du body : 88 px de marge sur un
+       ecran de 360, soit un quart de la largeur perdu, et l'en-tete qui
+       passe a la ligne faute de place. Le body suffit ici. */
+    .wrap{padding:0}
     .brand h1{font-size:24px}
     .brand p{font-size:12px}
     header{gap:14px}
@@ -1718,6 +1723,30 @@
     .ld-proof-row .ld-lockpill{grid-column:1/-1}
     /* les halos fixes coûtent cher à repeindre au défilement sur mobile */
     #landing::after{animation:none;opacity:.6}
+  }
+  /* — barre de navigation sur téléphone —
+     A 360 px, la somme des éléments (logo 34 + « NADOEDGE » 95 + trois
+     boutons + les écarts + 48 px de marge interne) dépasse la largeur de
+     l'écran. .ld-brand ayant flex:1 et min-width:0, c'est elle qui absorbe
+     tout le manque : elle tombait à 50 px et son texte débordait PAR-DESSUS
+     le bouton EN. On resserre donc l'ensemble, et overflow:hidden garantit
+     que la marque ne pourra plus jamais chevaucher les boutons, même sur un
+     écran plus étroit ou avec une police agrandie. */
+  @media(max-width:560px){
+    .ld-wrap{padding:0 14px}
+    .ld-nav-in{padding:12px 14px;gap:9px}
+    .ld-brand{overflow:hidden}
+    .ld-brand svg{width:30px;height:30px}
+    .ld-brand-t{font-size:16px}
+    .ld-nav-b{padding:7px 10px;font-size:12px}
+  }
+  @media(max-width:380px){
+    /* Seuil calé sur une mesure, pas sur un modèle de téléphone. La boîte de
+       la marque vaut « largeur - 24 (body) - 28 (barre) - 173 (boutons) - 27
+       (écarts) », et le logo plus le mot en réclament 124 : il faut donc au
+       moins 376 px. En dessous, on garde le seul logo — il est distinctif, et
+       « NADOEDGE » est répété en grand dans le hero juste dessous. */
+    .ld-brand-t{display:none}
   }
 </style>
 </head>
