@@ -5586,6 +5586,7 @@
     await loadChatMessages();
     chatChannel=sb.channel('NADOEDGE_chat')
       .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages'},payload=>{
+        lastRealtimeAt=Date.now();   // le temps réel répond : le sondage se met en veille
         const m=payload.new;
         // celui qui vient d'envoyer n'écrit plus
         if(typingUsers[m.user_id]){ delete typingUsers[m.user_id]; renderTyping(); }
@@ -5701,6 +5702,39 @@
     }catch(err){ console.error('chat:',err);
       $('#chatMessages').innerHTML='<div class="chat-empty">Chat indisponible.<br>Vérifiez que la table « messages » existe (voir le guide).</div>'; }
   }
+  /* ── Rattrapage après coupure ────────────────────────────────────────
+     Les messages n'arrivaient QUE par le temps réel, sans aucun repli. Or
+     sur téléphone, verrouiller l'écran ou passer à une autre application
+     coupe le websocket : les messages reçus pendant ce temps n'étaient
+     jamais rattrapés, et n'apparaissaient qu'au rechargement complet de la
+     page. L'infobulle ne les ratait pas — elle ne les recevait jamais.
+
+     On resynchronise donc au retour à l'écran et au retour du réseau, et on
+     sonde de loin en loin si le temps réel reste muet plus d'une minute
+     (réplication désactivée sur la table, websocket tombé sans erreur…).
+     Une requête toutes les 30 s au pire, jamais quand l'onglet est caché. */
+  let lastRealtimeAt=0, resyncEnCours=false;
+  async function resyncChat(){
+    if(!sb || !currentUser || document.hidden || resyncEnCours) return;
+    resyncEnCours=true;
+    try{
+      const connus={}; chatMsgs.forEach(m=>{ connus[m.id]=true; });
+      await loadChatMessages();
+      const manques=chatMsgs.filter(m=>!connus[m.id] && m.user_id!==currentUser.id);
+      if(manques.length){
+        if(!chatInView()){
+          chatUnread+=manques.length;
+          const d=manques[manques.length-1];   // on annonce le plus récent
+          showChatPop(displayNameFor(d.email,d.username,d.sender_role), d.text, d.room||'general');
+        }
+        updateChatFab();
+      }
+    } finally { resyncEnCours=false; }
+  }
+  document.addEventListener('visibilitychange',()=>{ if(!document.hidden) resyncChat(); });
+  window.addEventListener('online',resyncChat);
+  setInterval(()=>{ if(Date.now()-lastRealtimeAt>60000) resyncChat(); },30000);
+
   function msgById(id){ return chatMsgs.find(x=>x.id===id); }
   function renderChat(scroll){
     const box=$('#chatMessages'); if(!box)return;
