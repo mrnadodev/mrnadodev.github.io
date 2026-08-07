@@ -7829,6 +7829,34 @@
                   '<div style="padding:13px 2px;text-align:center;color:#f2c14e">3 DROITE</div>';
   document.body.appendChild(barre);
 
+  /* Nomme les elements fautifs. Un debordement se propage a tous les
+     ancetres : le coupable est le plus PROFOND a depasser, pas le premier.
+     On ignore donc tout element qui a un descendant fautif. */
+  function coupables(largeur){
+    var tous=[], i, e, r;
+    var liste=document.querySelectorAll('body *');
+    for(i=0;i<liste.length;i++){
+      e=liste[i];
+      if(e===boite||e===barre||boite.contains(e)||barre.contains(e)) continue;
+      /* Un element fixe en left:0/right:0 s'etire a la largeur du document
+         des qu'il y a debordement : il en est la consequence, jamais la
+         cause. L'inclure masquerait le vrai coupable. */
+      if(getComputedStyle(e).position==='fixed') continue;
+      r=e.getBoundingClientRect();
+      if(r.width>0 && r.right>largeur+1) tous.push({e:e,r:r});
+    }
+    var feuilles=tous.filter(function(o){
+      return !tous.some(function(p){ return p.e!==o.e && o.e.contains(p.e); });
+    });
+    feuilles.sort(function(a,b){ return b.r.right-a.r.right; });
+    return feuilles.slice(0,3).map(function(o){
+      var c=(o.e.className&&o.e.className.baseVal!==undefined?o.e.className.baseVal:o.e.className||'').toString();
+      return (o.e.id?'#'+o.e.id:'')+(c?'.'+c.trim().split(/\s+/).slice(0,2).join('.'):o.e.tagName.toLowerCase())+
+             ' → '+Math.round(o.r.right)+'px';
+    });
+  }
+
+  var dernier='';
   function mesurer(){
     var vv=window.visualViewport;
     var miseEnPage=document.documentElement.clientWidth;
@@ -7836,24 +7864,28 @@
     var pourcent=Math.round((vv&&vv.scale?vv.scale:miseEnPage/visible)*100);
     var manque=miseEnPage-visible;
     var deborde=document.documentElement.scrollWidth-miseEnPage;
+    var onglet=document.querySelector('.botnav button.on');
 
-    var verdict, couleur;
-    if(pourcent>105){ verdict='AGRANDI '+pourcent+'% — reglage du navigateur'; couleur='#ff5a67'; }
-    else if(deborde>2){ verdict='DEBORDEMENT '+deborde+'px — defaut de la page'; couleur='#f2c14e'; }
-    else { verdict='NORMAL — rien de coupe'; couleur='#2fe6a8'; }
+    var verdict, couleur, details='';
+    if(deborde>2){
+      verdict='DEBORDEMENT '+deborde+'px — defaut de la page'; couleur='#f2c14e';
+      details='<div style="margin-top:7px;color:#f2c14e">coupable :<br>'+
+              coupables(miseEnPage).join('<br>')+'</div>';
+    } else if(pourcent>105){
+      verdict='AGRANDI '+pourcent+'% — reglage du navigateur'; couleur='#ff5a67';
+    } else {
+      verdict='NORMAL — rien de coupe'; couleur='#2fe6a8';
+    }
 
-    boite.innerHTML=
+    var html=
       '<div style="color:'+couleur+';font-weight:700;margin-bottom:7px">'+verdict+'</div>'+
-      'mise en page ... <b>'+miseEnPage+' px</b><br>'+
+      'onglet .......... <b>'+(onglet?onglet.innerText.replace(/\s+/g,' ').trim():'?')+'</b><br>'+
+      'mise en page .... <b>'+miseEnPage+' px</b><br>'+
       'zone visible .... <b style="color:'+(manque>4?'#ff5a67':'#2fe6a8')+'">'+visible+' px</b><br>'+
-      'ecart ........... <b>'+manque+' px</b><br>'+
       'debordement ..... <b>'+deborde+' px</b><br>'+
-      'ecran appareil .. <b>'+screen.width+'x'+screen.height+'</b> &nbsp; densite <b>'+
-        (window.devicePixelRatio||1).toFixed(2)+'x</b><br>'+
-      'media 400/640/720 <b>'+
-        [400,640,720].map(function(s){
-          return window.matchMedia('(max-width:'+s+'px)').matches?'oui':'non';
-        }).join(' / ')+'</b>';
+      'ecran ........... <b>'+screen.width+'x'+screen.height+'</b> densite <b>'+
+        (window.devicePixelRatio||1).toFixed(2)+'x</b>'+details;
+    if(html!==dernier){ boite.innerHTML=html; dernier=html; }
   }
 
   mesurer();
@@ -7862,6 +7894,9 @@
     visualViewport.addEventListener('resize',mesurer);
     visualViewport.addEventListener('scroll',mesurer);
   }
+  /* Le changement d'onglet ne declenche aucun evenement de fenetre :
+     sans cette boucle, le panneau resterait fige sur la premiere vue. */
+  setInterval(mesurer,700);
 })();
 </script>
 </body>
