@@ -29,3 +29,6 @@ Thumbs.db
 # Deploiement VPS : secrets et sauvegardes ne doivent jamais entrer ici
 deploiement/.env
 deploiement/sauvegardes/
+
+# Sauvegardes locales du scanner : jamais dans le depot
+sauvegardes/

@@ -223,6 +223,33 @@ def verifier_tests() -> None:
         dire(ALERTE, "Tests du scanner", resume.strip()[:70])
 
 
+def verifier_sauvegardes() -> None:
+    """La sauvegarde tourne-t-elle encore ?
+
+    Une tache de sauvegarde qui s'arrete ne fait aucun bruit : tout semble
+    normal jusqu'au jour ou l'on cherche une copie qui n'existe pas. On
+    verifie donc la FRAICHEUR de la derniere, pas seulement sa presence.
+    """
+    dossier = RACINE / "sauvegardes"
+    copies = sorted(dossier.glob("surebet-*.db")) if dossier.exists() else []
+    if not copies:
+        if (RACINE / "surebet.db").exists():
+            dire(ALERTE, "Sauvegardes du scanner",
+                 "aucune copie : lancez outils/sauvegarder_scanner.py")
+        else:
+            dire(INFO, "Sauvegardes du scanner", "pas de scanner sur cette machine")
+        return
+
+    recente = max(copies, key=lambda f: f.stat().st_mtime)
+    heures = (datetime.now() - datetime.fromtimestamp(recente.stat().st_mtime)).total_seconds() / 3600
+    if heures > 48:
+        dire(ALERTE, "Sauvegardes du scanner",
+             f"la plus recente date de {heures/24:.1f} jour(s) : la tache ne tourne plus")
+    else:
+        dire(OK, "Sauvegardes du scanner",
+             f"{len(copies)} copie(s), derniere il y a {heures:.0f} h")
+
+
 def verifier_tache_scanner() -> None:
     """Le scanner tourne-t-il vraiment ?
 
@@ -276,6 +303,7 @@ def main() -> int:
     verifier_signaux(url, key)
     verifier_telegram()
     verifier_tache_scanner()
+    verifier_sauvegardes()
     verifier_tests()
 
     print()

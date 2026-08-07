@@ -182,27 +182,34 @@ Etape "Sauvegardes"
 $sauvegardes = Join-Path $Dossier "sauvegardes"
 New-Item -ItemType Directory -Force $sauvegardes | Out-Null
 
-$scriptSauv = Join-Path $Dossier "sauvegarder_base.ps1"
-@"
-# Copie datée de la base du scanner, 14 jours conservés.
-`$src  = "$Dossier\surebet.db"
-`$dest = "$sauvegardes\surebet-`$(Get-Date -Format 'yyyy-MM-dd-HHmm').db"
-if (Test-Path `$src) { Copy-Item `$src `$dest }
-Get-ChildItem "$sauvegardes\surebet-*.db" |
-  Where-Object { `$_.LastWriteTime -lt (Get-Date).AddDays(-14) } |
-  Remove-Item -Force
-"@ | Set-Content -Path $scriptSauv -Encoding UTF8
+# On n'utilise PAS Copy-Item : le scanner ecrit en continu, et copier un
+# fichier SQLite en cours d'ecriture peut capturer une base au milieu d'une
+# transaction — un fichier qui existe, pese le bon poids, et ne s'ouvre pas.
+# outils/sauvegarder_scanner.py demande a SQLite un instantane coherent
+# (VACUUM INTO) puis RELIT la copie pour verifier son integrite.
+$scriptSauv = Join-Path $Dossier "outils\sauvegarder_scanner.py"
+if (-not (Test-Path $scriptSauv)) {
+    Alerte "outils\sauvegarder_scanner.py introuvable : faites un git pull"
+}
 
 $tacheSauv = "NADOEDGE-Sauvegarde"
 if (Get-ScheduledTask -TaskName $tacheSauv -ErrorAction SilentlyContinue) {
     Unregister-ScheduledTask -TaskName $tacheSauv -Confirm:$false
 }
 Register-ScheduledTask -TaskName $tacheSauv `
-    -Action (New-ScheduledTaskAction -Execute "powershell.exe" `
-             -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$scriptSauv`"") `
+    -Action (New-ScheduledTaskAction -Execute (Get-Command python).Source `
+             -Argument "outils\sauvegarder_scanner.py" -WorkingDirectory $Dossier) `
     -Trigger (New-ScheduledTaskTrigger -Daily -At 4am) `
+    -Settings (New-ScheduledTaskSettingsSet -StartWhenAvailable) `
     -User "SYSTEM" -RunLevel Highest `
-    -Description "NADOEDGE - copie quotidienne de la base du scanner" | Out-Null
+    -Description "NADOEDGE - sauvegarde quotidienne coherente de la base du scanner" | Out-Null
+
+# Ancien script de copie, remplace : on le retire pour eviter la confusion.
+Remove-Item (Join-Path $Dossier "sauvegarder_base.ps1") -ErrorAction SilentlyContinue
+
+# Premiere sauvegarde tout de suite : une tache qui n'a jamais tourne ne
+# prouve rien, et la premiere echeance est demain 4 h.
+Start-ScheduledTask -TaskName $tacheSauv
 Ok "sauvegarde quotidienne à 4 h, 14 jours conservés"
 
 # ── Fin ───────────────────────────────────────────────────────────────
