@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NADOEDGE — Tableau de bord</title>
+
+<!-- Polices. preconnect ouvre la connexion pendant que le reste se charge :
+     sur un reseau lent, cela retire un aller-retour complet avant le texte. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <!-- Calcul d'arbitrage : un seul endroit, teste par outils/arbitrage.test.js.
@@ -99,7 +106,13 @@
   :root[data-theme="light"] .toast{color:#ffffff}
   :root[data-theme="light"] header{background:var(--bg)}
   :root[data-theme="light"] .offline-banner{color:#ffffff}
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+  /* Les polices sont chargées par une balise <link> dans <head>.
+     Elles étaient importées ici par @import, mais la règle CSS impose que
+     @import précède toute autre règle : placé après quinze déclarations,
+     il était purement et simplement ignoré. Inter et JetBrains Mono n'ont
+     donc jamais été chargées, et le site tournait sur les polices système.
+     Une balise <link> est en prime plus rapide : le navigateur la découvre
+     en analysant le head, sans attendre d'avoir lu la feuille de style. */
   *{box-sizing:border-box;margin:0;padding:0}
   /* fond identique a la maquette : halo vert en haut a droite, ambre en bas a gauche */
   body{font-family:var(--sans);
@@ -4008,7 +4021,7 @@
   // Le profit se déplace vers sa nouvelle valeur au lieu de sauter : on voit
   // le chiffre réagir à la cote qu'on vient de changer. Coupé si l'utilisateur
   // préfère moins d'animation.
-  let ldTweenId=null, ldFromP=0, ldFromR=0;
+  let ldTweenId=null, ldTweenFin=null, ldFromP=0, ldFromR=0;
   function ldTween(el, profit, roi){
     if(!el) return;
     const write=(p,r)=>{ el.textContent=(p>=0?'+':'')+Math.round(p).toLocaleString('fr-FR')+' HTG  ('
@@ -4019,6 +4032,16 @@
     // Montant et pourcentage glissent ensemble : les voir se désynchroniser
     // donnerait l'impression d'un bug plutôt que d'une animation.
     const p0=ldFromP, r0=ldFromR, t0=performance.now(), dur=380;
+    // Filet de sécurité : requestAnimationFrame ne se déclenche pas dans un
+    // onglet en arrière-plan. Sans ce minuteur, l'animation resterait figée
+    // à sa première image et afficherait « +0 HTG » sur un vrai surebet —
+    // l'utilisateur conclurait qu'il n'y a rien à gagner. Le chiffre juste
+    // prime toujours sur l'effet visuel.
+    if(ldTweenFin) clearTimeout(ldTweenFin);
+    ldTweenFin=setTimeout(()=>{
+      if(ldTweenId){ cancelAnimationFrame(ldTweenId); ldTweenId=null; }
+      write(profit, roi); ldFromP=profit; ldFromR=roi;
+    }, dur+120);
     (function step(now){
       const k=Math.min(1,(now-t0)/dur), e=1-Math.pow(1-k,3);   // décélération
       write(p0+(profit-p0)*e, r0+(roi-r0)*e);
