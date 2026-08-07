@@ -5,6 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NADOEDGE — Tableau de bord</title>
 
+<!-- Icone de l'onglet, embarquee plutot que servie en fichier : le build ne
+     copie que index.html, arbitrage.js et _headers, donc un fichier de plus
+     serait un oubli garanti au prochain deploiement. Sans cette ligne, le
+     navigateur reclame /favicon.ico et recolte un 404 a chaque visite. -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Crect width='120' height='120' rx='27' fill='%230c100e'/%3E%3Cpath d='M8.5 52.8A52 52 0 1 0 108.9 42.2' fill='none' stroke='%2322a141' stroke-width='9.5' stroke-linecap='round'/%3E%3Cpath d='M9.4 48.3A52 52 0 0 1 111.5 52.8' fill='none' stroke='%23eef2f0' stroke-width='6.5' stroke-linecap='round'/%3E%3Cg transform='translate(14,1)'%3E%3Cpath d='M12 85 24 33 38 33 57.7 68.9 66 33 80 33 68 85 54 85 34.3 49.1 26 85Z' fill='%23eef2f0'/%3E%3C/g%3E%3C/svg%3E">
+<meta name="theme-color" content="#0c100e">
+
 <!-- Polices. preconnect ouvre la connexion pendant que le reste se charge :
      sur un reseau lent, cela retire un aller-retour complet avant le texte. -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
