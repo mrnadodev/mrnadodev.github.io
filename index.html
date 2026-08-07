@@ -7794,5 +7794,75 @@
   apply();
 })();
 </script>
+
+<script>
+/* ╔══════════════════════════════════════════════════════════════════════╗
+   ║  DIAGNOSTIC D'AFFICHAGE — temporaire, à retirer une fois la cause    ║
+   ║  identifiée.                                                         ║
+   ║                                                                      ║
+   ║  Ne s'active QUE sur nadoedge.com/?diag : sans ce paramètre, rien    ║
+   ║  n'est lu, rien n'est écrit, aucun élément n'est créé.               ║
+   ║                                                                      ║
+   ║  Ce qu'il mesure : la fenêtre de mise en page (ce que voit le CSS)   ║
+   ║  et la zone réellement visible (ce que montre l'écran). Quand les    ║
+   ║  deux diffèrent, l'affichage est agrandi — et aucune modification    ║
+   ║  du CSS ne peut y changer quoi que ce soit.                          ║
+   ╚══════════════════════════════════════════════════════════════════════╝ */
+(function(){
+  if(!/[?&]diag\b/.test(location.search)) return;
+
+  var boite=document.createElement('div');
+  boite.style.cssText='position:fixed;left:0;top:0;right:0;z-index:2147483647;'+
+    'background:#06100c;color:#e8efeb;font:13px/1.5 ui-monospace,Menlo,monospace;'+
+    'padding:12px 14px;border-bottom:2px solid #2fe6a8;box-shadow:0 8px 24px rgba(0,0,0,.5)';
+  document.body.appendChild(boite);
+
+  /* Même construction que la barre du bas de l'application : left:0 et
+     right:0 en position:fixed occupent TOUTE la fenêtre de mise en page.
+     Si la troisième cellule n'apparaît pas, l'écran n'en montre qu'une part. */
+  var barre=document.createElement('div');
+  barre.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:2147483647;'+
+    'display:grid;grid-template-columns:repeat(3,1fr);'+
+    'font:700 12px/1 ui-monospace,Menlo,monospace;background:#06100c;border-top:2px solid #2fe6a8';
+  barre.innerHTML='<div style="padding:13px 2px;text-align:center;color:#2fe6a8">1 GAUCHE</div>'+
+                  '<div style="padding:13px 2px;text-align:center;color:#e8efeb">2 MILIEU</div>'+
+                  '<div style="padding:13px 2px;text-align:center;color:#f2c14e">3 DROITE</div>';
+  document.body.appendChild(barre);
+
+  function mesurer(){
+    var vv=window.visualViewport;
+    var miseEnPage=document.documentElement.clientWidth;
+    var visible=vv?Math.round(vv.width):miseEnPage;
+    var pourcent=Math.round((vv&&vv.scale?vv.scale:miseEnPage/visible)*100);
+    var manque=miseEnPage-visible;
+    var deborde=document.documentElement.scrollWidth-miseEnPage;
+
+    var verdict, couleur;
+    if(pourcent>105){ verdict='AGRANDI '+pourcent+'% — reglage du navigateur'; couleur='#ff5a67'; }
+    else if(deborde>2){ verdict='DEBORDEMENT '+deborde+'px — defaut de la page'; couleur='#f2c14e'; }
+    else { verdict='NORMAL — rien de coupe'; couleur='#2fe6a8'; }
+
+    boite.innerHTML=
+      '<div style="color:'+couleur+';font-weight:700;margin-bottom:7px">'+verdict+'</div>'+
+      'mise en page ... <b>'+miseEnPage+' px</b><br>'+
+      'zone visible .... <b style="color:'+(manque>4?'#ff5a67':'#2fe6a8')+'">'+visible+' px</b><br>'+
+      'ecart ........... <b>'+manque+' px</b><br>'+
+      'debordement ..... <b>'+deborde+' px</b><br>'+
+      'ecran appareil .. <b>'+screen.width+'x'+screen.height+'</b> &nbsp; densite <b>'+
+        (window.devicePixelRatio||1).toFixed(2)+'x</b><br>'+
+      'media 400/640/720 <b>'+
+        [400,640,720].map(function(s){
+          return window.matchMedia('(max-width:'+s+'px)').matches?'oui':'non';
+        }).join(' / ')+'</b>';
+  }
+
+  mesurer();
+  addEventListener('resize',mesurer);
+  if(window.visualViewport){
+    visualViewport.addEventListener('resize',mesurer);
+    visualViewport.addEventListener('scroll',mesurer);
+  }
+})();
+</script>
 </body>
 </html>
