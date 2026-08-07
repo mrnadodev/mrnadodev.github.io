@@ -1307,13 +1307,22 @@
   .sb-none .sn-t{font-size:14.5px;font-weight:700;color:var(--ink)}
   .sb-none .sn-d{font-size:12.5px;color:var(--ink-dim);margin-top:6px;max-width:44ch;
     margin-left:auto;margin-right:auto;line-height:1.55}
-  .edu{flex:1;display:flex;flex-direction:column;justify-content:center;min-height:0;
+  /* min-width:0 — la ligne qui empêche le carrousel d'élargir toute la page.
+     .edu-track est une rangée flex sans retour à la ligne : sa largeur
+     minimale intrinsèque vaut la SOMME des diapositives, chacune portant un
+     .edu-art de largeur fixe. Sur téléphone, ces 4 × 130 px remontaient la
+     chaîne jusqu'à .sb-panel, dont la min-width:auto d'élément de grille
+     interdisait de descendre en dessous. Résultat mesuré à 393 px : la page
+     faisait 542 px, soit 148 px hors écran — sur la seule vue Surebets.
+     overflow:hidden sur .edu-view ne suffisait pas : il découpe à l'affichage
+     mais ne réduit pas la contribution du contenu au calcul de largeur. */
+  .edu{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;min-height:0;
     margin-top:22px;padding-top:20px;border-top:1px solid var(--line)}
   /* carrousel affiché sous l'écran de déblocage (compte non abonné) */
   .edu-locked{margin-top:18px;padding:18px 16px 4px;border:1px solid var(--line);
     border-radius:var(--radius);background:var(--panel);border-top:1px solid var(--line)}
   /* la fenêtre qui découpe : sans elle les diapos s'affichent côte à côte et débordent */
-  .edu-view{overflow:hidden;width:100%}
+  .edu-view{overflow:hidden;width:100%;min-width:0}
   .edu-track{display:flex;transition:transform .45s cubic-bezier(.4,0,.2,1);width:100%}
   .edu-slide{position:relative;flex:0 0 100%;min-width:100%;max-width:100%;box-sizing:border-box;
     padding:18px 10px;display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -1436,7 +1445,9 @@
 
   /* ===== PANNEAU SUREBETS DANS LA PAGE ===== */
   /* colonne en hauteur pleine : le ticket s'etire pour occuper tout l'espace */
-  .sb-panel{position:relative;margin-bottom:6px;display:flex;flex-direction:column;height:100%;gap:16px}
+  /* min-width:0 : sans lui, cet element de grille refuse de descendre sous la
+     largeur minimale de son contenu — voir le commentaire de .edu. */
+  .sb-panel{position:relative;min-width:0;margin-bottom:6px;display:flex;flex-direction:column;height:100%;gap:16px}
   .sb-panel > .sb-select{margin-bottom:0}
   #sbTicket{flex:1;display:flex}
   #sbTicket > .ticket{flex:1;display:flex;flex-direction:column}
@@ -7842,6 +7853,9 @@
          des qu'il y a debordement : il en est la consequence, jamais la
          cause. L'inclure masquerait le vrai coupable. */
       if(getComputedStyle(e).position==='fixed') continue;
+      /* Les formes internes d'un SVG (rect, path...) sont decoupees par leur
+         <svg> mais leur boite de mesure reste large : bruit, jamais cause. */
+      if(e.ownerSVGElement) continue;
       r=e.getBoundingClientRect();
       if(r.width>0 && r.right>largeur+1) tous.push({e:e,r:r});
     }
