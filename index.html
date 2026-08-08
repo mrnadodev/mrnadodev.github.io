@@ -29,6 +29,19 @@
 })();
 </script>
 
+<!-- L'URL d'arrivée, mémorisée avant que quiconque y touche.
+     Le client Supabase lit l'URL dès sa création, y prend le jeton, émet son
+     événement — puis EFFACE le fragment. Tout code qui cherche « type=recovery »
+     plus tard dans la page ne trouve donc rien, et l'écran « nouveau mot de
+     passe » ne s'affiche jamais : l'utilisateur se retrouve simplement
+     connecté, sans comprendre pourquoi on ne lui demande rien.
+     Ces deux chaînes sont la seule trace fiable de la façon dont il est
+     arrivé. Elles ne contiennent rien de plus que l'URL déjà visible dans la
+     barre d'adresse, et ne sont jamais transmises. -->
+<script>
+window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || '' };
+</script>
+
 <title>NADOEDGE — Tableau de bord</title>
 
 <!-- Icone de l'onglet, embarquee plutot que servie en fichier : le build ne
@@ -7411,9 +7424,15 @@
     sb.auth.onAuthStateChange((event)=>{
       if(event==='PASSWORD_RECOVERY'){ recoveryHandled=true; enterRecoveryMode(); }
     });
-    // Repli : certains liens exposent type=recovery dans l'URL
-    const hash=window.location.hash||'';
-    const qs=window.location.search||'';
+    // On lit l'URL MEMORISEE AU CHARGEMENT, pas l'URL courante : le client
+    // Supabase a déjà consommé le fragment et l'a effacé bien avant cette
+    // ligne. C'était le défaut — l'événement PASSWORD_RECOVERY est émis avant
+    // que l'écouteur ci-dessus existe, et le repli ne trouvait plus rien à
+    // lire. L'utilisateur se retrouvait connecté, sans écran de nouveau mot
+    // de passe. On garde l'URL courante en second recours.
+    const arrivee = window.NE_URL_ARRIVEE || {};
+    const hash = arrivee.hash || window.location.hash || '';
+    const qs   = arrivee.search || window.location.search || '';
     if(hash.includes('type=recovery')||qs.includes('type=recovery')){
       recoveryHandled=true; enterRecoveryMode();
     }
