@@ -7061,7 +7061,17 @@ window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || 
     }catch(e){/* fonction absente : l'index unique reste le filet de sécurité */}
     const {data,error}=await sb.auth.signUp({
       email, password:pass,
-      options:{ data:{ username } }   // stocké dans user_metadata, survit à la confirmation
+      options:{
+        data:{ username },            // stocké dans user_metadata, survit à la confirmation
+        // Sans cette ligne, le lien de confirmation est construit à partir du
+        // « Site URL » du projet Supabase — un réglage distant, invisible
+        // depuis le code, et qui a déjà pointé vers l'ancienne adresse. Or
+        // c'est le tout premier message qu'un inscrit reçoit : un lien qui
+        // renvoie ailleurs que là où il vient de s'inscrire ressemble à un
+        // hameçonnage. On désigne donc explicitement la page d'où part la
+        // demande, comme le fait déjà la réinitialisation de mot de passe.
+        emailRedirectTo: window.location.origin + window.location.pathname
+      }
     });
     if(error)return authError('Inscription échouée : '+error.message);
     // Enregistre aussi le username dans le profil (si session déjà active)
