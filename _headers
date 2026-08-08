@@ -13,7 +13,15 @@
   # frame-ancestors remplace X-Frame-Options, qu'il rend inutile :
   # sans lui, votre écran de connexion peut être encadré dans une page
   # tierce qui capte les frappes au clavier.
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https:; connect-src 'self' https://pemcdjrciskqhqfimrxo.supabase.co wss://pemcdjrciskqhqfimrxo.supabase.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
+  #
+  # cloudflareinsights.com : Cloudflare injecte lui-même son script de
+  # statistiques dans les pages qu'il sert. Sans ces deux autorisations, la
+  # politique le bloque — le site fonctionne, mais vous n'avez aucune donnée
+  # de fréquentation. Il faut les DEUX : l'origine « static » pour charger le
+  # script, l'autre pour qu'il puisse envoyer sa mesure. Si vous préférez
+  # zéro script tiers sur un écran de connexion, désactivez plutôt Web
+  # Analytics dans Cloudflare et retirez ces deux entrées.
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https:; connect-src 'self' https://pemcdjrciskqhqfimrxo.supabase.co wss://pemcdjrciskqhqfimrxo.supabase.co https://cloudflareinsights.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
 
 # ── Le fichier de l'application ────────────────────────────────────────
 # must-revalidate : le navigateur redemande la page à chaque visite et ne
