@@ -1,5 +1,5 @@
 // ╔══════════════════════════════════════════════════════════════════════╗
-// ║  NADOBET · Edge Function « notify-telegram »                           ║
+// ║  NADOEDGE · Edge Function « notify-telegram »                          ║
 // ║  Envoie l'alerte Telegram quand un surebet est publié, SANS exposer    ║
 // ║  le token (il vit dans les secrets Supabase, jamais dans le client).   ║
 // ║                                                                        ║
@@ -7,6 +7,12 @@
 // ║   1. JWT utilisateur obligatoire (la clé anon seule est rejetée).      ║
 // ║   2. Seuls les rôles 'admin' / 'publisher' peuvent déclencher l'envoi. ║
 // ║   3. Message générique (aucun détail du surebet ne transite ici).      ║
+// ║                                                                        ║
+// ║  TELEGRAM_CHAT_ID doit contenir l'identifiant NUMERIQUE du canal       ║
+// ║  (-100…), jamais un « @nom ». Un nom d'utilisateur peut etre renomme   ║
+// ║  — c'est arrive — et l'alerte tombe alors en silence, avec un simple   ║
+// ║  « chat not found » que personne ne lit. L'identifiant numerique ne    ║
+// ║  change jamais et survit au passage du canal en prive.                 ║
 // ╚══════════════════════════════════════════════════════════════════════╝
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -66,7 +72,7 @@ Deno.serve(async (req: Request) => {
 
     // 4) Envoi de l'alerte générique (aucun détail du surebet)
     const text =
-      "🔔 Surebet détecté !\nVérifie vite ton dashboard NADOBET pour voir les détails. ⚽💰";
+      "🔔 Surebet détecté !\nVérifie vite ton dashboard NADOEDGE pour voir les détails. ⚽💰";
     const tgRes = await fetch(
       `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,
       {
