@@ -4480,6 +4480,7 @@ window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || 
     await loadBankroll();
     renderHistory();
     await claimDevice();              // limite d'appareils : avant de lire les signaux
+    startVeilleAppareil();            // et on surveille d'être encore le bon
     startPresence(user);
     startSignals(user);
     startChat(user);
@@ -5178,6 +5179,40 @@ window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || 
       }
     }catch(e){ /* sans effet : l'accès reste ouvert */ }
   }
+
+  /* ═══════════════ VEILLE D'APPAREIL ═══════════════
+     L'éviction se faisait uniquement en base : l'ancien appareil gardait son
+     écran ouvert et ne s'apercevait de rien, jusqu'à se heurter au mur en
+     tentant de lire un signal. Il fallait donc qu'il le demande lui-même.
+
+     Une requête par minute, et une au retour à l'écran — c'est là que le cas
+     se produit vraiment : on reprend son téléphone après s'être connecté
+     ailleurs. Rien ne part quand l'onglet est caché.
+
+     En cas d'erreur, on ne déconnecte JAMAIS. Une migration non exécutée ou
+     un réseau coupé ne doit pas mettre un abonné dehors : le mécanisme est
+     là pour empêcher le partage de compte, pas pour punir une panne. */
+  let veilleAppareilTimer=null;
+  async function verifierAppareil(){
+    if(!sb || !currentUser || document.hidden) return;
+    try{
+      const {data,error}=await sb.rpc('device_still_valid');
+      if(error || data!==false) return;
+      stopVeilleAppareil();
+      await doLogout();
+      authError('Votre compte vient d’être utilisé sur un autre appareil. Vous avez été déconnecté ici.');
+    }catch(e){ /* réseau : on laisse la session tranquille */ }
+  }
+  function startVeilleAppareil(){
+    stopVeilleAppareil();
+    veilleAppareilTimer=setInterval(verifierAppareil,60000);
+    document.addEventListener('visibilitychange',verifierAppareilSiVisible);
+  }
+  function stopVeilleAppareil(){
+    if(veilleAppareilTimer){ clearInterval(veilleAppareilTimer); veilleAppareilTimer=null; }
+    document.removeEventListener('visibilitychange',verifierAppareilSiVisible);
+  }
+  function verifierAppareilSiVisible(){ if(!document.hidden) verifierAppareil(); }
 
   /* ═══════════════ SANTÉ DU SERVICE ═══════════════
      Le seul chiffre qui prédit un renouvellement, c'est le nombre de
@@ -7182,6 +7217,7 @@ window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || 
     else{setAuthMode('login');authError('Compte créé. Vérifiez votre email pour confirmer, puis connectez-vous.');}
   }
   async function doLogout(){
+    stopVeilleAppareil();
     await stopPresence();
     await stopSignals();
     await stopChat();
