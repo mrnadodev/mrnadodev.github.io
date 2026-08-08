@@ -1982,21 +1982,22 @@ window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || 
   <section class="ld-sec">
     <div class="ld-wrap ld-rise">
       <div class="ld-eyebrow" data-i18n="ld.steps_eyebrow">Comment ça marche</div>
-      <h2 class="ld-h2" data-i18n="ld.steps_h2">Quatre étapes, rien de plus</h2>
+      <h2 class="ld-h2" data-i18n="ld.steps_h2">Trois étapes, rien de plus</h2>
       <p class="ld-p" data-i18n="ld.steps_p">Vous n'avez pas besoin de connaître le sport, ni de faire de pronostic. Le résultat du match ne change rien à votre gain.</p>
+      <!-- Trois étapes, et toutes commencent par « vous ». L'ancienne première
+           étape décrivait notre surveillance des cotes : un travail réel, mais
+           qui n'est pas une action du visiteur. La placer en tête faisait
+           compter quatre étapes là où l'utilisateur n'en accomplit que trois. -->
       <div class="ld-steps">
         <div class="ld-step"><div class="ld-step-n">01</div>
-          <div class="ld-step-t" data-i18n="ld.s1_t">On surveille les cotes</div>
-          <div class="ld-step-d" data-i18n="ld.s1_d">Les bookmakers haïtiens ne fixent pas les mêmes cotes au même moment. Ces désaccords ouvrent des fenêtres de quelques minutes.</div></div>
+          <div class="ld-step-t" data-i18n="ld.s1_t">Vous recevez le signal</div>
+          <div class="ld-step-d" data-i18n="ld.s1_d">Match, sport, heure du coup d'envoi, bookmakers, cotes et ROI. Avec l'âge du signal, pour savoir s'il est encore fiable.</div></div>
         <div class="ld-step"><div class="ld-step-n">02</div>
-          <div class="ld-step-t" data-i18n="ld.s2_t">Vous recevez le signal</div>
-          <div class="ld-step-d" data-i18n="ld.s2_d">Match, sport, heure du coup d'envoi, bookmakers, cotes et ROI. Avec l'âge du signal, pour savoir s'il est encore fiable.</div></div>
+          <div class="ld-step-t" data-i18n="ld.s2_t">Vous répartissez la mise</div>
+          <div class="ld-step-d" data-i18n="ld.s2_d">Un clic charge le signal dans le calculateur, qui vous donne le montant exact à placer chez chaque bookmaker.</div></div>
         <div class="ld-step"><div class="ld-step-n">03</div>
-          <div class="ld-step-t" data-i18n="ld.s3_t">Vous répartissez la mise</div>
-          <div class="ld-step-d" data-i18n="ld.s3_d">Un clic charge le signal dans le calculateur, qui vous donne le montant exact à placer chez chaque bookmaker.</div></div>
-        <div class="ld-step"><div class="ld-step-n">04</div>
-          <div class="ld-step-t" data-i18n="ld.s4_t">Vous encaissez</div>
-          <div class="ld-step-d" data-i18n="ld.s4_d">Une des deux mises gagne, l'autre perd, et le total dépasse votre mise de départ. Le résultat du match est indifférent.</div></div>
+          <div class="ld-step-t" data-i18n="ld.s3_t">Vous encaissez</div>
+          <div class="ld-step-d" data-i18n="ld.s3_d">Une des deux mises gagne, l'autre perd, et le total dépasse votre mise de départ. Le résultat du match est indifférent.</div></div>
       </div>
     </div>
   </section>
@@ -7652,16 +7653,14 @@ window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || 
       "ld.lose_t":"Pas d'arbitrage sur ces cotes",
       "ld.lose_d":"L'écart est trop faible : les deux bookmakers gardent leur marge. Augmentez une cote pour voir le seuil de bascule.",
       "ld.steps_eyebrow":"Comment ça marche",
-      "ld.steps_h2":"Quatre étapes, rien de plus",
+      "ld.steps_h2":"Trois étapes, rien de plus",
       "ld.steps_p":"Vous n'avez pas besoin de connaître le sport, ni de faire de pronostic. Le résultat du match ne change rien à votre gain.",
-      "ld.s1_t":"On surveille les cotes",
-      "ld.s1_d":"Les bookmakers haïtiens ne fixent pas les mêmes cotes au même moment. Ces désaccords ouvrent des fenêtres de quelques minutes.",
-      "ld.s2_t":"Vous recevez le signal",
-      "ld.s2_d":"Match, sport, heure du coup d'envoi, bookmakers, cotes et ROI. Avec l'âge du signal, pour savoir s'il est encore fiable.",
-      "ld.s3_t":"Vous répartissez la mise",
-      "ld.s3_d":"Un clic charge le signal dans le calculateur, qui vous donne le montant exact à placer chez chaque bookmaker.",
-      "ld.s4_t":"Vous encaissez",
-      "ld.s4_d":"Une des deux mises gagne, l'autre perd, et le total dépasse votre mise de départ. Le résultat du match est indifférent.",
+      "ld.s1_t":"Vous recevez le signal",
+      "ld.s1_d":"Match, sport, heure du coup d'envoi, bookmakers, cotes et ROI. Avec l'âge du signal, pour savoir s'il est encore fiable.",
+      "ld.s2_t":"Vous répartissez la mise",
+      "ld.s2_d":"Un clic charge le signal dans le calculateur, qui vous donne le montant exact à placer chez chaque bookmaker.",
+      "ld.s3_t":"Vous encaissez",
+      "ld.s3_d":"Une des deux mises gagne, l'autre perd, et le total dépasse votre mise de départ. Le résultat du match est indifférent.",
       "ld.books_eyebrow":"Couverture",
       "ld.books_h2":"Les bookmakers suivis",
       "ld.books_p":"Il vous faut un compte approvisionné chez au moins deux d'entre eux : un surebet se joue toujours des deux côtés à la fois.",
@@ -7855,16 +7854,14 @@ window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || 
       "ld.lose_t":"No arbitrage at these odds",
       "ld.lose_d":"The gap is too small: both bookmakers keep their margin. Raise one of the odds to see where it tips over.",
       "ld.steps_eyebrow":"How it works",
-      "ld.steps_h2":"Four steps, nothing more",
+      "ld.steps_h2":"Three steps, nothing more",
       "ld.steps_p":"You do not need to know the sport, or to predict anything. The match result does not change what you earn.",
-      "ld.s1_t":"We watch the odds",
-      "ld.s1_d":"Haitian bookmakers do not set the same odds at the same time. Those disagreements open windows of a few minutes.",
-      "ld.s2_t":"You get the signal",
-      "ld.s2_d":"Match, sport, kick-off time, bookmakers, odds and ROI. With the age of the signal, so you know whether it is still reliable.",
-      "ld.s3_t":"You split the stake",
-      "ld.s3_d":"One click loads the signal into the calculator, which gives you the exact amount to place at each bookmaker.",
-      "ld.s4_t":"You collect",
-      "ld.s4_d":"One of the two bets wins, the other loses, and the total beats what you put in. The match result is irrelevant.",
+      "ld.s1_t":"You get the signal",
+      "ld.s1_d":"Match, sport, kick-off time, bookmakers, odds and ROI. With the age of the signal, so you know whether it is still reliable.",
+      "ld.s2_t":"You split the stake",
+      "ld.s2_d":"One click loads the signal into the calculator, which gives you the exact amount to place at each bookmaker.",
+      "ld.s3_t":"You collect",
+      "ld.s3_d":"One of the two bets wins, the other loses, and the total beats what you put in. The match result is irrelevant.",
       "ld.books_eyebrow":"Coverage",
       "ld.books_h2":"Bookmakers we track",
       "ld.books_p":"You need a funded account at two of them at least: a surebet is always played on both sides at once.",
