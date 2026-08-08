@@ -111,7 +111,21 @@ window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || 
           qr: ""                         // (optionnel) URL ou data:image de votre QR NatCash
         }
       ]
-    }
+    },
+
+    /* ── ADRESSES DE CONTACT ──
+       Affichées dans le menu du compte. N'inscrivez ici QUE des alias
+       réellement créés chez votre hébergeur de courrier : une adresse qui
+       n'existe pas renvoie un rebond automatique, et l'utilisateur en
+       conclut que personne ne lit — le contraire du but recherché.
+       Retirez une ligne et elle disparaît de l'écran, sans autre changement. */
+    CONTACTS: [
+      { email: "support@nadoedge.com",     objet: "Aide",         desc: "Problème d'accès, question sur un signal" },
+      { email: "paiement@nadoedge.com",    objet: "Paiement",     desc: "Preuve MonCash ou NatCash, abonnement" },
+      { email: "securite@nadoedge.com",    objet: "Sécurité",     desc: "Signaler une faille ou un compte suspect" },
+      { email: "partenariat@nadoedge.com", objet: "Partenariat",  desc: "Publicité et sponsoring dans l'application" },
+      { email: "contact@nadoedge.com",     objet: "Autre",        desc: "Tout le reste" }
+    ]
   };
 </script>
 <style>
@@ -370,6 +384,25 @@ window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || 
   .tour-dontshow input{width:15px;height:15px;accent-color:var(--mint);cursor:pointer}
   .tour-btns{display:flex;gap:8px}
   .tour-btns .btn{padding:8px 16px;font-size:13px}
+
+  /* ===== NOUS ÉCRIRE ===== */
+  .ct-list{display:flex;flex-direction:column;gap:9px}
+  .ct-item{display:flex;align-items:center;gap:13px;text-decoration:none;
+    background:var(--panel-2);border:1px solid var(--line);border-radius:12px;
+    padding:12px 14px;transition:.15s}
+  .ct-item:hover{border-color:var(--mint-dim);transform:translateY(-1px)}
+  .ct-item:focus-visible{outline:2px solid var(--mint);outline-offset:2px}
+  .ct-ic{width:36px;height:36px;border-radius:10px;flex:none;display:grid;place-items:center;
+    background:rgba(47,230,168,.10);font-size:17px}
+  /* flex colonne : les trois lignes sont des <span> dans un <a>, elles ne
+     s'empileraient pas d'elles-mêmes. */
+  .ct-txt{min-width:0;display:flex;flex-direction:column}
+  .ct-obj{font-size:13.5px;font-weight:650;color:var(--ink)}
+  .ct-desc{font-size:11.5px;color:var(--ink-dim);margin-top:2px}
+  /* L'adresse est en chasse fixe et coupable : sur téléphone, un abonné qui
+     ne peut pas ouvrir son client de messagerie doit pouvoir la recopier. */
+  .ct-mail{font-family:var(--mono);font-size:11px;color:var(--ink-faint);margin-top:3px;
+    word-break:break-all}
 
   /* ===== ABONNEMENT / PAYWALL SUREBETS ===== */
   /* Puce d'état d'abonnement dans le header */
@@ -1147,7 +1180,11 @@ window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || 
     .botnav button{border:none;background:none;color:var(--ink-faint);font-family:var(--sans);
       font-size:10.5px;font-weight:650;display:flex;flex-direction:column;align-items:center;gap:3px;
       padding:7px 4px;border-radius:11px;cursor:pointer}
-    .botnav button .bi{font-size:19px;line-height:1}
+    .botnav button .bi{font-size:19px;line-height:1;display:grid;place-items:center;height:21px}
+    /* display:block sur le SVG : une image en ligne traîne un espace fantôme
+       sous elle, qui décalait le libellé « Communauté » de deux pixels par
+       rapport à ses deux voisins en emoji. */
+    .botnav button .bi svg{display:block}
     .botnav button.on{color:var(--mint);background:rgba(47,230,168,.12)}
     body{padding-bottom:76px}
     .chat-fab{bottom:88px}
@@ -2186,6 +2223,7 @@ window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || 
           <button class="um-item" id="tourBtn" data-i18n="hdr.guide">❔ Guide</button>
           <a class="um-item" href="https://t.me/NADOEDGE_surebets" target="_blank" rel="noopener" id="tgBtn">📲 Telegram</a>
           <a class="um-item" href="https://www.sofascore.com/" target="_blank" rel="noopener" id="statsBtn" data-i18n="hdr.stats">📊 Scores & stats ↗</a>
+          <button class="um-item" id="contactBtn" data-i18n="hdr.contact">✉️ Nous écrire</button>
           <div class="um-sep"></div>
           <button class="um-item danger" id="logoutBtn" data-i18n="hdr.logout">↩ Déconnexion</button>
         </div>
@@ -2526,7 +2564,12 @@ window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || 
 <div class="botnav" id="botNav">
   <button class="on" data-view="surebets"><span class="bi">🎯</span><span data-i18n="nav.m_surebets">Surebets</span></button>
   <button data-view="caisse"><span class="bi">💰</span><span data-i18n="nav.m_caisse">Caisse</span></button>
-  <button data-view="chat"><span class="bi">💬</span><span data-i18n="nav.m_chat">Communauté</span></button>
+  <!-- Groupe de trois personnes plutot qu'une bulle de dialogue : cet
+       onglet reunit le salon general et celui des abonnes — des gens, pas
+       une conversation. Le trace suit currentColor, donc l'etat actif
+       (menthe) s'applique sans regle supplementaire ; un emoji, dont la
+       couleur est figee, ne le permettait pas. -->
+  <button data-view="chat"><span class="bi"><svg viewBox="0 0 24 24" width="21" height="21" fill="currentColor" aria-hidden="true"><circle cx="12" cy="6.9" r="3.6"/><circle cx="4.7" cy="9" r="2.7"/><circle cx="19.3" cy="9" r="2.7"/><path d="M12 12.2c-3.3 0-6 2.7-6 6 0 .5.4.9.9.9h10.2c.5 0 .9-.4.9-.9 0-3.3-2.7-6-6-6z"/><path d="M6.6 12.6a7.6 7.6 0 0 0-2.4 5.6c0 .3 0 .6.1.9H1.4a.9.9 0 0 1-.9-.9 4.5 4.5 0 0 1 6.1-4.2z"/><path d="M17.4 12.6a7.6 7.6 0 0 1 2.4 5.6c0 .3 0 .6-.1.9h2.9c.5 0 .9-.4.9-.9a4.5 4.5 0 0 0-6.1-4.2z"/></svg></span><span data-i18n="nav.m_chat">Communauté</span></button>
 </div>
 
 <div class="toast" id="toast">Pari enregistré ✓</div>
@@ -2890,6 +2933,21 @@ window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || 
     <div class="ts-title" style="font-size:20px">Email confirmé ✓</div>
     <div class="ts-desc" style="margin:10px 0 20px">Votre adresse a bien été vérifiée. Vous pouvez maintenant vous connecter à votre compte NADOEDGE.</div>
     <button class="btn primary" id="confirmLoginBtn" style="width:100%;justify-content:center;padding:12px">Se connecter</button>
+  </div>
+</div>
+
+<!-- ===== NOUS ÉCRIRE =====
+     Une adresse par sujet, plutôt qu'un formulaire : l'utilisateur garde une
+     trace de son message dans sa propre messagerie. Sur un litige de paiement,
+     c'est lui qui en a le plus besoin — et cela vaut mieux qu'un abonné bloqué
+     qui écrit dans le chat public faute de savoir où s'adresser. -->
+<div id="contactModal" class="tour-modal" style="display:none">
+  <div class="tour-backdrop" id="contactBackdrop"></div>
+  <div class="tour-box" style="max-width:440px">
+    <button class="tour-skip" id="contactClose" aria-label="Fermer">Fermer ✕</button>
+    <div class="ts-title" style="font-size:19px;margin-bottom:4px" data-i18n="contact.title">Nous écrire</div>
+    <div class="ts-desc" style="margin-bottom:18px" data-i18n="contact.lead">Choisissez le sujet : votre message arrive directement à la bonne personne.</div>
+    <div id="contactList" class="ct-list"></div>
   </div>
 </div>
 
@@ -4489,6 +4547,38 @@ window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || 
   window.NADOEDGE_showTour=startTour;
   $('#tourBtn') && $('#tourBtn').addEventListener('click',startTour);
 
+  /* ═══════════════ NOUS ÉCRIRE ═══════════════
+     Les adresses viennent de CONTACTS, en tête de fichier : une ligne
+     retirée disparaît de l'écran, sans autre changement. Le sujet est
+     pré-rempli — sans lui, tout arrive avec « (sans objet) » et le tri
+     devient impossible dès la dixième demande. */
+  const CT_ICONES = { 'Aide':'🛟', 'Paiement':'💳', 'Sécurité':'🛡️',
+                      'Partenariat':'🤝', 'Autre':'✉️' };
+  function buildContactList(){
+    const box=$('#contactList'); if(!box) return;
+    const liste=(window.NADOEDGE_CONFIG && NADOEDGE_CONFIG.CONTACTS) || [];
+    if(!liste.length){
+      box.innerHTML='<div class="sig-empty">Aucune adresse configurée.</div>';
+      return;
+    }
+    box.innerHTML=liste.map(c=>{
+      const sujet=encodeURIComponent('NADOEDGE — '+(c.objet||'Message'));
+      const ic=CT_ICONES[c.objet]||'✉️';
+      return `<a class="ct-item" href="mailto:${escapeHTML(c.email)}?subject=${sujet}">
+        <span class="ct-ic">${ic}</span>
+        <span class="ct-txt">
+          <span class="ct-obj">${escapeHTML(c.objet||'')}</span>
+          <span class="ct-desc">${escapeHTML(c.desc||'')}</span>
+          <span class="ct-mail">${escapeHTML(c.email)}</span>
+        </span></a>`;
+    }).join('');
+  }
+  function openContact(){ buildContactList(); $('#contactModal').style.display='flex'; }
+  function closeContact(){ $('#contactModal').style.display='none'; }
+  $('#contactBtn')      && $('#contactBtn').addEventListener('click',openContact);
+  $('#contactClose')    && $('#contactClose').addEventListener('click',closeContact);
+  $('#contactBackdrop') && $('#contactBackdrop').addEventListener('click',closeContact);
+
   /* ===== CHOIX USERNAME (comptes existants) ===== */
   function promptUsernameSetup(){
     $('#setupUsername').value='';
@@ -4669,7 +4759,11 @@ window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || 
   // Source de l'image QR d'un canal (config.qr prioritaire, sinon génération en ligne)
   function chanQrSrc(ch){
     if(ch.qr) return ch.qr;
-    const info=[ch.name, ch.business, ch.number, SUB.PRICE].filter(Boolean).join(' | ');
+    // payPlanPrice() et non SUB.PRICE : le QR doit porter le montant du
+    // forfait CHOISI. Avec le prix hebdomadaire figé, un abonné qui prend le
+    // mois payait le tarif de la semaine — et se retrouvait débloqué pour
+    // sept jours après avoir cru en acheter trente.
+    const info=[ch.name, ch.business, ch.number, payPlanPrice()].filter(Boolean).join(' | ');
     return 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=6&data='+encodeURIComponent(info);
   }
   // Canaux saisis par l'admin (table payment_channels). Tant qu'aucun n'est
@@ -4695,7 +4789,7 @@ window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || 
         ${qrHtml}
         <div class="pc-line"><span class="pc-k">Numéro</span><span class="pc-v">${escapeHTML(ch.number||'—')} <button class="pay-copy" data-copy="${escapeHTML(ch.number||'')}">copier</button></span></div>
         <div class="pc-line"><span class="pc-k">Business</span><span class="pc-v">${escapeHTML(ch.business||'—')}</span></div>
-        <div class="pc-line"><span class="pc-k">Montant</span><span class="pc-v">${escapeHTML(SUB.PRICE||'—')}</span></div>
+        <div class="pc-line"><span class="pc-k">Montant</span><span class="pc-v">${escapeHTML(payPlanPrice()||'—')}</span></div>
       </div>`;
     }).join('') || '<div class="sig-empty">Aucun canal de paiement configuré.</div>';
     const sel=$('#payRefChannel');
@@ -4725,6 +4819,12 @@ window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || 
     payPlan = (p==='month' && SUB.PRICE_MONTH) ? 'month' : 'week';
     $$('#payPlans .pay-plan').forEach(b=>b.classList.toggle('on', b.dataset.plan===payPlan));
     const d=$('#payDurTxt'); if(d) d.textContent=payPlanDays()+' jours';
+    // Les canaux affichent le montant à payer : ils doivent être redessinés
+    // à chaque changement de forfait. Sans cette ligne, le bandeau du haut
+    // annonçait 30 jours pendant que le montant sous les QR restait celui de
+    // la semaine — la contradiction la plus coûteuse possible sur un écran
+    // de paiement, puisque c'est le second chiffre que l'abonné recopie.
+    if($('#payChans')) buildPayChannels();
   }
   $$('#payPlans .pay-plan').forEach(b=>b.addEventListener('click',()=>setPayPlan(b.dataset.plan)));
 
@@ -7579,6 +7679,9 @@ window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || 
       "hdr.threshold":"Seuil actif",
       "hdr.saved":"Paris enregistrés",
       "hdr.guide":"❔ Guide",
+      "hdr.contact":"✉️ Nous écrire",
+      "contact.title":"Nous écrire",
+      "contact.lead":"Choisissez le sujet : votre message arrive directement à la bonne personne.",
       "hdr.stats":"📊 Scores & stats ↗",
       "hdr.publish":"📢 Publier un surebet",
       "hdr.admin":"🛡️ Admin","hdr.logout":"↩ Déconnexion",
@@ -7779,6 +7882,9 @@ window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || 
       "hdr.threshold":"Active threshold",
       "hdr.saved":"Saved bets",
       "hdr.guide":"❔ Guide",
+      "hdr.contact":"✉️ Contact us",
+      "contact.title":"Contact us",
+      "contact.lead":"Pick the topic: your message goes straight to the right person.",
       "hdr.stats":"📊 Scores & stats ↗",
       "hdr.publish":"📢 Publish a surebet",
       "hdr.admin":"🛡️ Admin","hdr.logout":"↩ Sign out",
