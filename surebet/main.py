@@ -125,7 +125,8 @@ async def process_cycle(pool: list[Odd], scout: Scout, notifier: TelegramNotifie
             silencieuses += 1
             continue
 
-        if should_alert(opp, settings.min_roi_alert_pct, settings.min_score_alert):
+        if should_alert(opp, settings.min_roi_alert_pct, settings.min_score_alert,
+                        settings.alert_only_bookmaker):
             sent = await notifier.send(opp)
             logger.info("Alerte %s (ROI %.2f%%, score %d) : envoi=%s",
                         opp.match_label, opp.roi_pct, opp.score_ia, sent)

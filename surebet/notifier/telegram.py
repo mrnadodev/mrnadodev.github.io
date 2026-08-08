@@ -21,11 +21,37 @@ def _esc(value) -> str:
 logger = logging.getLogger("surebet.notifier.telegram")
 
 
-def should_alert(opp: Opportunity, min_roi: float = 2.0, min_score: int = 70) -> bool:
-    """Declenche l'alerte si ROI >= min_roi ET score_ia >= min_score (spec MISSION §8)."""
+def should_alert(
+    opp: Opportunity,
+    min_roi: float = 2.0,
+    min_score: int = 70,
+    only_bookmaker: str | None = None,
+) -> bool:
+    """Declenche l'alerte si ROI >= min_roi ET score_ia >= min_score (spec MISSION §8).
+
+    `only_bookmaker` restreint les alertes aux occasions dont au moins une jambe
+    vient de ce bookmaker. Ce n'est pas un confort : depuis aout 2026, l'API de
+    Paryaj Lakay refuse l'adresse du VPS (403), alors qu'elle repond depuis une
+    connexion haitienne. Deux machines se partagent donc le marche — le VPS
+    couvre les trois autres bookmakers, une machine en Haiti couvre Lakay.
+
+    Sans ce filtre, la seconde machine reenverrait toutes les occasions que le
+    VPS a deja signalees, et l'abonne recevrait chaque surebet en double. Avec
+    lui, le recouvrement est nul par construction : le VPS ne peut pas voir une
+    occasion qui contient Lakay, puisqu'il n'obtient aucune de ses cotes.
+
+    La comparaison ignore la casse et les espaces de bordure : la valeur vient
+    d'une variable d'environnement, saisie a la main.
+    """
     if opp.score_ia is None:
         return False
-    return opp.roi_pct >= min_roi and opp.score_ia >= min_score
+    if opp.roi_pct < min_roi or opp.score_ia < min_score:
+        return False
+    if only_bookmaker:
+        vise = only_bookmaker.strip().casefold()
+        if not any((leg.bookmaker or "").strip().casefold() == vise for leg in opp.legs):
+            return False
+    return True
 
 
 def format_alert(opp: Opportunity) -> str:

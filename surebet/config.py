@@ -39,6 +39,19 @@ class Settings(BaseSettings):
     # dans .env a la priorite sur cette valeur.
     min_roi_alert_pct: float = 3.0
     min_score_alert: int = 70
+
+    # N'alerter que sur les occasions dont une jambe vient de ce bookmaker.
+    # Vide = aucune restriction, comportement d'origine.
+    #
+    # Sert a repartir la couverture entre deux machines. Depuis aout 2026,
+    # l'API de Paryaj Lakay refuse l'adresse du VPS (403) alors qu'elle repond
+    # depuis une connexion haitienne : le VPS couvre les trois autres
+    # bookmakers, une machine en Haiti couvre Lakay avec
+    # ALERT_ONLY_BOOKMAKER="Paryaj Lakay". Le recouvrement est nul par
+    # construction — le VPS ne peut pas detecter une occasion contenant Lakay,
+    # puisqu'il n'obtient aucune de ses cotes.
+    alert_only_bookmaker: str | None = None
+
     default_bankroll: float = 50_000.0
 
     # Scraping (spec MISSION §3)
