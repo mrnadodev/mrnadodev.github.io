@@ -1246,7 +1246,21 @@ window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || 
   /* ===== CARTES OUTILS (presentation de la maquette) ===== */
   .card-h{display:flex;align-items:center;justify-content:space-between;gap:12px;
     padding:15px 18px;border-bottom:1px solid var(--line)}
-  .card-h h3{font-size:14px;font-weight:700;letter-spacing:-.01em;margin:0}
+  .card-h h3{font-size:14px;font-weight:700;letter-spacing:-.01em;margin:0;
+    display:flex;align-items:center;gap:9px}
+
+  /* ═══════════════ ICÔNES ═══════════════
+     Un seul jeu, plein, en fill:currentColor — l'icône prend donc la couleur
+     de son contexte : gris quand l'onglet dort, menthe quand il est actif,
+     rouge sur le bouton de déconnexion. Les emoji ne le permettaient pas :
+     leur couleur est figée par la police système, et chaque plateforme les
+     dessine à sa façon. Sur un produit payant, cela se voit.
+     flex:none : dans un conteneur flex, une icône ne doit jamais se
+     comprimer pour laisser de la place au texte. */
+  .ic{flex:none;display:block}
+  .card-h h3 .ic{color:var(--mint)}
+  .um-item .ic{color:var(--ink-dim)}
+  .um-item.danger .ic{color:var(--red)}
   .card-h .tagm{font-family:var(--mono);font-size:10px;color:var(--ink-faint);
     text-transform:uppercase;letter-spacing:.1em;white-space:nowrap}
   .card-b{padding:18px}
@@ -2217,15 +2231,15 @@ window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || 
       <div class="user-menu" id="userMenu">
         <button class="icon-chip" id="userChip" style="display:none" title="—" aria-label="Menu du compte"><span id="userInitial">?</span></button>
         <div class="um-drop" id="umDrop">
-          <button class="um-item" id="publishBtn" style="display:none" data-i18n="hdr.publish">📢 Publier un surebet</button>
-          <button class="um-item" id="adminBtn" style="display:none" data-i18n="hdr.admin">🛡️ Admin</button>
+          <button class="um-item" id="publishBtn" style="display:none"><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M19 4.1a1.1 1.1 0 0 0-1.8-.9L9.8 8.6H6.4A3.4 3.4 0 0 0 3 12v.6a3.4 3.4 0 0 0 3.4 3.4h.3l1.1 4a1.5 1.5 0 0 0 2.9-.8l-.9-3.2h.9l7.5 5.4a1.1 1.1 0 0 0 1.8-.9z"/></svg><span data-i18n="hdr.publish">Publier un surebet</span></button>
+          <button class="um-item" id="adminBtn" style="display:none"><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M12 2.2 4.6 5.4v6c0 4.5 3 8.7 7.4 10.4 4.4-1.7 7.4-5.9 7.4-10.4v-6z"/></svg><span data-i18n="hdr.admin">Admin</span></button>
           <div class="um-sep"></div>
-          <button class="um-item" id="tourBtn" data-i18n="hdr.guide">❔ Guide</button>
-          <a class="um-item" href="https://t.me/NADOEDGE_surebets" target="_blank" rel="noopener" id="tgBtn">📲 Telegram</a>
-          <a class="um-item" href="https://www.sofascore.com/" target="_blank" rel="noopener" id="statsBtn" data-i18n="hdr.stats">📊 Scores & stats ↗</a>
-          <button class="um-item" id="contactBtn" data-i18n="hdr.contact">✉️ Nous écrire</button>
+          <button class="um-item" id="tourBtn"><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M3 6a2 2 0 0 1 2-2h4.6c1 0 1.8.4 2.4 1v15.2a3.4 3.4 0 0 0-2.4-1H5a2 2 0 0 1-2-2z"/><path d="M21 6a2 2 0 0 0-2-2h-4.6c-1 0-1.8.4-2.4 1v15.2a3.4 3.4 0 0 1 2.4-1H19a2 2 0 0 0 2-2z"/></svg><span data-i18n="hdr.guide">Guide</span></button>
+          <a class="um-item" href="https://t.me/NADOEDGE_surebets" target="_blank" rel="noopener" id="tgBtn"><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M2.4 11.4 20.7 3.2c.6-.3 1.3.4 1 1l-8.2 18.3c-.3.7-1.3.6-1.5-.1l-1.9-6.2-6.2-1.9c-.7-.2-.8-1.2-.1-1.5z"/></svg><span>Telegram</span></a>
+          <a class="um-item" href="https://www.sofascore.com/" target="_blank" rel="noopener" id="statsBtn"><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><rect x="3" y="12.5" width="4.4" height="7.5" rx="1.3"/><rect x="9.8" y="7.5" width="4.4" height="12.5" rx="1.3"/><rect x="16.6" y="3.5" width="4.4" height="16.5" rx="1.3"/></svg><span data-i18n="hdr.stats">Scores & stats ↗</span></a>
+          <button class="um-item" id="contactBtn"><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M2.2 7.5A3 3 0 0 1 5.2 5h13.6a3 3 0 0 1 3 2.5L12 13.1z"/><path d="M21.8 9.9v6.1a3 3 0 0 1-3 3H5.2a3 3 0 0 1-3-3V9.9l9.3 5.3c.3.2.7.2 1 0z"/></svg><span data-i18n="hdr.contact">Nous écrire</span></button>
           <div class="um-sep"></div>
-          <button class="um-item danger" id="logoutBtn" data-i18n="hdr.logout">↩ Déconnexion</button>
+          <button class="um-item danger" id="logoutBtn"><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M10.2 3.4H6.6A2.6 2.6 0 0 0 4 6v12a2.6 2.6 0 0 0 2.6 2.6h3.6a1.1 1.1 0 0 0 0-2.2H6.6a.4.4 0 0 1-.4-.4V6c0-.2.2-.4.4-.4h3.6a1.1 1.1 0 0 0 0-2.2z"/><path d="m15.5 7.2 3.9 3.9c.5.5.5 1.3 0 1.8l-3.9 3.9a1.1 1.1 0 0 1-1.6-1.6l2-2h-5.7a1.1 1.1 0 0 1 0-2.2h5.7l-2-2a1.1 1.1 0 0 1 1.6-1.6z"/></svg><span data-i18n="hdr.logout">Déconnexion</span></button>
         </div>
       </div>
       <span id="userEmail" style="display:none"></span>
@@ -2234,9 +2248,9 @@ window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || 
 
   <!-- ===== NAVIGATION : 3 ESPACES ===== -->
   <nav class="app-nav" id="appNav">
-    <button class="nav-tab on" data-view="surebets" data-i18n="nav.surebets">🎯 Surebets</button>
-    <button class="nav-tab" data-view="caisse" data-i18n="nav.caisse">💰 Caisse</button>
-    <button class="nav-tab" data-view="chat" data-i18n="nav.chat">💬 Communauté</button>
+    <button class="nav-tab on" data-view="surebets"><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="9.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4.6" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="1.9"/></svg><span data-i18n="nav.surebets">Surebets</span></button>
+    <button class="nav-tab" data-view="caisse"><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M3 8.2A3.2 3.2 0 0 1 6.2 5h11.6A3.2 3.2 0 0 1 21 8.2V9H3z"/><path d="M3 10.8h18v5A3.2 3.2 0 0 1 17.8 19H6.2A3.2 3.2 0 0 1 3 15.8z"/></svg><span data-i18n="nav.caisse">Caisse</span></button>
+    <button class="nav-tab" data-view="chat"><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><circle cx="12" cy="6.9" r="3.6"/><circle cx="4.7" cy="9" r="2.7"/><circle cx="19.3" cy="9" r="2.7"/><path d="M12 12.2c-3.3 0-6 2.7-6 6 0 .5.4.9.9.9h10.2c.5 0 .9-.4.9-.9 0-3.3-2.7-6-6-6z"/><path d="M6.6 12.6a7.6 7.6 0 0 0-2.4 5.6c0 .3 0 .6.1.9H1.4a.9.9 0 0 1-.9-.9 4.5 4.5 0 0 1 6.1-4.2z"/><path d="M17.4 12.6a7.6 7.6 0 0 1 2.4 5.6c0 .3 0 .6-.1.9h2.9c.5 0 .9-.4.9-.9a4.5 4.5 0 0 0-6.1-4.2z"/></svg><span data-i18n="nav.chat">Communauté</span></button>
   </nav>
 
   <!-- ═══ ESPACE 1 · SUREBETS ═══ -->
@@ -2252,9 +2266,9 @@ window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || 
 
   <!-- Bandeau de confiance -->
   <div class="trust">
-    <div class="tchip"><div class="tc-ic">🎯</div><div><div class="tc-k" data-i18n="trust.active">Signaux actifs</div><div class="tc-v good" id="trustActive">0</div></div></div>
-    <div class="tchip"><div class="tc-ic gold">📈</div><div><div class="tc-k" data-i18n="trust.roi">Meilleur ROI actif</div><div class="tc-v gold" id="trustRoi">—</div></div></div>
-    <div class="tchip"><div class="tc-ic" id="trustAccessIc">🔓</div><div><div class="tc-k" data-i18n="trust.access">Votre accès</div><div class="tc-v good" id="trustAccess">—</div></div></div>
+    <div class="tchip"><div class="tc-ic"><svg class="ic" viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="9.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4.6" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="1.9"/></svg></div><div><div class="tc-k" data-i18n="trust.active">Signaux actifs</div><div class="tc-v good" id="trustActive">0</div></div></div>
+    <div class="tchip"><div class="tc-ic gold"><svg class="ic" viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true"><path d="M3.6 17.3a1.3 1.3 0 0 1 0-1.8l5.2-5.2c.5-.5 1.3-.5 1.8 0l2.6 2.6 4.2-4.2h-2.2a1.3 1.3 0 0 1 0-2.6h5.3c.7 0 1.3.6 1.3 1.3v5.3a1.3 1.3 0 0 1-2.6 0V10.4l-5.1 5.1c-.5.5-1.3.5-1.8 0l-2.6-2.6-4.3 4.4c-.5.5-1.3.5-1.8 0z"/></svg></div><div><div class="tc-k" data-i18n="trust.roi">Meilleur ROI actif</div><div class="tc-v gold" id="trustRoi">—</div></div></div>
+    <div class="tchip"><div class="tc-ic" id="trustAccessIc"><svg class="ic" viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M9.4 10.2h8A2.6 2.6 0 0 1 20 12.8v5.6A2.6 2.6 0 0 1 17.4 21H6.6A2.6 2.6 0 0 1 4 18.4v-5.6a2.6 2.6 0 0 1 2.6-2.6H7V8a5 5 0 0 1 9.7-1.7 1.2 1.2 0 0 1-2.3.8A2.6 2.6 0 0 0 9.4 8z"/></svg></div><div><div class="tc-k" data-i18n="trust.access">Votre accès</div><div class="tc-v good" id="trustAccess">—</div></div></div>
   </div>
 
   <!-- Surebets en direct, affichés dans la page -->
@@ -2264,7 +2278,7 @@ window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || 
     <div id="sbPanel" class="sb-panel"></div>
       <!-- CALCULATEUR DE MISES -->
       <div class="card">
-        <div class="card-h"><h3 data-i18n="calc.title">🧮 Calculateur de mises</h3><span class="tagm" id="calcModeTag" data-i18n="calc.mode_equal">Profit égal</span></div>
+        <div class="card-h"><h3><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M6.4 2h11.2A3.4 3.4 0 0 1 21 5.4v13.2A3.4 3.4 0 0 1 17.6 22H6.4A3.4 3.4 0 0 1 3 18.6V5.4A3.4 3.4 0 0 1 6.4 2zm.4 3.6v3.2h10.4V5.6zm1.3 6.2a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4zm4 0a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4zm4 0a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4zm-8 4.4a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4zm4 0a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4zm4 0a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4z"/></svg><span data-i18n="calc.title">Calculateur de mises</span></h3><span class="tagm" id="calcModeTag" data-i18n="calc.mode_equal">Profit égal</span></div>
         <div class="card-b">
           <details class="more top">
             <summary data-i18n="calc.more">Options avancées</summary>
@@ -2319,7 +2333,7 @@ window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || 
 
     <!-- DÉTECTEUR DE COTE -->
     <div class="card">
-      <div class="card-h"><h3 data-i18n="det.title">🧭 Détecteur de cote</h3><span class="tagm" data-i18n="det.sub">cote → cote adverse</span></div>
+      <div class="card-h"><h3><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm4.3 5.7-2.1 5.4a1.2 1.2 0 0 1-.7.7l-5.4 2.1a.6.6 0 0 1-.8-.8l2.1-5.4a1.2 1.2 0 0 1 .7-.7l5.4-2.1a.6.6 0 0 1 .8.8z"/></svg><span data-i18n="det.title">Détecteur de cote</span></h3><span class="tagm" data-i18n="det.sub">cote → cote adverse</span></div>
       <div class="card-b">
         <div class="row2">
           <label class="fld" style="margin:0"><span class="lab" data-i18n="det.myodd">Votre cote</span>
@@ -2339,7 +2353,7 @@ window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || 
 
     <!-- CONVERTISSEUR DE COTES -->
     <div class="card">
-      <div class="card-h"><h3 data-i18n="conv.title">🔁 Convertisseur de cotes</h3><span class="tagm" data-i18n="conv.tag">déc · frac · US</span></div>
+      <div class="card-h"><h3><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M4.4 8.6a1.2 1.2 0 0 1 0-1.7l3-3a1.2 1.2 0 0 1 1.7 1.7L8 6.7h9.6a1.2 1.2 0 0 1 0 2.4H8l1.1 1.1a1.2 1.2 0 1 1-1.7 1.7z"/><path d="M19.6 15.4a1.2 1.2 0 0 1 0 1.7l-3 3a1.2 1.2 0 0 1-1.7-1.7l1.1-1.1H6.4a1.2 1.2 0 0 1 0-2.4H16l-1.1-1.1a1.2 1.2 0 0 1 1.7-1.7z"/></svg><span data-i18n="conv.title">Convertisseur de cotes</span></h3><span class="tagm" data-i18n="conv.tag">déc · frac · US</span></div>
       <div class="card-b">
         <div class="row3">
           <label class="fld" style="margin:0"><span class="lab" data-i18n="conv.dec">Décimale</span>
@@ -2397,7 +2411,7 @@ window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || 
   <div class="g-2">
     <!-- MOUVEMENTS DE CAISSE -->
     <div class="card fill" id="movesCard">
-      <div class="card-h"><h3 data-i18n="bk.moves_title">💰 Mouvements</h3>
+      <div class="card-h"><h3><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M3 8.2A3.2 3.2 0 0 1 6.2 5h11.6A3.2 3.2 0 0 1 21 8.2V9H3z"/><path d="M3 10.8h18v5A3.2 3.2 0 0 1 17.8 19H6.2A3.2 3.2 0 0 1 3 15.8z"/></svg><span data-i18n="bk.moves_title">Mouvements</span></h3>
         <div class="hbtns">
           <button class="btn ghost" id="bkDepositBtn" data-i18n="bk.deposit">＋ Dépôt</button>
           <button class="btn ghost" id="bkWithdrawBtn" data-i18n="bk.withdraw">－ Retrait</button>
@@ -2409,7 +2423,7 @@ window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || 
 
     <!-- MES PARIS -->
     <div class="card fill hist-card" id="histCard">
-      <div class="card-h"><h3 data-i18n="hist.title2">🧾 Mes paris</h3>
+      <div class="card-h"><h3><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5 2.6c0-.5.5-.8.9-.6l1.8.9 1.8-.9c.3-.2.6-.2.9 0l1.8.9 1.8-.9c.3-.2.6-.2.9 0l1.8.9 1.8-.9c.4-.2.9.1.9.6v18.8c0 .5-.5.8-.9.6l-1.8-.9-1.8.9c-.3.2-.6.2-.9 0l-1.8-.9-1.8.9c-.3.2-.6.2-.9 0l-1.8-.9-1.8.9c-.4.2-.9-.1-.9-.6zM8 7.8h8v2H8zm0 4.2h8v2H8zm0 4.2h5v2H8z"/></svg><span data-i18n="hist.title2">Mes paris</span></h3>
         <div class="hbtns">
           <button class="btn ghost" id="exportBtn2" data-i18n="hist.excel">⤓ Excel</button>
           <button class="eye-btn on" id="histEye" style="display:none" aria-label="Afficher ou masquer l'historique">
@@ -2550,7 +2564,7 @@ window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || 
 
   <!-- CLASSEMENT (profit sur 7 jours) -->
   <div class="card">
-    <div class="card-h"><h3 data-i18n="lb.title">🏆 Classement</h3><span class="tagm" data-i18n="lb.tag">profit · 7 j</span></div>
+    <div class="card-h"><h3><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M6 3h12v2.2h2.6a1.2 1.2 0 0 1 1.2 1.2c0 2.9-1.9 5.3-4.5 6.1a6.2 6.2 0 0 1-3.1 2.4v2.5h2.4a1.2 1.2 0 0 1 0 2.4H7.4a1.2 1.2 0 0 1 0-2.4h2.4v-2.5a6.2 6.2 0 0 1-3.1-2.4C4.1 11.7 2.2 9.3 2.2 6.4A1.2 1.2 0 0 1 3.4 5.2H6zm0 4.6H4.9c.3 1.3 1.1 2.4 2.2 3-.7-.9-1.1-1.9-1.1-3zm12 0c0 1.1-.4 2.1-1.1 3 1.1-.6 1.9-1.7 2.2-3z"/></svg><span data-i18n="lb.title">Classement</span></h3><span class="tagm" data-i18n="lb.tag">profit · 7 j</span></div>
     <div id="lbList" class="lb-list"></div>
   </div>
   </div>
@@ -2562,8 +2576,8 @@ window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || 
 
 <!-- ===== NAVIGATION MOBILE (barre du bas) ===== -->
 <div class="botnav" id="botNav">
-  <button class="on" data-view="surebets"><span class="bi">🎯</span><span data-i18n="nav.m_surebets">Surebets</span></button>
-  <button data-view="caisse"><span class="bi">💰</span><span data-i18n="nav.m_caisse">Caisse</span></button>
+  <button class="on" data-view="surebets"><span class="bi"><svg class="ic" viewBox="0 0 24 24" width="21" height="21" fill="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="9.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4.6" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="1.9"/></svg></span><span data-i18n="nav.m_surebets">Surebets</span></button>
+  <button data-view="caisse"><span class="bi"><svg class="ic" viewBox="0 0 24 24" width="21" height="21" fill="currentColor" aria-hidden="true"><path d="M3 8.2A3.2 3.2 0 0 1 6.2 5h11.6A3.2 3.2 0 0 1 21 8.2V9H3z"/><path d="M3 10.8h18v5A3.2 3.2 0 0 1 17.8 19H6.2A3.2 3.2 0 0 1 3 15.8z"/></svg></span><span data-i18n="nav.m_caisse">Caisse</span></button>
   <!-- Groupe de trois personnes plutot qu'une bulle de dialogue : cet
        onglet reunit le salon general et celui des abonnes — des gens, pas
        une conversation. Le trace suit currentColor, donc l'etat actif
@@ -7687,7 +7701,7 @@ window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || 
       "auth.foot":"Connexion chiffrée · chaque compte est privé",
       "brand.tag":"Votre avantage sur chaque pari",
       "brand.kicker":"Arbitrage · Value scanner",
-      "nav.surebets":"🎯 Surebets","nav.caisse":"💰 Caisse","nav.chat":"💬 Communauté",
+      "nav.surebets":"Surebets","nav.caisse":"Caisse","nav.chat":"Communauté",
       "nav.m_surebets":"Surebets","nav.m_caisse":"Caisse","nav.m_chat":"Communauté",
       "trust.active":"Signaux actifs","trust.roi":"Meilleur ROI actif","trust.access":"Votre accès",
       "sb.section":"Signaux en direct","sb.realtime":"temps réel","sb.tools":"Outils",
@@ -7714,14 +7728,14 @@ window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || 
       "edu4_d":"<b>1xBet</b>, <b>Paryaj Lakay</b>, <b>Paryaj Pam</b> et <b>Golcash</b>. Un arbitrage n'existe qu'<b>entre deux opérateurs</b> : plus vous avez de comptes approvisionnés, plus vous captez de surebets.",
       "hdr.threshold":"Seuil actif",
       "hdr.saved":"Paris enregistrés",
-      "hdr.guide":"❔ Guide",
-      "hdr.contact":"✉️ Nous écrire",
+      "hdr.guide":"Guide",
+      "hdr.contact":"Nous écrire",
       "contact.title":"Nous écrire",
       "contact.lead":"Choisissez le sujet : votre message arrive directement à la bonne personne.",
-      "hdr.stats":"📊 Scores & stats ↗",
-      "hdr.publish":"📢 Publier un surebet",
-      "hdr.admin":"🛡️ Admin","hdr.logout":"↩ Déconnexion",
-      "det.title":"🧭 Détecteur de cote",
+      "hdr.stats":"Scores & stats ↗",
+      "hdr.publish":"Publier un surebet",
+      "hdr.admin":"Admin","hdr.logout":"Déconnexion",
+      "det.title":"Détecteur de cote",
       "det.sub":"cote → cote adverse",
       "det.myodd":"Votre cote",
       "det.threshold":"Seuil surebet %",
@@ -7746,17 +7760,17 @@ window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || 
       "cm.title":"Communauté",
       "cm.intro":"Échangez en direct avec les autres parieurs. Les surebets officiels sont archivés dans le salon dédié.",
       "cm.section":"Salon communautaire","cm.online":"en ligne",
-      "lb.title":"🏆 Classement","lb.tag":"profit · 7 j","lb.you":"vous",
+      "lb.title":"Classement","lb.tag":"profit · 7 j","lb.you":"vous",
       "lb.empty":"Aucun résultat sur les 7 derniers jours.","lb.soon":"Classement bientôt disponible.",
       "det.th_odd":"Cote adverse","det.th_sure":"Surebet","det.th_roi":"ROI garanti","det.th_status":"Statut",
       "det.hint":"<b>Lecture :</b> chaque ligne verte est exploitable. Reportez-la dans le calculateur pour connaître vos mises.",
-      "conv.title":"🔁 Convertisseur de cotes",
+      "conv.title":"Convertisseur de cotes",
       "conv.dec":"Décimale","conv.frac":"Fractionnaire","conv.us":"Américaine",
       "conv.note":"Tapez dans un champ, les deux autres se calculent. La cote décimale est celle à utiliser dans le détecteur et le calculateur.",
       "mc.head":"💰 Ma caisse","mc.balance":"Solde actuel","mc.deposited":"Déposé (net)","mc.profit":"Profit paris",
       "mc.pending":"En attente","mc.winrate":"Réussite",
       "mc.hint":"Ajoutez un dépôt dans la section « Caisse » pour suivre votre capital.",
-      "calc.title":"🧮 Calculateur de mises","calc.sub":"Mises · bookmaker · date · historique",
+      "calc.title":"Calculateur de mises","calc.sub":"Mises · bookmaker · date · historique",
       "calc.nlegs":"Nombre de cotes","calc.legs2":"2 cotes","calc.legs3":"3 cotes",
       "calc.mode":"Mode de mise","calc.mode_equal":"Profit égal","calc.mode_fixed":"Mise fixe",
       "calc.amount":"Montant total (HTG)","calc.fixleg":"Jambe à fixer",
@@ -7766,9 +7780,9 @@ window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || 
       "bk.title":"Caisse (bankroll)","bk.sub":"Suivi de votre capital de jeu",
       "bk.deposit":"＋ Dépôt","bk.withdraw":"－ Retrait","bk.balance":"Solde actuel",
       "bk.deposited":"Capital déposé (net)","bk.profit":"Profit des paris","bk.growth":"Croissance",
-      "bk.moves":"Derniers mouvements","bk.moves_title":"💰 Mouvements",
+      "bk.moves":"Derniers mouvements","bk.moves_title":"Mouvements",
       "cs.section":"Mouvements & historique",
-      "hist.title2":"🧾 Mes paris","hist.stats":"Statistiques & filtres","hist.total":"au total",
+      "hist.title2":"Mes paris","hist.stats":"Statistiques & filtres","hist.total":"au total",
       "hist.th_date":"Date","hist.th_match":"Match","hist.th_profit":"Profit","hist.th_roi":"ROI","hist.th_status":"Statut",
       "hist.detail":"Voir le détail","hist.d_bk":"Bookmaker","hist.d_odd":"Cote","hist.d_stake":"Mise",
       "hist.d_legs":"Issues","hist.d_mode":"Mode","hist.d_total":"Total misé","hist.d_return":"Retour garanti",
@@ -7890,7 +7904,7 @@ window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || 
       "auth.foot":"Encrypted connection · every account is private",
       "brand.tag":"Your edge on every bet",
       "brand.kicker":"Arbitrage · Value scanner",
-      "nav.surebets":"🎯 Surebets","nav.caisse":"💰 Bankroll","nav.chat":"💬 Community",
+      "nav.surebets":"Surebets","nav.caisse":"Bankroll","nav.chat":"Community",
       "nav.m_surebets":"Surebets","nav.m_caisse":"Bankroll","nav.m_chat":"Community",
       "trust.active":"Active signals","trust.roi":"Best active ROI","trust.access":"Your access",
       "sb.section":"Live signals","sb.realtime":"real time","sb.tools":"Tools",
@@ -7917,14 +7931,14 @@ window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || 
       "edu4_d":"<b>1xBet</b>, <b>Paryaj Lakay</b>, <b>Paryaj Pam</b> and <b>Golcash</b>. An arbitrage only exists <b>between two operators</b>: the more funded accounts you hold, the more surebets you catch.",
       "hdr.threshold":"Active threshold",
       "hdr.saved":"Saved bets",
-      "hdr.guide":"❔ Guide",
-      "hdr.contact":"✉️ Contact us",
+      "hdr.guide":"Guide",
+      "hdr.contact":"Contact us",
       "contact.title":"Contact us",
       "contact.lead":"Pick the topic: your message goes straight to the right person.",
-      "hdr.stats":"📊 Scores & stats ↗",
-      "hdr.publish":"📢 Publish a surebet",
-      "hdr.admin":"🛡️ Admin","hdr.logout":"↩ Sign out",
-      "det.title":"🧭 Odds detector",
+      "hdr.stats":"Scores & stats ↗",
+      "hdr.publish":"Publish a surebet",
+      "hdr.admin":"Admin","hdr.logout":"Sign out",
+      "det.title":"Odds detector",
       "det.sub":"odds → opposing odds",
       "det.myodd":"Your odds",
       "det.threshold":"Surebet threshold %",
@@ -7949,17 +7963,17 @@ window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || 
       "cm.title":"Community",
       "cm.intro":"Talk live with other bettors. Official surebets are archived in the dedicated room.",
       "cm.section":"Community room","cm.online":"online",
-      "lb.title":"🏆 Leaderboard","lb.tag":"profit · 7 d","lb.you":"you",
+      "lb.title":"Leaderboard","lb.tag":"profit · 7 d","lb.you":"you",
       "lb.empty":"No results over the last 7 days.","lb.soon":"Leaderboard coming soon.",
       "det.th_odd":"Opposing odds","det.th_sure":"Surebet","det.th_roi":"Guaranteed ROI","det.th_status":"Status",
       "det.hint":"<b>How to read:</b> every green row is usable. Enter it in the calculator to get your stakes.",
-      "conv.title":"🔁 Odds converter",
+      "conv.title":"Odds converter",
       "conv.dec":"Decimal","conv.frac":"Fractional","conv.us":"American",
       "conv.note":"Type in one field, the other two are calculated. Decimal odds are the ones to use in the detector and calculator.",
       "mc.head":"💰 My bankroll","mc.balance":"Current balance","mc.deposited":"Deposited (net)","mc.profit":"Bet profit",
       "mc.pending":"Pending","mc.winrate":"Win rate",
       "mc.hint":"Add a deposit in the “Bankroll” section to track your capital.",
-      "calc.title":"🧮 Stake calculator","calc.sub":"Stakes · bookmaker · date · history",
+      "calc.title":"Stake calculator","calc.sub":"Stakes · bookmaker · date · history",
       "calc.nlegs":"Number of odds","calc.legs2":"2 odds","calc.legs3":"3 odds",
       "calc.mode":"Staking mode","calc.mode_equal":"Equal profit","calc.mode_fixed":"Fixed stake",
       "calc.amount":"Total amount (HTG)","calc.fixleg":"Leg to fix",
@@ -7969,9 +7983,9 @@ window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || 
       "bk.title":"Bankroll","bk.sub":"Track your betting capital",
       "bk.deposit":"＋ Deposit","bk.withdraw":"－ Withdraw","bk.balance":"Current balance",
       "bk.deposited":"Deposited capital (net)","bk.profit":"Bet profit","bk.growth":"Growth",
-      "bk.moves":"Latest movements","bk.moves_title":"💰 Movements",
+      "bk.moves":"Latest movements","bk.moves_title":"Movements",
       "cs.section":"Movements & history",
-      "hist.title2":"🧾 My bets","hist.stats":"Stats & filters","hist.total":"in total",
+      "hist.title2":"My bets","hist.stats":"Stats & filters","hist.total":"in total",
       "hist.th_date":"Date","hist.th_match":"Match","hist.th_profit":"Profit","hist.th_roi":"ROI","hist.th_status":"Status",
       "hist.detail":"Show details","hist.d_bk":"Bookmaker","hist.d_odd":"Odds","hist.d_stake":"Stake",
       "hist.d_legs":"Legs","hist.d_mode":"Mode","hist.d_total":"Total staked","hist.d_return":"Guaranteed return",
