@@ -1,100 +1,145 @@
 @echo off
 REM ====================================================================
-REM  NADOEDGE - Pilotage du scanner
-REM  Double-cliquer ce fichier (ou son raccourci sur le Bureau).
-REM  Demande les droits administrateur : la tache planifiee en a besoin.
+REM  NADOEDGE - Poste de surveillance local
+REM
+REM  Double-cliquer ce fichier, ou son raccourci sur le Bureau.
+REM  Aucun droit administrateur requis : contrairement a la version VPS,
+REM  ce lanceur ne pilote pas de taches planifiees. Une surveillance =
+REM  une fenetre. Fermer la fenetre arrete la surveillance.
+REM
+REM  Pourquoi en local : depuis aout 2026, l'API de Paryaj Lakay refuse
+REM  les adresses de centres de donnees. Depuis une connexion haitienne,
+REM  les QUATRE bookmakers repondent. Ce poste voit donc tout le marche.
 REM ====================================================================
-title NADOEDGE - scanner
-
-REM --- Elevation automatique -------------------------------------------
-net session >nul 2>&1
-if errorlevel 1 (
-    powershell -NoProfile -Command "Start-Process -FilePath '%~f0' -Verb RunAs"
-    exit /b
-)
-
+title NADOEDGE - surveillance
 cd /d "%~dp0"
 chcp 65001 >nul
 set PYTHONIOENCODING=utf-8
-set TACHE=NADOEDGE-Scanner
+
+python --version >nul 2>&1
+if errorlevel 1 (
+    echo.
+    echo   [ERREUR] Python est introuvable.
+    echo   Installez Python 3.11+ depuis https://www.python.org/downloads/
+    echo   en cochant "Add Python to PATH", puis relancez ce fichier.
+    echo.
+    pause
+    exit /b 1
+)
 
 :menu
 cls
 echo.
 echo   ================================================================
-echo     NADOEDGE - scanner
+echo     NADOEDGE - surveillance locale        4 bookmakers
 echo   ================================================================
 echo.
-echo     1 = Demarrer le scanner (football)
-echo     2 = Arreter le scanner (football)
-echo     3 = Etat (tourne-t-il ?)
-echo     4 = Scan manuel (Ctrl+C pour sortir)
-echo     5 = Controle de sante complet
-echo     6 = Sauvegarder la base maintenant
+echo     SURVEILLANCE CONTINUE       (s'ouvre dans une fenetre a part)
+echo       1 = Football
+echo       2 = Basketball
+echo       3 = Les deux
 echo.
-echo     7 = Demarrer le BASKETBALL
-echo     8 = Arreter le basketball
+echo     VERIFIER MAINTENANT         (un seul passage, puis rend la main)
+echo       4 = Scan football
+echo       5 = Scan basketball
 echo.
-echo     9 = Ouvrir le tableau de bord (liste visuelle des surebets)
-echo     0 = Quitter
+echo     SUIVI
+echo       6 = Controle de sante
+echo       7 = Carnet - detections et bilan
+echo       8 = Sauvegarder la base
+echo       9 = Tableau de bord visuel
+echo.
+echo       0 = Quitter
 echo.
 set /p CHOIX="   Votre choix : "
 echo.
 
-if "%CHOIX%"=="1" goto demarrer
-if "%CHOIX%"=="2" goto arreter
-if "%CHOIX%"=="3" goto etat
-if "%CHOIX%"=="4" goto journal
-if "%CHOIX%"=="5" goto sante
-if "%CHOIX%"=="6" goto sauver
-if "%CHOIX%"=="7" goto basketon
-if "%CHOIX%"=="8" goto basketoff
+if "%CHOIX%"=="1" goto foot
+if "%CHOIX%"=="2" goto basket
+if "%CHOIX%"=="3" goto deux
+if "%CHOIX%"=="4" goto scanfoot
+if "%CHOIX%"=="5" goto scanbasket
+if "%CHOIX%"=="6" goto sante
+if "%CHOIX%"=="7" goto carnet
+if "%CHOIX%"=="8" goto sauver
 if "%CHOIX%"=="9" goto tableau
 if "%CHOIX%"=="0" exit /b
 goto menu
 
-:demarrer
-powershell -NoProfile -Command ^
-  "Enable-ScheduledTask -TaskName '%TACHE%' -ErrorAction SilentlyContinue | Out-Null; Start-ScheduledTask -TaskName '%TACHE%'; Start-Sleep 2; (Get-ScheduledTask -TaskName '%TACHE%').State"
+REM --- Surveillance continue ------------------------------------------
+REM  BROWSER_PROFILE_DIR distinct par sport : Playwright VERROUILLE le
+REM  dossier de profil qu'il ouvre. Sans cette separation, lancer les deux
+REM  sports fait echouer le second a demarrer ses navigateurs — en silence,
+REM  le collecteur continuant de tourner sans jamais recuperer de cotes.
+
+:foot
+echo   Football : surveillance continue dans une nouvelle fenetre.
+echo   Fermez cette fenetre-la pour arreter. Ctrl+C fonctionne aussi.
 echo.
-echo   Running = le scanner tourne. Les alertes arrivent sur Telegram.
-pause
+start "NADOEDGE - football" cmd /k "chcp 65001 >nul & set PYTHONIOENCODING=utf-8 & set BROWSER_PROFILE_DIR=./.browser-profiles/football & python -m surebet.main --collector --sport football"
+timeout /t 2 /nobreak >nul
 goto menu
 
-:arreter
-powershell -NoProfile -Command ^
-  "Stop-ScheduledTask -TaskName '%TACHE%'; Start-Sleep 2; (Get-ScheduledTask -TaskName '%TACHE%').State"
+:basket
+echo   Basketball : surveillance continue dans une nouvelle fenetre.
 echo.
-echo   Ready = arrete. Il repartira au prochain demarrage de la machine.
-pause
+start "NADOEDGE - basketball" cmd /k "chcp 65001 >nul & set PYTHONIOENCODING=utf-8 & set BROWSER_PROFILE_DIR=./.browser-profiles/basketball & python -m surebet.main --collector --sport basketball"
+timeout /t 2 /nobreak >nul
 goto menu
 
-:etat
-powershell -NoProfile -Command ^
-  "$t = Get-ScheduledTask -TaskName '%TACHE%' -ErrorAction SilentlyContinue;" ^
-  "if (-not $t) { 'Tache absente : relancez installer_vps_windows.ps1'; exit }" ^
-  "$i = $t | Get-ScheduledTaskInfo;" ^
-  "'Football        : ' + $t.State;" ^
-  "'Derniere execution : ' + $i.LastRunTime;" ^
-  "'Dernier resultat   : ' + $i.LastTaskResult + '  (0 = normal)';" ^
-  "$b = Get-ScheduledTask -TaskName '%TACHE%-Basket' -ErrorAction SilentlyContinue;" ^
-  "if ($b) { 'Basketball      : ' + $b.State } else { 'Basketball      : tache absente' };" ^
-  "$c = Get-Process chrome*,chromium* -ErrorAction SilentlyContinue;" ^
-  "if ($c) { 'Chromium        : ' + $c.Count + ' processus, ' + [math]::Round(($c | Measure-Object WorkingSet64 -Sum).Sum/1GB,1) + ' Go' } else { 'Chromium        : aucun processus' }"
+:deux
+echo   Les deux sports, dans deux fenetres separees.
 echo.
-pause
+echo   A savoir : chaque sport ouvre son propre jeu de navigateurs.
+echo   Comptez environ 1 Go de memoire par sport. Si la machine peine,
+echo   n'en gardez qu'un.
+echo.
+start "NADOEDGE - football" cmd /k "chcp 65001 >nul & set PYTHONIOENCODING=utf-8 & set BROWSER_PROFILE_DIR=./.browser-profiles/football & python -m surebet.main --collector --sport football"
+timeout /t 3 /nobreak >nul
+start "NADOEDGE - basketball" cmd /k "chcp 65001 >nul & set PYTHONIOENCODING=utf-8 & set BROWSER_PROFILE_DIR=./.browser-profiles/basketball & python -m surebet.main --collector --sport basketball"
+timeout /t 2 /nobreak >nul
 goto menu
 
-:journal
-echo   Journal du scanner. Ctrl+C pour revenir au menu.
+REM --- Passage unique --------------------------------------------------
+:scanfoot
+echo   Scan football. Les cotes de chaque bookmaker s'affichent ci-dessous.
 echo.
 python -m surebet.main --scan --sport football
 echo.
 pause
 goto menu
 
+:scanbasket
+echo   Scan basketball.
+echo.
+python -m surebet.main --scan --sport basketball
+echo.
+pause
+goto menu
+
+REM --- Suivi ------------------------------------------------------------
 :sante
 python outils\controle_sante.py
+echo.
+echo   ----------------------------------------------------------------
+echo   [ ALERTE] = quelque chose a corriger.  [  OK  ] = rien a faire.
+echo   ----------------------------------------------------------------
+echo.
+pause
+goto menu
+
+:carnet
+echo     1 = pointer les detections du jour
+echo     2 = bilan football        3 = bilan basketball
+echo     4 = les deux melanges     5 = poids de chaque bookmaker
+echo.
+set /p C2="   Votre choix : "
+echo.
+if "%C2%"=="2" ( python outils\journal_scanner.py --rapport --jours 7 --sport football
+) else if "%C2%"=="3" ( python outils\journal_scanner.py --rapport --jours 7 --sport basketball
+) else if "%C2%"=="4" ( python outils\journal_scanner.py --rapport --jours 7
+) else if "%C2%"=="5" ( python outils\valeur_bookmaker.py --jours 30
+) else ( python outils\journal_scanner.py )
 echo.
 pause
 goto menu
@@ -106,40 +151,16 @@ pause
 goto menu
 
 :tableau
-REM Le tableau de bord n'a AUCUNE authentification : il n'ecoute donc que
-REM sur 127.0.0.1 et son port est bloque au pare-feu. Il est accessible
-REM depuis CETTE machine uniquement — ce qui suffit en Bureau a distance.
-REM
-REM Il lit la meme base que le scanner : les detections y apparaissent
-REM sans qu'il soit necessaire de relancer quoi que ce soit.
-tasklist /FI "IMAGENAME eq python.exe" /FO CSV 2>nul | find /I "python.exe" >nul
-echo   Demarrage du tableau de bord sur http://127.0.0.1:8000
-echo   (laissez la fenetre ouverte ; fermez-la pour l'arreter)
+REM Le tableau de bord n'a AUCUNE authentification : il n'ecoute que sur
+REM 127.0.0.1. En local c'est sans risque — la machine est la votre.
+REM Il fait son PROPRE scan a chaque chargement de page : ouvrez-le a la
+REM demande, ne le laissez pas tourner en permanence.
+echo   Tableau de bord sur http://127.0.0.1:8000
+echo   Fermez sa fenetre pour l'arreter.
 echo.
 start "NADOEDGE - tableau de bord" cmd /c "python -m uvicorn surebet.dashboard.app:app --host 127.0.0.1 --port 8000 --log-level warning"
-timeout /t 3 /nobreak >nul
+timeout /t 4 /nobreak >nul
 start "" "http://127.0.0.1:8000"
-echo   Si la page ne s'ouvre pas, tapez l'adresse a la main dans un
-echo   navigateur DU SERVEUR. Depuis votre PC, elle restera injoignable :
-echo   c'est voulu, la page listerait vos surebets sans mot de passe.
-echo.
-pause
-goto menu
-
-:basketon
-echo   Le basketball a sa propre tache : run_collector_loop ne traite
-echo   qu'un sport a la fois. Un second Chromium double la memoire
-echo   consommee : surveillez l'etat ensuite (choix 3).
-echo.
-powershell -NoProfile -Command ^
-  "Enable-ScheduledTask -TaskName '%TACHE%-Basket' | Out-Null; Start-ScheduledTask -TaskName '%TACHE%-Basket'; Start-Sleep 2; 'Basket : ' + (Get-ScheduledTask -TaskName '%TACHE%-Basket').State"
-echo.
-pause
-goto menu
-
-:basketoff
-powershell -NoProfile -Command ^
-  "Stop-ScheduledTask -TaskName '%TACHE%-Basket' -ErrorAction SilentlyContinue; Disable-ScheduledTask -TaskName '%TACHE%-Basket' | Out-Null; 'Basket : desactive'"
 echo.
 pause
 goto menu
