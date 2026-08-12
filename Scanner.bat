@@ -72,18 +72,24 @@ REM  dossier de profil qu'il ouvre. Sans cette separation, lancer les deux
 REM  sports fait echouer le second a demarrer ses navigateurs — en silence,
 REM  le collecteur continuant de tourner sans jamais recuperer de cotes.
 
+REM  set "VAR=valeur" et non set VAR=valeur : sans les guillemets, cmd
+REM  inclut dans la valeur l'espace qui precede le &. Le profil devenait
+REM  « .browser-profiles\football  » avec une espace finale, et Windows
+REM  refuse de creer un dossier dont le nom se termine par une espace.
+REM  Paryaj Lakay echouait donc au demarrage de sa session navigateur.
+
 :foot
 echo   Football : surveillance continue dans une nouvelle fenetre.
 echo   Fermez cette fenetre-la pour arreter. Ctrl+C fonctionne aussi.
 echo.
-start "NADOEDGE - football" cmd /k "chcp 65001 >nul & set PYTHONIOENCODING=utf-8 & set BROWSER_PROFILE_DIR=./.browser-profiles/football & python -m surebet.main --collector --sport football"
+start "NADOEDGE - football" cmd /k "chcp 65001 >nul & set "PYTHONIOENCODING=utf-8" & set "BROWSER_PROFILE_DIR=./.browser-profiles/football" & python -m surebet.main --collector --sport football"
 timeout /t 2 /nobreak >nul
 goto menu
 
 :basket
 echo   Basketball : surveillance continue dans une nouvelle fenetre.
 echo.
-start "NADOEDGE - basketball" cmd /k "chcp 65001 >nul & set PYTHONIOENCODING=utf-8 & set BROWSER_PROFILE_DIR=./.browser-profiles/basketball & python -m surebet.main --collector --sport basketball"
+start "NADOEDGE - basketball" cmd /k "chcp 65001 >nul & set "PYTHONIOENCODING=utf-8" & set "BROWSER_PROFILE_DIR=./.browser-profiles/basketball" & python -m surebet.main --collector --sport basketball"
 timeout /t 2 /nobreak >nul
 goto menu
 
@@ -94,9 +100,9 @@ echo   A savoir : chaque sport ouvre son propre jeu de navigateurs.
 echo   Comptez environ 1 Go de memoire par sport. Si la machine peine,
 echo   n'en gardez qu'un.
 echo.
-start "NADOEDGE - football" cmd /k "chcp 65001 >nul & set PYTHONIOENCODING=utf-8 & set BROWSER_PROFILE_DIR=./.browser-profiles/football & python -m surebet.main --collector --sport football"
+start "NADOEDGE - football" cmd /k "chcp 65001 >nul & set "PYTHONIOENCODING=utf-8" & set "BROWSER_PROFILE_DIR=./.browser-profiles/football" & python -m surebet.main --collector --sport football"
 timeout /t 3 /nobreak >nul
-start "NADOEDGE - basketball" cmd /k "chcp 65001 >nul & set PYTHONIOENCODING=utf-8 & set BROWSER_PROFILE_DIR=./.browser-profiles/basketball & python -m surebet.main --collector --sport basketball"
+start "NADOEDGE - basketball" cmd /k "chcp 65001 >nul & set "PYTHONIOENCODING=utf-8" & set "BROWSER_PROFILE_DIR=./.browser-profiles/basketball" & python -m surebet.main --collector --sport basketball"
 timeout /t 2 /nobreak >nul
 goto menu
 

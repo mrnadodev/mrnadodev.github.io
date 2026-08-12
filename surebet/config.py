@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Chemin ABSOLU du .env, dans le paquet surebet/ (git-ignore), pour qu'il soit
@@ -61,8 +62,12 @@ class Settings(BaseSettings):
     scraper_unavailable_alert_after_s: int = 300
 
     # Collector (sessions navigateur persistantes)
-    # headless=False recommande en prod : le test live a montre que Cloudflare
-    # bloque les routes de feed en headless (utiliser xvfb-run sous Linux).
+    #
+    # Note du 12 aout 2026 : le commentaire qui accusait Cloudflare de bloquer
+    # le mode headless est FAUX. Paryaj Lakay repond « Server: IIS/10.0 », sans
+    # aucun en-tete Cloudflare, et l'echec constate sur le VPS venait du filtre
+    # d'adresse IP de son fournisseur de plateforme — pas du mode d'affichage.
+    # Le mode invisible convient donc, y compris en production.
     browser_headless: bool = True
     browser_profile_dir: str = "./.browser-profiles"
     evaluation_interval_s: int = 10
@@ -79,6 +84,23 @@ class Settings(BaseSettings):
     paryajlakay_base_url: str = "https://www.paryajlakay.com"
     paryajpam_base_url: str = "https://www.paryajpam.com"
     golcash_base_url: str = "https://www.golcashhaiti.com"
+
+    @field_validator("browser_profile_dir", "database_url", mode="after")
+    @classmethod
+    def _nettoyer(cls, v: str) -> str:
+        """Retire espaces et guillemets parasites autour d'un chemin.
+
+        Cas reel du 12 aout 2026 : un lanceur .bat ecrivant
+        « set VAR=valeur & commande » place l'espace precedant le & DANS la
+        valeur. Le dossier de profil devenait « …/football » avec une espace
+        finale, et Windows refuse de creer un tel dossier — Paryaj Lakay
+        echouait au demarrage de sa session, avec une trace illisible.
+
+        Ces valeurs viennent d'une variable d'environnement, saisie a la main
+        ou posee par un script : les nettoyer ici protege tous les appelants
+        plutot qu'un seul.
+        """
+        return v.strip().strip('"').strip("'").strip() if isinstance(v, str) else v
 
 
 settings = Settings()
