@@ -250,6 +250,42 @@ def verifier_sauvegardes() -> None:
              f"{len(copies)} copie(s), derniere il y a {heures:.0f} h")
 
 
+def verifier_collecteur_en_cours() -> None:
+    """Un collecteur tourne-t-il, ici et maintenant ?
+
+    Sur le VPS, l'etat de la tache planifiee repondait a cette question. Sur
+    un PC il n'y a pas de tache : la surveillance est une fenetre, et une
+    fenetre se ferme — par erreur, a l'extinction, ou parce qu'on a redemarre
+    la machine. Sans cette verification, le controle resterait tout vert
+    pendant des jours sans que rien ne surveille.
+
+    On lit la ligne de commande des processus python plutot que leur simple
+    presence : cette machine sert aussi a developper, et un interpreteur
+    ouvert n'est pas un collecteur.
+    """
+    if os.name != "nt":
+        return
+    try:
+        p = subprocess.run(
+            ["powershell", "-NoProfile", "-Command",
+             "Get-CimInstance Win32_Process -Filter \"Name='python.exe'\" -EA 0 | "
+             "Where-Object { $_.CommandLine -like '*surebet.main*--collector*' } | "
+             "ForEach-Object { if ($_.CommandLine -match '--sport\\s+(\\w+)') "
+             "{ $Matches[1] } else { 'inconnu' } }"],
+            capture_output=True, text=True, timeout=60,
+        )
+    except Exception as e:
+        dire(INFO, "Surveillance en cours", f"non verifiable ({str(e)[:40]})")
+        return
+
+    sports = [s.strip() for s in (p.stdout or "").splitlines() if s.strip()]
+    if sports:
+        dire(OK, "Surveillance en cours", ", ".join(sorted(set(sports))))
+    else:
+        dire(ALERTE, "Surveillance en cours",
+             "AUCUNE - rien n'est surveille (lancez Scanner.bat, choix 1)")
+
+
 def verifier_tache_scanner() -> None:
     """Le scanner tourne-t-il vraiment ?
 
@@ -278,8 +314,11 @@ def verifier_tache_scanner() -> None:
 
     sortie = (p.stdout or "").strip()
     if not sortie or sortie == "ABSENTE":
-        dire(INFO, "Tache du scanner",
-             "absente sur cette machine (normale sur un PC, anormale sur le VPS)")
+        # Pas de tache planifiee. Sur un PC c'est normal : la surveillance y
+        # est une fenetre, pas un service. Mais alors cette ligne ne repond
+        # plus a la seule question qui compte — est-ce que ca tourne ? On va
+        # donc chercher le processus lui-meme.
+        verifier_collecteur_en_cours()
         return
 
     etat, code, derniere = (sortie.split("|") + ["", "", ""])[:3]
