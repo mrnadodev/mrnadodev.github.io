@@ -1,0 +1,49 @@
+# NADOEDGE · dépendances du scanner
+#
+# Versions figées : reproduire l'environnement exact plutôt que le plus
+# récent. Un scraper dépend de bibliothèques réseau dont un changement
+# mineur suffit à modifier une empreinte TLS ou un en-tête — et donc à se
+# faire refuser par un bookmaker, sans erreur explicite.
+#
+#     pip install -r requirements.txt
+#     playwright install chromium
+#
+# Le second appel est indispensable : pip installe le pilote Playwright,
+# pas le navigateur.
+
+# ── Collecte ─────────────────────────────────────────────────────────
+playwright==1.61.0          # navigateur piloté : Paryaj Lakay, 1xBet
+httpx==0.28.1               # requêtes simples
+curl_cffi==0.15.0           # empreinte TLS d'un vrai navigateur
+websockets==16.0            # flux temps réel de Paryaj Pam
+beautifulsoup4==4.15.0      # lecture du HTML rendu
+
+# ── Normalisation et calcul ──────────────────────────────────────────
+rapidfuzz==3.14.5           # rapprochement des noms d'équipes
+python-dateutil==2.9.0.post0
+
+# ── Configuration ────────────────────────────────────────────────────
+pydantic==2.13.4
+pydantic-settings==2.14.2   # lecture du fichier .env
+
+# ── Stockage ─────────────────────────────────────────────────────────
+SQLAlchemy==2.0.51
+aiosqlite==0.22.1
+
+# ── Tableau de bord ──────────────────────────────────────────────────
+fastapi==0.139.2
+uvicorn==0.50.2
+Jinja2==3.1.6
+
+# ── Export Excel du carnet ───────────────────────────────────────────
+openpyxl==3.1.5
+
+# ── Explications par IA (facultatif) ─────────────────────────────────
+# Sans clé ANTHROPIC_API_KEY, le scanner bascule en mode déterministe et
+# fonctionne normalement. La bibliothèque reste nécessaire à l'import.
+anthropic==0.119.0
+
+# ── Tests ────────────────────────────────────────────────────────────
+pytest==9.1.1
+pytest-asyncio==1.4.0
+respx==0.23.1
