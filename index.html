@@ -3583,6 +3583,14 @@ window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || 
       const id=e.target.dataset.del;history=history.filter(x=>x.id!==id);renderHistory();dbDelete(id);
     }));
     renderPerformance();
+    // Le solde de la caisse se calcule à partir de l'historique : il vaut
+    // « dépôts − retraits + profit des paris RÉGLÉS ». Marquer un pari
+    // « Gagné » change donc ce solde — mais rien ne le recalculait, et le
+    // montant restait figé jusqu'au rechargement de la page. Un utilisateur
+    // qui vient d'encaisser voyait sa caisse ignorer son gain.
+    // Même problème à la suppression d'un pari déjà réglé.
+    // renderBankroll ne rappelle pas renderHistory : aucune récursion.
+    if(typeof renderBankroll==='function') renderBankroll();
   }
 
   /* ---- MODIFICATION D'UN PARI (ciblée) ---- */
