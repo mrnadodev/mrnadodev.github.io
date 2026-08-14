@@ -185,6 +185,8 @@ async def run_collector_loop(sport: str = "football") -> None:
                 name=scraper.bookmaker_name,
                 headless=settings.browser_headless,
                 profile_dir=Path(settings.browser_profile_dir) / scraper.bookmaker_name.replace(" ", "_"),
+                max_navigations=settings.browser_recycle_navigations,
+                max_minutes=settings.browser_recycle_minutes,
             )
             scraper.attach_session(session)
             sessions.append(session)

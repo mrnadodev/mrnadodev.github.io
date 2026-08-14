@@ -44,6 +44,8 @@ class BrowserSession:
         locale: str = "fr-FR",
         user_agent: str | None = None,
         nav_timeout_ms: int = 30000,
+        max_navigations: int = 0,
+        max_minutes: int = 0,
     ) -> None:
         self.name = name
         self.headless = headless
@@ -51,6 +53,9 @@ class BrowserSession:
         self.locale = locale
         self.user_agent = user_agent or random.choice(USER_AGENTS)
         self.nav_timeout_ms = nav_timeout_ms
+        # Duree de vie bornee. Voir _recycler_si_necessaire : 0 = illimite.
+        self.max_navigations = max_navigations
+        self.max_minutes = max_minutes
 
         self._pw = None
         self._browser = None
@@ -58,6 +63,7 @@ class BrowserSession:
         self._page = None
         self.started_at: datetime | None = None
         self.navigations = 0
+        self.recyclages = 0
 
     @property
     def is_started(self) -> bool:
@@ -118,8 +124,44 @@ class BrowserSession:
     async def __aexit__(self, exc_type, exc, tb) -> None:
         await self.stop()
 
+    def _recyclage_du(self) -> str | None:
+        """Faut-il fermer et rouvrir le navigateur ? Si oui, pourquoi.
+
+        Le 12 aout 2026, un portable de 8 Go a gele apres 4 heures de
+        collecte. Le meme symptome avait ete impute au ballooning de
+        l'hebergeur du VPS ; une machine personnelle, sans hyperviseur, l'a
+        reproduit. La fuite est donc reelle, et elle est dans Chromium.
+
+        Notre code ne fuit pas : render() reutilise la page, capture_json()
+        retire son ecouteur. Mais un onglet renavigue des milliers de fois sur
+        une application JavaScript lourde accumule du tas JS, du DOM detache
+        et des caches de service worker. C'est un comportement connu de
+        l'automatisation au long cours : on ne le corrige pas, on le BORNE.
+
+        Fermer et rouvrir le navigateur rend toute cette memoire d'un coup.
+        Le profil etant persistant, cookies et session survivent au recyclage.
+        """
+        if self.max_navigations and self.navigations >= self.max_navigations:
+            return f"{self.navigations} navigations"
+        if self.max_minutes and self.started_at:
+            age = (datetime.now(timezone.utc) - self.started_at).total_seconds() / 60
+            if age >= self.max_minutes:
+                return f"{age:.0f} min d'anciennete"
+        return None
+
+    async def _recycler_si_necessaire(self) -> None:
+        raison = self._recyclage_du() if self.is_started else None
+        if not raison:
+            return
+        logger.info("%s: recyclage du navigateur (%s)", self.name, raison)
+        await self.stop()
+        await self.start()
+        self.navigations = 0
+        self.recyclages += 1
+
     async def render(self, url: str, wait_selector: str | None = None, timeout_ms: int | None = None) -> str:
         """Navigue et renvoie le HTML rendu, en reutilisant la page existante."""
+        await self._recycler_si_necessaire()
         if not self.is_started:
             await self.start()
         timeout = timeout_ms or self.nav_timeout_ms
@@ -160,6 +202,7 @@ class BrowserSession:
         """
         import asyncio
 
+        await self._recycler_si_necessaire()
         if not self.is_started:
             await self.start()
         captured: dict = {}
@@ -181,4 +224,5 @@ class BrowserSession:
                 await asyncio.sleep(0.5)
         finally:
             self._page.remove_listener("response", on_response)
+        self.navigations += 1
         return captured.get("payload")
