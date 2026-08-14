@@ -1767,9 +1767,12 @@ window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || 
   .ld-book:hover{border-color:var(--gold);transform:translateY(-2px)}
   .ld-book-d{width:6px;height:6px;border-radius:50%;background:var(--gold);flex:none;
     box-shadow:0 0 0 0 rgba(242,193,78,.55);animation:ldDot 3.2s ease-out infinite}
-  .ld-book:nth-child(2) .ld-book-d{animation-delay:.8s}
-  .ld-book:nth-child(3) .ld-book-d{animation-delay:1.6s}
-  .ld-book:nth-child(4) .ld-book-d{animation-delay:2.4s}
+  /* Cinq bookmakers : les points clignotent en decale pour eviter un
+     battement synchrone. Le 1er demarre a 0, on echelonne les suivants. */
+  .ld-book:nth-child(2) .ld-book-d{animation-delay:.6s}
+  .ld-book:nth-child(3) .ld-book-d{animation-delay:1.2s}
+  .ld-book:nth-child(4) .ld-book-d{animation-delay:1.8s}
+  .ld-book:nth-child(5) .ld-book-d{animation-delay:2.4s}
   @keyframes ldDot{0%{box-shadow:0 0 0 0 rgba(242,193,78,.5)}70%,100%{box-shadow:0 0 0 9px rgba(242,193,78,0)}}
 
   /* — prix : la carte est le point chaud de la page, donc c'est elle qui porte l'or — */
@@ -2011,8 +2014,13 @@ window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || 
           <div class="ld-eyebrow" data-i18n="ld.books_eyebrow">Couverture</div>
           <h2 class="ld-h2" data-i18n="ld.books_h2">Les bookmakers suivis</h2>
           <p class="ld-p" data-i18n="ld.books_p">Il vous faut un compte approvisionné chez au moins deux d'entre eux : un surebet se joue toujours des deux côtés à la fois.</p>
+          <!-- Le point vert clignotant annonce une surveillance automatique.
+               MelBet a rejoint le scanner le 12 aout 2026 (meme plateforme
+               que 1xBet, scraper herite) : il porte donc le meme point que
+               les autres. -->
           <div class="ld-books">
             <div class="ld-book"><span class="ld-book-d"></span>1xBet</div>
+            <div class="ld-book"><span class="ld-book-d"></span>MelBet</div>
             <div class="ld-book"><span class="ld-book-d"></span>Paryaj Lakay</div>
             <div class="ld-book"><span class="ld-book-d"></span>Paryaj Pam</div>
             <div class="ld-book"><span class="ld-book-d"></span>Golcash</div>
@@ -4517,7 +4525,7 @@ window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || 
   /* ===== TOUR GUIDÉ ===== */
   const TOUR_SLIDES=[
     { art:`<svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="54" cy="54" r="34" stroke="var(--mint)" stroke-width="5"/><line x1="78" y1="78" x2="100" y2="100" stroke="var(--mint)" stroke-width="6" stroke-linecap="round"/><path d="M42 54h24M54 42v24" stroke="var(--gold)" stroke-width="4" stroke-linecap="round"/></svg>`,
-      title:'Bienvenue sur NADOEDGE 👋', desc:'Quand deux bookmakers ne sont pas d\'accord sur les cotes d\'un même match, il existe une façon de répartir votre mise pour encaisser un profit quel que soit le résultat. NADOEDGE surveille 1xBet, Paryaj Lakay, Paryaj Pam et Golcash, et vous dit exactement combien miser où.' },
+      title:'Bienvenue sur NADOEDGE 👋', desc:'Quand deux bookmakers ne sont pas d\'accord sur les cotes d\'un même match, il existe une façon de répartir votre mise pour encaisser un profit quel que soit le résultat. NADOEDGE surveille 1xBet, MelBet, Paryaj Lakay, Paryaj Pam et Golcash, et vous dit exactement combien miser où.' },
     { art:`<svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="18" y="26" width="84" height="22" rx="7" stroke="var(--mint)" stroke-width="4"/><rect x="18" y="56" width="84" height="22" rx="7" stroke="var(--mint)" stroke-width="4"/><rect x="18" y="86" width="84" height="22" rx="7" stroke="var(--mint)" stroke-width="4" opacity=".35"/><circle cx="32" cy="37" r="5" fill="var(--gold)"/><circle cx="32" cy="67" r="5" fill="var(--gold)"/><path d="M48 37h34M48 67h24" stroke="var(--mint)" stroke-width="4" stroke-linecap="round"/></svg>`,
       title:'1 · Les signaux en direct', desc:'L\'onglet <b>Surebets</b> est le cœur de la plateforme : les occasions détectées s\'y affichent au fur et à mesure, avec leur ROI et le temps qu\'il reste avant le coup d\'envoi. Un clic les charge dans le calculateur, prêtes à jouer.' },
     { art:`<svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="32" y="56" width="56" height="44" rx="10" stroke="var(--mint)" stroke-width="5"/><path d="M52 56V42a14 14 0 0 1 28 0v6" stroke="var(--gold)" stroke-width="5" stroke-linecap="round"/><circle cx="60" cy="74" r="6" fill="var(--gold)"/><path d="M60 80v9" stroke="var(--gold)" stroke-width="4" stroke-linecap="round"/></svg>`,
@@ -7816,7 +7824,7 @@ window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || 
       "tour.skip":"Passer ✕","tour.dontshow":"Ne plus afficher","tour.prev":"Précédent",
       "tour.next":"Suivant","tour.finish":"Terminer",
       "tour.s1_title":"Bienvenue sur NADOEDGE 👋",
-      "tour.s1_desc":"Quand deux bookmakers ne sont pas d'accord sur les cotes d'un même match, il existe une façon de répartir votre mise pour encaisser un profit quel que soit le résultat. NADOEDGE surveille 1xBet, Paryaj Lakay, Paryaj Pam et Golcash, et vous dit exactement combien miser où.",
+      "tour.s1_desc":"Quand deux bookmakers ne sont pas d'accord sur les cotes d'un même match, il existe une façon de répartir votre mise pour encaisser un profit quel que soit le résultat. NADOEDGE surveille 1xBet, MelBet, Paryaj Lakay, Paryaj Pam et Golcash, et vous dit exactement combien miser où.",
       "tour.s2_title":"1 · Les signaux en direct",
       "tour.s2_desc":"L'onglet <b>Surebets</b> est le cœur de la plateforme : les occasions détectées s'y affichent au fur et à mesure, avec leur ROI et le temps qu'il reste avant le coup d'envoi. Un clic les charge dans le calculateur, prêtes à jouer.",
       "tour.s3_title":"2 · Débloquer les signaux",
@@ -8017,7 +8025,7 @@ window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || 
       "tour.skip":"Skip ✕","tour.dontshow":"Don't show again","tour.prev":"Previous",
       "tour.next":"Next","tour.finish":"Finish",
       "tour.s1_title":"Welcome to NADOEDGE 👋",
-      "tour.s1_desc":"When two bookmakers disagree on the odds for the same match, there is a way to split your stake so you profit whatever the result. NADOEDGE watches 1xBet, Paryaj Lakay, Paryaj Pam and Golcash, and tells you exactly how much to stake where.",
+      "tour.s1_desc":"When two bookmakers disagree on the odds for the same match, there is a way to split your stake so you profit whatever the result. NADOEDGE watches 1xBet, MelBet, Paryaj Lakay, Paryaj Pam and Golcash, and tells you exactly how much to stake where.",
       "tour.s2_title":"1 · Live signals",
       "tour.s2_desc":"The <b>Surebets</b> tab is the heart of the platform: detected opportunities appear as they come, with their ROI and the time left before kick-off. One tap loads them into the calculator, ready to play.",
       "tour.s3_title":"2 · Unlocking the signals",

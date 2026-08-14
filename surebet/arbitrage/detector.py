@@ -11,6 +11,27 @@ from ..normalizer.schema import Leg, Odd, Opportunity, make_match_id
 from .combinatorics import best_three_way, best_two_way, group_by_match_market
 
 
+# Bookmakers appartenant au MEME groupe. Un arbitrage entre deux marques d'un
+# meme operateur n'est pas jouable : elles partagent leur moteur de cotes,
+# leurs limites et leur service anti-fraude, et annulent ce genre de pari.
+#
+# Mesure du 12 aout 2026 : sur 530 cotes comparables, MelBet et 1xBet en
+# donnent 466 identiques — 87,9 %. Les 12 % restants sont plus souvent un
+# decalage de rafraichissement qu'un vrai desaccord de prix : exactement ce
+# qui fabrique un arbitrage sur le papier et une annulation au guichet.
+GROUPES = {
+    "1xbet": "1xbet-group",
+    "melbet": "1xbet-group",
+    "linebet": "1xbet-group",
+}
+
+
+def operateur(bookmaker: str) -> str:
+    """Groupe proprietaire d'un bookmaker. Inconnu = independant."""
+    cle = (bookmaker or "").strip().casefold().replace(" ", "")
+    return GROUPES.get(cle, cle)
+
+
 def implied_margin(odds: list[float]) -> float:
     """M = Sigma (1 / Cote_i) pour i = 1..n. Fonction generique, n quelconque."""
     if not odds:
@@ -58,7 +79,9 @@ def _make_opportunity(
     # bookmaker UNIQUE qu'on refuse.
     # Meme regle que dashboard/live.py, pour que les deux moteurs de
     # detection decident a l'identique.
-    if len({o.bookmaker for o in legs_odds}) < 2:
+    # On compte les OPERATEURS, pas les enseignes : 1xBet et MelBet sont deux
+    # marques du meme groupe, et un arbitrage entre elles serait annule.
+    if len({operateur(o.bookmaker) for o in legs_odds}) < 2:
         return None
 
     odds_values = [o.odds for o in legs_odds]

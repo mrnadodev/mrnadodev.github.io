@@ -12,7 +12,7 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 
 from ..arbitrage.combinatorics import best_three_way, best_two_way, group_by_match_market
-from ..arbitrage.detector import implied_margin, roi_percent
+from ..arbitrage.detector import implied_margin, operateur, roi_percent
 from ..arbitrage.reconcile import reconcile_pool
 from ..arbitrage.stakes import split_stakes
 from ..normalizer.schema import Odd
@@ -124,7 +124,11 @@ def rank_cross_book(
         combo = best_two_way(group) if group[0].n_outcomes == 2 else best_three_way(group)
         if combo is None:
             continue
-        if len({o.bookmaker for o in combo}) < 2:
+        # Meme regle que arbitrage/detector.py : on compte les OPERATEURS,
+        # pas les enseignes. 1xBet et MelBet sont deux marques du meme groupe,
+        # et un arbitrage entre elles serait annule. Les deux moteurs de
+        # detection doivent trancher a l'identique.
+        if len({operateur(o.bookmaker) for o in combo}) < 2:
             continue
 
         odds_values = [o.odds for o in combo]
