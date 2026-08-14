@@ -98,6 +98,7 @@ class Settings(BaseSettings):
     paryajlakay_base_url: str = "https://www.paryajlakay.com"
     paryajpam_base_url: str = "https://www.paryajpam.com"
     golcash_base_url: str = "https://www.golcashhaiti.com"
+    melbet_base_url: str = "https://melbet.com"
 
     @field_validator("browser_profile_dir", "database_url", mode="after")
     @classmethod

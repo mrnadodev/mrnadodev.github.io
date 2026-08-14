@@ -22,6 +22,7 @@ from .normalizer.schema import Odd
 from .notifier.telegram import TelegramNotifier, should_alert
 from .scrapers.base import ScraperUnavailableError
 from .scrapers.golcash import GolcashScraper
+from .scrapers.melbet import MelBetScraper
 from .scrapers.parsing import MatchMeta, extract_markets_from_html, raw_markets_to_odds
 from .scrapers.paryajlakay import ParyajLakayScraper
 from .scrapers.paryajpam import ParyajPamScraper
@@ -41,6 +42,7 @@ FIXTURES = Path(__file__).parent / "tests" / "fixtures"
 def build_scrapers():
     return [
         XBetScraper(base_url=settings.xbet_base_url),
+        MelBetScraper(base_url=settings.melbet_base_url),
         ParyajLakayScraper(base_url=settings.paryajlakay_base_url),
         ParyajPamScraper(base_url=settings.paryajpam_base_url),
         GolcashScraper(base_url=settings.golcash_base_url),
