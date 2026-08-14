@@ -72,6 +72,20 @@ class Settings(BaseSettings):
     browser_profile_dir: str = "./.browser-profiles"
     evaluation_interval_s: int = 10
 
+    # Duree de vie d'une session navigateur avant fermeture-reouverture.
+    #
+    # Un portable de 8 Go a gele apres 4 heures de collecte, et le VPS avant
+    # lui : un onglet renavigue des milliers de fois sur une application
+    # JavaScript lourde accumule du tas et des caches que rien ne libere.
+    # Notre code ne fuit pas — c'est Chromium. On ne corrige pas cette fuite,
+    # on la borne : fermer le navigateur rend toute sa memoire d'un coup, et
+    # le profil persistant conserve cookies et session.
+    #
+    # 150 navigations ou 45 minutes, au premier des deux atteint. A un cycle
+    # de 30 s, cela recycle environ toutes les 45 minutes. Mettre 0 desactive.
+    browser_recycle_navigations: int = 150
+    browser_recycle_minutes: int = 45
+
     # Normalizer
     fuzzy_team_threshold: int = 85
 
