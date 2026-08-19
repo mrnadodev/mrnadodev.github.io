@@ -1767,12 +1767,15 @@ window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || 
   .ld-book:hover{border-color:var(--gold);transform:translateY(-2px)}
   .ld-book-d{width:6px;height:6px;border-radius:50%;background:var(--gold);flex:none;
     box-shadow:0 0 0 0 rgba(242,193,78,.55);animation:ldDot 3.2s ease-out infinite}
-  /* Cinq bookmakers : les points clignotent en decale pour eviter un
+  /* Huit bookmakers : les points clignotent en decale pour eviter un
      battement synchrone. Le 1er demarre a 0, on echelonne les suivants. */
-  .ld-book:nth-child(2) .ld-book-d{animation-delay:.6s}
-  .ld-book:nth-child(3) .ld-book-d{animation-delay:1.2s}
-  .ld-book:nth-child(4) .ld-book-d{animation-delay:1.8s}
-  .ld-book:nth-child(5) .ld-book-d{animation-delay:2.4s}
+  .ld-book:nth-child(2) .ld-book-d{animation-delay:.45s}
+  .ld-book:nth-child(3) .ld-book-d{animation-delay:.9s}
+  .ld-book:nth-child(4) .ld-book-d{animation-delay:1.35s}
+  .ld-book:nth-child(5) .ld-book-d{animation-delay:1.8s}
+  .ld-book:nth-child(6) .ld-book-d{animation-delay:2.25s}
+  .ld-book:nth-child(7) .ld-book-d{animation-delay:2.7s}
+  .ld-book:nth-child(8) .ld-book-d{animation-delay:3.15s}
   @keyframes ldDot{0%{box-shadow:0 0 0 0 rgba(242,193,78,.5)}70%,100%{box-shadow:0 0 0 9px rgba(242,193,78,0)}}
 
   /* — prix : la carte est le point chaud de la page, donc c'est elle qui porte l'or — */
@@ -1874,29 +1877,7 @@ window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || 
   <nav class="ld-nav">
     <div class="ld-nav-in">
       <div class="ld-brand">
-        <svg class="ne-mark" viewBox="0 0 120 120" role="img" aria-label="NADOEDGE">
-          <defs>
-            <linearGradient id="ldSilver" x1="0.15" y1="0" x2="0.6" y2="1">
-              <stop offset="0" stop-color="#ffffff"/><stop offset=".4" stop-color="#f2f5f4"/>
-              <stop offset=".62" stop-color="#c2cac6"/><stop offset="1" stop-color="#8e9a95"/>
-            </linearGradient>
-            <linearGradient id="ldGreen" x1="0.1" y1="0" x2="0.5" y2="1">
-              <stop offset="0" stop-color="#43c65b"/><stop offset=".55" stop-color="#22a141"/>
-              <stop offset="1" stop-color="#0d7a2c"/>
-            </linearGradient>
-          </defs>
-          <path d="M9.4,48.3 A52,52 0 0 1 111.5,52.8" fill="none" stroke="#101410" stroke-width="8.6" stroke-linecap="round" opacity=".9"/>
-          <path d="M9.4,48.3 A52,52 0 0 1 111.5,52.8" fill="none" stroke="url(#ldSilver)" stroke-width="6" stroke-linecap="round"/>
-          <path d="M8.5,52.8 A52,52 0 1 0 108.9,42.2" fill="none" stroke="#101410" stroke-width="10.2" stroke-linecap="round" opacity=".9"/>
-          <path d="M8.5,52.8 A52,52 0 1 0 108.9,42.2" fill="none" stroke="url(#ldGreen)" stroke-width="7.4" stroke-linecap="round"/>
-          <path d="M12,85 L24,33 L38,33 L57.7,68.9 L66,33 L80,33 L68,85 L54,85 L34.3,49.1 L26,85 Z"
-                fill="url(#ldSilver)" stroke="#101410" stroke-width="1.9" stroke-linejoin="round"/>
-          <g stroke="#101410" stroke-width="1.7" stroke-linejoin="round">
-            <path d="M67,33 L114,33 L106,44.5 L59,44.5 Z" fill="url(#ldGreen)"/>
-            <path d="M62,53 L99,53 L91,63.5 L54,63.5 Z" fill="url(#ldGreen)"/>
-            <path d="M58,72.5 L104,72.5 L96,84 L50,84 Z" fill="url(#ldGreen)"/>
-          </g>
-        </svg>
+        <svg class="ne-mark" viewBox="0 0 120 120" role="img" aria-label="NADOEDGE"><image href="nadoedge-logo.png" width="120" height="120" preserveAspectRatio="xMidYMid meet"/></svg>
         <div>
           <div class="ld-brand-t">NADO<span class="edge">EDGE</span></div>
           <div class="ld-brand-s" data-i18n="ld.tagline">Votre avantage sur chaque pari</div>
@@ -2024,6 +2005,9 @@ window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || 
             <div class="ld-book"><span class="ld-book-d"></span>Paryaj Lakay</div>
             <div class="ld-book"><span class="ld-book-d"></span>Paryaj Pam</div>
             <div class="ld-book"><span class="ld-book-d"></span>Golcash</div>
+            <div class="ld-book"><span class="ld-book-d"></span>Lisa Paryaj</div>
+            <div class="ld-book"><span class="ld-book-d"></span>Beltifich</div>
+            <div class="ld-book"><span class="ld-book-d"></span>Bel Paryaj</div>
           </div>
           <p class="ld-p" style="margin-top:22px;font-size:13.5px" data-i18n="ld.price_p">Paiement par MonCash ou NatCash. Vous envoyez votre référence de transaction, un administrateur valide, et votre accès s'ouvre.</p>
         </div>
@@ -2113,29 +2097,7 @@ window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || 
     </button>
     <div class="auth-head">
       <div class="auth-logo ne-wrap" id="authLogo">
-        <svg class="ne-mark" viewBox="0 0 120 120" role="img" aria-label="NADOEDGE">
-          <defs>
-            <linearGradient id="neSilver2" x1="0.15" y1="0" x2="0.6" y2="1">
-              <stop offset="0" stop-color="#ffffff"/><stop offset=".4" stop-color="#f2f5f4"/>
-              <stop offset=".62" stop-color="#c2cac6"/><stop offset="1" stop-color="#8e9a95"/>
-            </linearGradient>
-            <linearGradient id="neGreen2" x1="0.1" y1="0" x2="0.5" y2="1">
-              <stop offset="0" stop-color="#43c65b"/><stop offset=".55" stop-color="#22a141"/>
-              <stop offset="1" stop-color="#0d7a2c"/>
-            </linearGradient>
-          </defs>
-          <path d="M9.4,48.3 A52,52 0 0 1 111.5,52.8" fill="none" stroke="#101410" stroke-width="8.6" stroke-linecap="round" opacity=".9"/>
-          <path d="M9.4,48.3 A52,52 0 0 1 111.5,52.8" fill="none" stroke="url(#neSilver2)" stroke-width="6" stroke-linecap="round"/>
-          <path d="M8.5,52.8 A52,52 0 1 0 108.9,42.2" fill="none" stroke="#101410" stroke-width="10.2" stroke-linecap="round" opacity=".9"/>
-          <path d="M8.5,52.8 A52,52 0 1 0 108.9,42.2" fill="none" stroke="url(#neGreen2)" stroke-width="7.4" stroke-linecap="round"/>
-          <path d="M12,85 L24,33 L38,33 L57.7,68.9 L66,33 L80,33 L68,85 L54,85 L34.3,49.1 L26,85 Z"
-                fill="url(#neSilver2)" stroke="#101410" stroke-width="1.9" stroke-linejoin="round"/>
-          <g stroke="#101410" stroke-width="1.7" stroke-linejoin="round">
-            <path d="M67,33 L114,33 L106,44.5 L59,44.5 Z" fill="url(#neGreen2)"/>
-            <path d="M62,53 L99,53 L91,63.5 L54,63.5 Z" fill="url(#neGreen2)"/>
-            <path d="M58,72.5 L104,72.5 L96,84 L50,84 Z" fill="url(#neGreen2)"/>
-          </g>
-        </svg>
+        <svg class="ne-mark" viewBox="0 0 120 120" role="img" aria-label="NADOEDGE"><image href="nadoedge-logo.png" width="120" height="120" preserveAspectRatio="xMidYMid meet"/></svg>
       </div>
       <div class="auth-title">NADO<span class="edge">EDGE</span></div>
       <div class="auth-sub" id="authSub" data-i18n="auth.sub">Vos paris, synchronisés et sécurisés</div>
@@ -2199,29 +2161,7 @@ window.NE_URL_ARRIVEE = { hash: location.hash || '', search: location.search || 
   <header>
     <div class="brand">
       <h1><span class="hlogo" id="dashLogo">
-        <svg class="ne-mark" viewBox="0 0 120 120" role="img" aria-label="NADOEDGE">
-          <defs>
-            <linearGradient id="neSilver" x1="0.15" y1="0" x2="0.6" y2="1">
-              <stop offset="0" stop-color="#ffffff"/><stop offset=".4" stop-color="#f2f5f4"/>
-              <stop offset=".62" stop-color="#c2cac6"/><stop offset="1" stop-color="#8e9a95"/>
-            </linearGradient>
-            <linearGradient id="neGreen" x1="0.1" y1="0" x2="0.5" y2="1">
-              <stop offset="0" stop-color="#43c65b"/><stop offset=".55" stop-color="#22a141"/>
-              <stop offset="1" stop-color="#0d7a2c"/>
-            </linearGradient>
-          </defs>
-          <path d="M9.4,48.3 A52,52 0 0 1 111.5,52.8" fill="none" stroke="#101410" stroke-width="8.6" stroke-linecap="round" opacity=".9"/>
-          <path d="M9.4,48.3 A52,52 0 0 1 111.5,52.8" fill="none" stroke="url(#neSilver)" stroke-width="6" stroke-linecap="round"/>
-          <path d="M8.5,52.8 A52,52 0 1 0 108.9,42.2" fill="none" stroke="#101410" stroke-width="10.2" stroke-linecap="round" opacity=".9"/>
-          <path d="M8.5,52.8 A52,52 0 1 0 108.9,42.2" fill="none" stroke="url(#neGreen)" stroke-width="7.4" stroke-linecap="round"/>
-          <path d="M12,85 L24,33 L38,33 L57.7,68.9 L66,33 L80,33 L68,85 L54,85 L34.3,49.1 L26,85 Z"
-                fill="url(#neSilver)" stroke="#101410" stroke-width="1.9" stroke-linejoin="round"/>
-          <g stroke="#101410" stroke-width="1.7" stroke-linejoin="round">
-            <path d="M67,33 L114,33 L106,44.5 L59,44.5 Z" fill="url(#neGreen)"/>
-            <path d="M62,53 L99,53 L91,63.5 L54,63.5 Z" fill="url(#neGreen)"/>
-            <path d="M58,72.5 L104,72.5 L96,84 L50,84 Z" fill="url(#neGreen)"/>
-          </g>
-        </svg>
+        <svg class="ne-mark" viewBox="0 0 120 120" role="img" aria-label="NADOEDGE"><image href="nadoedge-logo.png" width="120" height="120" preserveAspectRatio="xMidYMid meet"/></svg>
       </span><span class="wordmark">NADO<span class="edge">EDGE</span></span></h1>
       <p data-i18n="brand.tag">Votre avantage sur chaque pari</p>
     </div>
